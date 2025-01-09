@@ -53,13 +53,14 @@ public sealed class ContentService(
     var cacheKey = $"moviesByCategory-{category}-{limit}";
     var response = _cacheService.GetValue<PagedList<MovieEntity>>(cacheKey);
 
-    if (response is null)
-    {
-      response = await _movieRepository.GetByFilterAsync(
-        new GetMoviesByFilterRequestDto(
-          EMovieSearchFilter.CATEGORY, category, limit ?? limitTotalResult, 1));
-      _cacheService.SetValue(cacheKey, response);
-    }
+    if (response is not null)
+      return Result<IEnumerable<GetMovieContentResponseDto>>
+        .Success(response.Items.Select(GetMovieContentResponseDto.FromEntity));
+    
+    response = await _movieRepository.GetByFilterAsync(
+      new GetMoviesByFilterRequestDto(
+        EMovieSearchFilter.CATEGORY, category, limit ?? limitTotalResult, 1));
+    _cacheService.SetValue(cacheKey, response);
 
     return Result<IEnumerable<GetMovieContentResponseDto>>
       .Success(response.Items.Select(GetMovieContentResponseDto.FromEntity));
@@ -92,13 +93,14 @@ public sealed class ContentService(
     var cacheKey = $"seriesByCategory-{category}-{limit}";
     var response = _cacheService.GetValue<PagedList<SeriesEntity>>(cacheKey);
 
-    if (response is null)
-    {
-      response = await _seriesRepository.GetByFilterAsync(
-        new GetSeriesByFilterRequestDto(
-          ESeriesSearchFilter.CATEGORY, category, limit ?? limitTotalResult, 1));
-      _cacheService.SetValue(cacheKey, response);
-    }
+    if (response is not null)
+      return Result<IEnumerable<GetSeriesContentResponseDto>>
+        .Success(response.Items.Select(GetSeriesContentResponseDto.FromEntity));
+    
+    response = await _seriesRepository.GetByFilterAsync(
+      new GetSeriesByFilterRequestDto(
+        ESeriesSearchFilter.CATEGORY, category, limit ?? limitTotalResult, 1));
+    _cacheService.SetValue(cacheKey, response);
 
     return Result<IEnumerable<GetSeriesContentResponseDto>>
       .Success(response.Items.Select(GetSeriesContentResponseDto.FromEntity));
@@ -109,11 +111,12 @@ public sealed class ContentService(
     var cacheKey = $"episodesSeriesBySeason-{serieId}-{season}";
     var response = _cacheService.GetValue<SeriesEntity>(cacheKey);
 
-    if (response is null)
-    {
-      response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season);
-      _cacheService.SetValue(cacheKey, response);
-    }
+    if (response is not null)
+      return Result<IEnumerable<Episode>>
+        .Success(response?.Episodes ?? Enumerable.Empty<Episode>());
+    
+    response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season);
+    _cacheService.SetValue(cacheKey, response);
 
     return Result<IEnumerable<Episode>>
       .Success(response?.Episodes ?? Enumerable.Empty<Episode>());
@@ -145,31 +148,30 @@ public sealed class ContentService(
     var cacheKey = $"contentsByTitle-{title}-{limit}";
     var response = _cacheService.GetValue<GetContentsByNameResponseDto>(cacheKey);
 
-    if (response is null)
-    {
-      var moviesTask = _movieRepository.GetByFilterAsync(
-        new GetMoviesByFilterRequestDto(EMovieSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
-
-      var seriesTask = _seriesRepository.GetByFilterAsync(
-        new GetSeriesByFilterRequestDto(ESeriesSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
-
-      var channelsTask = _channelRepository.GetByFilterAsync(
-        new GetChannelsByFilterRequestDto(EChannelSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
-      
-      await Task.WhenAll(moviesTask, seriesTask, channelsTask);
+    if (response is not null) return Result<GetContentsByNameResponseDto>.Success(response);
     
-      var movieListResponse = await moviesTask;
-      var seriesListResponse = await seriesTask;
-      var channelListResponse = await channelsTask;
+    var moviesTask = _movieRepository.GetByFilterAsync(
+      new GetMoviesByFilterRequestDto(EMovieSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
 
-      response = new GetContentsByNameResponseDto(
-        movieListResponse.Items.Select(GetMovieContentResponseDto.FromEntity),
-        seriesListResponse.Items.Select(GetSeriesContentResponseDto.FromEntity),
-        channelListResponse.Items.Select(GetChannelContentResponseDto.FromEntity));
+    var seriesTask = _seriesRepository.GetByFilterAsync(
+      new GetSeriesByFilterRequestDto(ESeriesSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
+
+    var channelsTask = _channelRepository.GetByFilterAsync(
+      new GetChannelsByFilterRequestDto(EChannelSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
       
-      _cacheService.SetValue(cacheKey, response);
-    }
+    await Task.WhenAll(moviesTask, seriesTask, channelsTask);
     
+    var movieListResponse = await moviesTask;
+    var seriesListResponse = await seriesTask;
+    var channelListResponse = await channelsTask;
+
+    response = new GetContentsByNameResponseDto(
+      movieListResponse.Items.Select(GetMovieContentResponseDto.FromEntity),
+      seriesListResponse.Items.Select(GetSeriesContentResponseDto.FromEntity),
+      channelListResponse.Items.Select(GetChannelContentResponseDto.FromEntity));
+      
+    _cacheService.SetValue(cacheKey, response);
+
     return Result<GetContentsByNameResponseDto>.Success(response);
   }
 }
