@@ -15,7 +15,7 @@
   </header>
 
   <div class="row gap-4">
-    <div class="col-3 card-dashboard bg-success text-light py-3">
+    <div class="col-md-3 card-dashboard bg-success text-light py-3">
       <div class="d-flex justify-content-between align-items-center px-3">
         <i class="fa-solid fa-clapperboard display-5"></i>
         <span class="display-5 fw-bold">@Model.NumberOfMovies</span>
@@ -32,7 +32,7 @@
       </div>
     </div>
 
-    <div class="col-3 card-dashboard bg-primary text-light py-3">
+    <div class="col-md-3 card-dashboard bg-primary text-light py-3">
       <div class="d-flex justify-content-between align-items-center px-3">
         <i class="fa-solid fa-photo-film display-5"></i>
         <span class="display-5 fw-bold">@Model.NumberOfSeries</span>
@@ -49,7 +49,7 @@
       </div>
     </div>
 
-    <div class="col-3 card-dashboard bg-dark text-light py-3">
+    <div class="col-md-3 card-dashboard bg-dark text-light py-3">
       <div class="d-flex justify-content-between align-items-center px-3">
         <i class="fa-solid fa-satellite-dish display-5"></i>
         <span class="display-5 fw-bold">@Model.NumberOfChannels</span>
@@ -67,7 +67,7 @@
     </div>
   </div>
 
-  <div class="w-full" style="height: 60vh;">
+  <div class="w-full d-none d-md-block" style="height: 60vh;">
     <canvas class="mt-5 w-full h-full" id="chart"></canvas>
   </div>
 

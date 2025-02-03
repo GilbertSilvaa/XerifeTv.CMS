@@ -9,6 +9,14 @@
   var episodeEmpty = new Episode { Id = string.Empty };
 }
 
+<style>
+  @@media (min-width: 800px) {
+    #seasonFilter {
+      max-width: 20%;
+    }
+  }
+</style>
+
 <div class="container">
   @await Html.PartialAsync("_VideoModal")
   @await Html.PartialAsync("_EpisodeFormModal", episodeEmpty)
@@ -19,7 +27,7 @@
         <a asp-controller="Series" asp-action="Index" class="fs-4">
           <i class="fa fa-undo" aria-hidden="true"></i>
         </a>
-        <span class="fs-3 fw-normal">Episódios (@Model.SerieTitle)</span>
+        <span class="d-none d-md-block fs-3 fw-normal">Episódios (@Model.SerieTitle)</span>
       </div>
 
       @if (!User.IsInRole("visitor"))
@@ -36,8 +44,7 @@
     <select 
       class="form-select shadow-none" 
       name="seasonFilter" 
-      id="seasonFilter" 
-      style="max-width: 20%">
+      id="seasonFilter">
 
       @for (var i = 1; i <= (ViewBag.NumberSeasons ?? 1); i++)
       {
@@ -63,10 +70,10 @@
     
     @foreach (var episode in Model.Episodes)
     {
-      <div class="card mb-3 col-5">
+      <div class="card mb-3 col-md-5">
         <div class="row g-0">
           <div class="col-md-4">
-            <img src="@episode.BannerUrl" class="img-fluid rounded-start h-100" alt="@episode.Title">
+            <img src="@episode.BannerUrl" class="img-fluid rounded-start h-100 w-100" alt="@episode.Title">
           </div>
           <div class="col-md-8">
             <div class="card-body">

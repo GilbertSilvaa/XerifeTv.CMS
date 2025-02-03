@@ -27,11 +27,11 @@
   </header>
 
   <div class="row mb-3 justify-content-between">
-    <a class="col-1 fs-5" role="button" asp-controller="Channels" asp-action="Index">
+    <a class="d-none d-md-block col-1 fs-5" role="button" asp-controller="Channels" asp-action="Index">
       <i class="fa-solid fa-rotate"></i>
     </a>
 
-    <div class="col-5">
+    <div class="col-md-5">
       <form 
         class="input-group input-group-sm" 
         asp-controller="Channels" 
@@ -76,7 +76,7 @@
   <div class="row gap-3">
     @foreach (var Channel in Model)
     {
-      <div class="card col-2 pt-1">
+      <div class="card col-md-2 pt-1">
         <img 
           src="@Channel.LogoUrl"
           onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
