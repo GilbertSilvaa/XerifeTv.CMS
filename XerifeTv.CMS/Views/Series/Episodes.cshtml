@@ -23,11 +23,13 @@
 
   <header>
     <div class="d-flex align-items-center justify-content-between gap-4">
-      <div class="d-flex align-items-center gap-4">
+      <div class="d-flex align-items-center gap-4" style="max-width: 65%;">
         <a asp-controller="Series" asp-action="Index" class="fs-4">
           <i class="fa fa-undo" aria-hidden="true"></i>
         </a>
-        <span class="d-none d-md-block fs-3 fw-normal">Episódios (@Model.SerieTitle)</span>
+        <span class="d-none d-md-inline-block text-truncate fs-3 fw-normal mw-100">
+          Episódios (@Model.SerieTitle)
+        </span>
       </div>
 
       @if (!User.IsInRole("visitor"))
@@ -70,10 +72,14 @@
     
     @foreach (var episode in Model.Episodes)
     {
-      <div class="card mb-3 col-md-5">
+      <div class="card mb-3 col-md-12 col-lg-8 col-xl-5">
         <div class="row g-0">
           <div class="col-md-4">
-            <img src="@episode.BannerUrl" class="img-fluid rounded-start h-100 w-100" alt="@episode.Title">
+            <img 
+              src="@episode.BannerUrl" 
+              class="img-fluid rounded-start h-100 w-100" 
+              alt="@episode.Title"
+              style="max-height: 250px;">
           </div>
           <div class="col-md-8">
             <div class="card-body">

@@ -32,7 +32,7 @@
       <i class="fa-solid fa-rotate"></i>
     </a>
 
-    <div class="col-md-5">
+    <div class="col-md-8 col-lg-5">
       <form 
         class="input-group input-group-sm" 
         asp-controller="Movies" 
@@ -77,7 +77,7 @@
   <div class="row gap-3">
     @foreach (var movie in Model)
     {
-      <div class="card col-md-2 pt-1">
+      <div class="card col-md-4 col-xl-2 pt-1">
         <div class="w-auto h-100 position-relative">
           <img
             src="@movie.PosterUrl"
