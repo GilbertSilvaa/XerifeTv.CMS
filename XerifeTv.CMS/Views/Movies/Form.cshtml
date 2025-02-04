@@ -24,7 +24,7 @@
 
       @if (Model is null)
       {
-        <div class="d-none d-md-flex align-items-center">
+        <div class="d-none d-lg-flex align-items-center">
           <form class="input-group input-group-sm" id="imdb-form">
             <span class="input-group-text">Imdb ID</span>
             <input type="text" name="imdbId" class="form-control shadow-none" required>
@@ -92,7 +92,7 @@
             required>
         </div>
 
-        <div class="col-5 px-4">
+        <div class="col-sm-3 col-lg-5 px-4">
           <label class="form-label">Classificação Indicativa</label>
           <div>
             @foreach (int year in parentalRatings)

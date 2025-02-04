@@ -31,7 +31,7 @@
       <i class="fa-solid fa-rotate"></i>
     </a>
 
-    <div class="col-md-5">
+    <div class="col-md-8 col-lg-5">
       <form 
         class="input-group input-group-sm" 
         asp-controller="Channels" 
@@ -76,7 +76,7 @@
   <div class="row gap-3">
     @foreach (var Channel in Model)
     {
-      <div class="card col-md-2 pt-1">
+      <div class="card col-md-4 col-xl-2 pt-1">
         <img 
           src="@Channel.LogoUrl"
           onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"

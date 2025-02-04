@@ -2,14 +2,29 @@
   ViewData["Title"] = "SignIn";
 }
 
+<style>
+  .signin-form 
+  {
+    max-width: 450px; 
+    border-radius: 0.5rem; 
+    background: #242424;
+  }
+  
+  @@media (max-width: 500px) 
+  {
+    .signin-form
+    {
+      width: 100% !important;
+    }
+  }
+</style>
+
 <div class="container d-flex flex-column justify-content-center align-items-center" style="height: 80vh;">
-
-
+  
   <form 
     asp-controller="Users"
     asp-action="SignIn"
-    class="w-50 p-4 py-5" 
-    style="max-width: 450px; border-radius: 0.5rem; background: #242424;">
+    class="w-50 p-4 py-5 signin-form">
 
     <div class="w-100 d-flex justify-content-center mb-5 py-1">
       <img src="~/assets/logo.png" alt="logo" style="width: 60%;"/>
