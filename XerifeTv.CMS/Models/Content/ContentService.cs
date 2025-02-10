@@ -60,6 +60,7 @@ public sealed class ContentService(
       response = await _movieRepository.GetByFilterAsync(
         new GetMoviesByFilterRequestDto(
           EMovieSearchFilter.CATEGORY, 
+          EMovieOrderFilter.REGISTRATION_DATE_DESC,
           category, 
           limit ?? limitTotalResult, 
           currentPage ?? 1));
@@ -160,7 +161,8 @@ public sealed class ContentService(
     if (response is not null) return Result<GetContentsByNameResponseDto>.Success(response);
     
     var moviesTask = _movieRepository.GetByFilterAsync(
-      new GetMoviesByFilterRequestDto(EMovieSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
+      new GetMoviesByFilterRequestDto(
+        EMovieSearchFilter.TITLE, EMovieOrderFilter.TITLE, title, limit ?? limitTotalResult, 1));
 
     var seriesTask = _seriesRepository.GetByFilterAsync(
       new GetSeriesByFilterRequestDto(ESeriesSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));

@@ -24,16 +24,19 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
     };
 
     FilterDefinition<MovieEntity> filter = Builders<MovieEntity>.Filter.Where(filterExpression); 
-
     var count = await _collection.CountDocumentsAsync(filter);
-    var items = await _collection.Find(filter)
-      .SortBy(r => r.Title)
+
+    var query = _collection.Find(filter)
       .Skip(dto.LimitResults * (dto.CurrentPage - 1))
-      .Limit(dto.LimitResults)
-      .ToListAsync();
+      .Limit(dto.LimitResults);
 
+    query = dto.Order == EMovieOrderFilter.REGISTRATION_DATE_DESC 
+      ? query.SortByDescending(r => r.CreateAt) 
+      : query.SortBy(r => r.Title);
+    
+    var items = await query.ToListAsync();
     var totalPages = (int)Math.Ceiling(count / (decimal)dto.LimitResults);
-
+    
     return new PagedList<MovieEntity>(dto.CurrentPage, totalPages, items);
   }
 
