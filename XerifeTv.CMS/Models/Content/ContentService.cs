@@ -47,23 +47,32 @@ public sealed class ContentService(
       .Success(result);
   }
 
-  public async Task<Result<IEnumerable<GetMovieContentResponseDto>>> GetMoviesByCategory(
-    string category, int? limit)
+  public async Task<Result<PagedList<GetMovieContentResponseDto>>> GetMoviesByCategory(
+    string category, 
+    int? currentPage, 
+    int? limit)
   {
-    var cacheKey = $"moviesByCategory-{category}-{limit}";
+    var cacheKey = $"moviesByCategory-{category}-{currentPage}-{limit}";
     var response = _cacheService.GetValue<PagedList<MovieEntity>>(cacheKey);
-
-    if (response is not null)
-      return Result<IEnumerable<GetMovieContentResponseDto>>
-        .Success(response.Items.Select(GetMovieContentResponseDto.FromEntity));
     
-    response = await _movieRepository.GetByFilterAsync(
-      new GetMoviesByFilterRequestDto(
-        EMovieSearchFilter.CATEGORY, category, limit ?? limitTotalResult, 1));
-    _cacheService.SetValue(cacheKey, response);
-
-    return Result<IEnumerable<GetMovieContentResponseDto>>
-      .Success(response.Items.Select(GetMovieContentResponseDto.FromEntity));
+    if (response is null)
+    {
+      response = await _movieRepository.GetByFilterAsync(
+        new GetMoviesByFilterRequestDto(
+          EMovieSearchFilter.CATEGORY, 
+          category, 
+          limit ?? limitTotalResult, 
+          currentPage ?? 1));
+      
+      _cacheService.SetValue(cacheKey, response);
+    }
+    
+    var result = new PagedList<GetMovieContentResponseDto>(
+      response.CurrentPage, 
+      response.TotalPageCount,
+      response.Items.Select(GetMovieContentResponseDto.FromEntity));
+      
+    return Result<PagedList<GetMovieContentResponseDto>>.Success(result);  
   }
 
   public async Task<Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> GetSeriesGroupByCategory(
