@@ -25,7 +25,12 @@ public class MoviesController(
     if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
     {
       result = await _service.GetByFilter(
-        new GetMoviesByFilterRequestDto(filter, search, limitResultsPage, currentPage));
+        new GetMoviesByFilterRequestDto(
+          filter, 
+          EMovieOrderFilter.TITLE, 
+          search, 
+          limitResultsPage, 
+          currentPage));
 
       ViewBag.Search = search;
       ViewBag.Filter = filter.ToString()?.ToLower();

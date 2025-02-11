@@ -19,12 +19,12 @@ public class ContentController(IContentService _service, ILogger<ContentControll
 
   [HttpGet]
   [Route("Movies/{category}")]
-  public async Task<IActionResult> MoviesCategory(string category, int? limit)
+  public async Task<IActionResult> MoviesCategory(string category, int? currentPage, int? limit)
   {
-    var response = await _service.GetMoviesByCategory(category, limit);
+    var response = await _service.GetMoviesByCategory(category, currentPage, limit);
     _logger.LogInformation($"Request Content API /Movies/{category}");
 
-    return Ok(response.IsSuccess ? response.Data : []);
+    return Ok(response.IsSuccess ? response.Data : new object());
   }
 
   [HttpGet]
