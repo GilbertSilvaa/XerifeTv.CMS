@@ -46,7 +46,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
   {
     Expression<Func<SeriesEntity, bool>> filterExpression = dto.Filter switch
     {
-      ESeriesSearchFilter.CATEGORY => r => r.Category.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase),
+      ESeriesSearchFilter.CATEGORY => r => r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase),
       _ => r => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase)
     };
 
