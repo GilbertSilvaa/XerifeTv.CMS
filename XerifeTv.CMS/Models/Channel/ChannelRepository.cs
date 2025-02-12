@@ -18,7 +18,7 @@ public sealed class ChannelRepository(IOptions<DBSettings> options)
     Expression<Func<ChannelEntity, bool>> filterExpression = dto.Filter switch
     {
       EChannelSearchFilter.TITLE => r => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase),
-      EChannelSearchFilter.CATEGORY => r => r.Category.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase),
+      EChannelSearchFilter.CATEGORY => r => r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase),
       _ => r => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase)
     };
 
