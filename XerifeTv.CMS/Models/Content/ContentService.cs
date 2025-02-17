@@ -59,11 +59,12 @@ public sealed class ContentService(
     {
       response = await _movieRepository.GetByFilterAsync(
         new GetMoviesByFilterRequestDto(
-          EMovieSearchFilter.CATEGORY, 
-          EMovieOrderFilter.REGISTRATION_DATE_DESC,
+          filter: EMovieSearchFilter.CATEGORY, 
+          order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
           category, 
           limit ?? limitTotalResult, 
-          currentPage ?? 1));
+          currentPage ?? 1,
+          isIncludeDisabled: false));
       
       _cacheService.SetValue(cacheKey, response);
     }
@@ -162,7 +163,12 @@ public sealed class ContentService(
     
     var moviesTask = _movieRepository.GetByFilterAsync(
       new GetMoviesByFilterRequestDto(
-        EMovieSearchFilter.TITLE, EMovieOrderFilter.TITLE, title, limit ?? limitTotalResult, 1));
+        filter: EMovieSearchFilter.TITLE, 
+        order: EMovieOrderFilter.TITLE, 
+        title, 
+        limit ?? limitTotalResult, 
+        currentPage: 1,
+        isIncludeDisabled: false));
 
     var seriesTask = _seriesRepository.GetByFilterAsync(
       new GetSeriesByFilterRequestDto(ESeriesSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));

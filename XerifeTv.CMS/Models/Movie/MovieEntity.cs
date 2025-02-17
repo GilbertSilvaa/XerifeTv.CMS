@@ -8,4 +8,5 @@ public class MovieEntity : Midia
   public string Category { get; set; } = string.Empty;
   public float Review { get; set; } = 0;
   public Video? Video { get; set; }
+  public bool Disabled { get; set; } = false;
 }

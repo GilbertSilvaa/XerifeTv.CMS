@@ -17,10 +17,17 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
   {
     Expression<Func<MovieEntity, bool>> filterExpression = dto.Filter switch
     {
-      EMovieSearchFilter.TITLE => r => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase),
-      EMovieSearchFilter.CATEGORY => r => r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase),
-      EMovieSearchFilter.RELEASE_YEAR => r => r.ReleaseYear.Equals(int.Parse(dto.Search)),
-      _ => r => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase)
+      EMovieSearchFilter.TITLE => r 
+        => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (dto.IsIncludeDisabled || !r.Disabled),
+      
+      EMovieSearchFilter.CATEGORY => r 
+        => r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (dto.IsIncludeDisabled || !r.Disabled),
+      
+      EMovieSearchFilter.RELEASE_YEAR => r 
+        => r.ReleaseYear.Equals(int.Parse(dto.Search)) && (dto.IsIncludeDisabled || !r.Disabled),
+      
+      _ => r => 
+        r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (dto.IsIncludeDisabled || !r.Disabled)
     };
 
     FilterDefinition<MovieEntity> filter = Builders<MovieEntity>.Filter.Where(filterExpression); 

@@ -2,6 +2,6 @@ namespace XerifeTv.CMS.Models.Movie.Enums;
 
 public enum EMovieOrderFilter
 {
-    TITLE,
-    REGISTRATION_DATE_DESC,
+  TITLE,
+  REGISTRATION_DATE_DESC,
 }
