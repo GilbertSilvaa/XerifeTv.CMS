@@ -17,6 +17,7 @@ public class UpdateMovieRequestDto
   public long VideoDuration { get; init; }
   public string VideoStreamFormat { get; init; } = string.Empty;
   public string? VideoSubtitle { get; init; }
+  public bool Disabled { get; init; } = false;
 
   public MovieEntity ToEntity()
   {
@@ -31,7 +32,8 @@ public class UpdateMovieRequestDto
       ReleaseYear = ReleaseYear,
       ParentalRating = ParentalRating,
       Review = Review,
-      Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle)
+      Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle),
+      Disabled = Disabled
     };
   }
 }

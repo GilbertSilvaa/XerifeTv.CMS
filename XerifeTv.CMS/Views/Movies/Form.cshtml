@@ -247,9 +247,28 @@
           </div>
         </div>
       </div>
-
+      
+      @if (Model is GetMovieResponseDto)
+      {
+        <div class="row mb-4">
+          <div class="col-6">
+            <div class="form-check">
+              <input
+                id="disabled"
+                name="disabled"
+                class="form-check-input" 
+                type="checkbox"
+                value="@(Model.Disabled ? "true" : "false")"
+                @(Model.Disabled ? "checked" : "")>
+              <label class="form-check-label" for="disabled">
+                Desativar
+              </label>
+            </div>
+          </div>
+        </div>
+      }
+      
       <hr />
-
       <div class="d-flex align-items-center justify-content-between">
         <button type="submit" class="btn btn-primary mt-2">
           @(Model is GetMovieResponseDto ? "Editar" : "Cadastrar")
@@ -292,6 +311,8 @@
       $('#bannerUrl').val(`https://image.tmdb.org/t/p/original${response.backdrop_path}`);
       $('#parentalRating-18').attr('checked', Boolean(response.adult));
     });
+    
+    $('#disabled').change(e => e.target.value = e.target.checked);
 
     $('#videoDuration').keyup(e => 
       $('#videoDuration').val(convertHHmmToSeconds(e.target.value)));
