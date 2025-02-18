@@ -30,7 +30,8 @@ public class MoviesController(
           EMovieOrderFilter.TITLE, 
           search, 
           limitResultsPage, 
-          currentPage));
+          currentPage,
+          isIncludeDisabled: true));
 
       ViewBag.Search = search;
       ViewBag.Filter = filter.ToString()?.ToLower();

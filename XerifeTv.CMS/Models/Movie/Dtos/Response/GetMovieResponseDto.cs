@@ -17,6 +17,7 @@ public class GetMovieResponseDto
   public DateTime RegistrationDate { get; private set; }
   public Video? Video { get; private set; }
   public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
+  public bool Disabled { get; private set; } = false;
 
   public static GetMovieResponseDto FromEntity(MovieEntity entity)
   {
@@ -32,7 +33,8 @@ public class GetMovieResponseDto
       ParentalRating = entity.ParentalRating,
       Review = entity.Review,
       RegistrationDate = entity.CreateAt,
-      Video = entity.Video
+      Video = entity.Video,
+      Disabled = entity.Disabled
     };
   }
 }

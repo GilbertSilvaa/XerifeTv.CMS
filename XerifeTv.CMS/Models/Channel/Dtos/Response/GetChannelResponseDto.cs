@@ -10,6 +10,7 @@ public class GetChannelResponseDto
   public string LogoUrl { get; private set; } = string.Empty;
   public Video? Video { get; private set; }
   public DateTime RegistrationDate { get; private set; }
+  public bool Disabled { get; private set; } = false;
 
   public static GetChannelResponseDto FromEntity(ChannelEntity entity)
   {
@@ -20,7 +21,8 @@ public class GetChannelResponseDto
       Category = entity.Category, 
       LogoUrl = entity.LogoUrl,
       Video = entity.Video,
-      RegistrationDate = entity.CreateAt
+      RegistrationDate = entity.CreateAt,
+      Disabled = entity.Disabled
     };
   }
 }

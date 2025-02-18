@@ -143,7 +143,7 @@
           </div>
         </div>
 
-        <div>
+        <div class="row mb-4">
           <label for="videoSubtitle" class="form-label">Legenda (URL)</label>
           
           <div class="input-group">
@@ -164,6 +164,25 @@
           </div>
           
         </div>
+
+        @if (!string.IsNullOrEmpty(Model?.Id))
+        {
+          <div class="row">
+            <div class="col-6">
+              <div class="form-check">
+                <input
+                  name="disabled"
+                  class="form-check-input disabled"
+                  type="checkbox"
+                  value="@(Model.Disabled ? "true" : "false")"
+                  @(Model.Disabled ? "checked" : "")>
+                <label class="form-check-label">
+                  Desativar
+                </label>
+              </div>
+            </div>
+          </div>
+        }
       </div>
       
       <div class="modal-footer d-flex justify-content-between">

@@ -46,8 +46,11 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
   {
     Expression<Func<SeriesEntity, bool>> filterExpression = dto.Filter switch
     {
-      ESeriesSearchFilter.CATEGORY => r => r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase),
-      _ => r => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase)
+      ESeriesSearchFilter.CATEGORY => r => 
+        r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+      
+      _ => r => 
+        r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
     };
 
     FilterDefinition<SeriesEntity> filter = Builders<SeriesEntity>.Filter.Where(filterExpression);
@@ -73,11 +76,13 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
       .Group(
         r => r.Category,
         g => 
-          new ItemsByCategory<SeriesEntity>(g.Key, g.OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
+          new ItemsByCategory<SeriesEntity>(
+            g.Key, 
+            g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
       .ToListAsync();
   }
 
-  public async Task<SeriesEntity?> GetEpisodesBySeasonAsync(string serieId, int season)
+  public async Task<SeriesEntity?> GetEpisodesBySeasonAsync(string serieId, int season, bool includeDisabled)
   {
     var filter = Builders<SeriesEntity>.Filter.Eq(r => r.Id, serieId);
     var projection = Builders<SeriesEntity>.Projection.Expression(
@@ -86,7 +91,10 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         Id = r.Id,
         Title = r.Title,
         NumberSeasons = r.NumberSeasons,
-        Episodes = r.Episodes.Where(e => e.Season == season).OrderBy(e => e.Number).ToList()
+        Episodes = r.Episodes
+          .Where(e => e.Season == season && (!e.Disabled || includeDisabled))
+          .OrderBy(e => e.Number)
+          .ToList()
       }
     );
     
@@ -112,7 +120,8 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
       .Set(r => r.NumberSeasons, entity.NumberSeasons)
       .Set(r => r.ReleaseYear, entity.ReleaseYear)
       .Set(r => r.ParentalRating, entity.ParentalRating)
-      .Set(r => r.UpdateAt, DateTime.UtcNow);
+      .Set(r => r.UpdateAt, DateTime.UtcNow)
+      .Set(r => r.Disabled, entity.Disabled);
 
     await _collection.UpdateOneAsync(filter, update);
   }

@@ -134,6 +134,8 @@
     $('.duration').keyup(e => 
       $(e.target).val(convertHHmmToSeconds(e.target.value)))
 
+    $('.disabled').change(e => e.target.value = e.target.checked);
+
     function remove(id) {
       if (!confirm('Deseja realmento excluir o episódio?')) return;
       location.href = `/Series/DeleteEpisode?serieId=@Model.SerieId&id=${id}`;

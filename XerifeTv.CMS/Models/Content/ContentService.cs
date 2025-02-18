@@ -59,11 +59,12 @@ public sealed class ContentService(
     {
       response = await _movieRepository.GetByFilterAsync(
         new GetMoviesByFilterRequestDto(
-          EMovieSearchFilter.CATEGORY, 
-          EMovieOrderFilter.REGISTRATION_DATE_DESC,
+          filter: EMovieSearchFilter.CATEGORY, 
+          order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
           category, 
           limit ?? limitTotalResult, 
-          currentPage ?? 1));
+          currentPage ?? 1,
+          isIncludeDisabled: false));
       
       _cacheService.SetValue(cacheKey, response);
     }
@@ -109,7 +110,12 @@ public sealed class ContentService(
     
     response = await _seriesRepository.GetByFilterAsync(
       new GetSeriesByFilterRequestDto(
-        ESeriesSearchFilter.CATEGORY, category, limit ?? limitTotalResult, 1));
+        ESeriesSearchFilter.CATEGORY, 
+        category, 
+        limit ?? limitTotalResult, 
+        currentPage: 1,
+        isIncludeDisabled: false));
+    
     _cacheService.SetValue(cacheKey, response);
 
     return Result<IEnumerable<GetSeriesContentResponseDto>>
@@ -125,7 +131,7 @@ public sealed class ContentService(
       return Result<IEnumerable<Episode>>
         .Success(response?.Episodes ?? Enumerable.Empty<Episode>());
     
-    response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season);
+    response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled: false);
     _cacheService.SetValue(cacheKey, response);
 
     return Result<IEnumerable<Episode>>
@@ -162,13 +168,28 @@ public sealed class ContentService(
     
     var moviesTask = _movieRepository.GetByFilterAsync(
       new GetMoviesByFilterRequestDto(
-        EMovieSearchFilter.TITLE, EMovieOrderFilter.TITLE, title, limit ?? limitTotalResult, 1));
+        filter: EMovieSearchFilter.TITLE, 
+        order: EMovieOrderFilter.TITLE, 
+        title, 
+        limit ?? limitTotalResult, 
+        currentPage: 1,
+        isIncludeDisabled: false));
 
     var seriesTask = _seriesRepository.GetByFilterAsync(
-      new GetSeriesByFilterRequestDto(ESeriesSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
+      new GetSeriesByFilterRequestDto(
+        ESeriesSearchFilter.TITLE, 
+        title, 
+        limit ?? limitTotalResult, 
+        currentPage: 1,
+        isIncludeDisabled: false));
 
     var channelsTask = _channelRepository.GetByFilterAsync(
-      new GetChannelsByFilterRequestDto(EChannelSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
+      new GetChannelsByFilterRequestDto(
+        EChannelSearchFilter.TITLE, 
+        title, 
+        limit ?? limitTotalResult, 
+        currentPage: 1,
+        isIncludeDisabled: false));
       
     await Task.WhenAll(moviesTask, seriesTask, channelsTask);
     

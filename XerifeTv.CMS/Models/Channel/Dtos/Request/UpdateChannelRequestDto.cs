@@ -11,6 +11,7 @@ public class UpdateChannelRequestDto
   public string VideoUrl { get; init; } = string.Empty;
   public long VideoDuration { get; init; }
   public string VideoStreamFormat { get; init; } = string.Empty;
+  public bool Disabled { get; init; } = false;
 
   public ChannelEntity ToEntity()
   {
@@ -20,7 +21,8 @@ public class UpdateChannelRequestDto
       Title = Title,
       Category = Category,
       LogoUrl = LogoUrl,
-      Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat)
+      Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat),
+      Disabled = Disabled
     };
   }
 }

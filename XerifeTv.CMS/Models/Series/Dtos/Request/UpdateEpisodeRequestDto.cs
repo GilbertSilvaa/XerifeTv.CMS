@@ -14,6 +14,7 @@ public class UpdateEpisodeRequestDto
   public long VideoDuration { get; init; }
   public string VideoStreamFormat { get; init; } = string.Empty;
   public string? VideoSubtitle { get; init; }
+  public bool Disabled { get; init; } = false;
 
   public Episode ToEntity()
   {
@@ -24,7 +25,8 @@ public class UpdateEpisodeRequestDto
       BannerUrl = BannerUrl,
       Number = Number,
       Season = Season,
-      Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle)
+      Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle),
+      Disabled = Disabled
     };
   }
 }

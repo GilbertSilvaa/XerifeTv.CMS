@@ -22,7 +22,12 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
     if (filter is ESeriesSearchFilter && !string.IsNullOrEmpty(search))
     {
       result = await _service.GetByFilter(
-        new GetSeriesByFilterRequestDto(filter, search, limitResultsPage, currentPage));
+        new GetSeriesByFilterRequestDto(
+          filter, 
+          search, 
+          limitResultsPage, 
+          currentPage,
+          isIncludeDisabled: true));
 
       ViewBag.Search = search;
       ViewBag.Filter = filter.ToString()?.ToLower();
@@ -96,7 +101,7 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
     ViewBag.SerieId = id;
     ViewBag.SeasonFilter = seasonFilter;
 
-    var response = await _service.GetEpisodesBySeason(id, seasonFilter ?? 1);
+    var response = await _service.GetEpisodesBySeason(id, seasonFilter ?? 1, includeDisabled: true);
 
     if (response.IsSuccess)
     {

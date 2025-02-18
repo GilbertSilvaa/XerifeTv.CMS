@@ -113,8 +113,27 @@
           value="0">
       </div>
 
-      <hr />
+      @if (Model is GetChannelResponseDto)
+      {
+        <div class="row mb-4">
+          <div class="col-6">
+            <div class="form-check">
+              <input
+                id="disabled"
+                name="disabled"
+                class="form-check-input"
+                type="checkbox"
+                value="@(Model.Disabled ? "true" : "false")"
+                @(Model.Disabled ? "checked" : "")>
+              <label class="form-check-label" for="disabled">
+                Desativar
+              </label>
+            </div>
+          </div>
+        </div>
+      }
 
+      <hr />
       <div class="d-flex align-items-center justify-content-between">
         <button type="submit" class="btn btn-primary mt-2">
           @(Model is GetChannelResponseDto ? "Editar" : "Cadastrar")
@@ -137,5 +156,7 @@
       if (!confirm('Deseja realmente remover o canal?')) return;
       location.href = '/Channels/Delete/@Model?.Id'
     }
+
+    $('#disabled').change(e => e.target.value = e.target.checked);
   </script>
 }
