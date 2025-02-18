@@ -101,7 +101,7 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
     ViewBag.SerieId = id;
     ViewBag.SeasonFilter = seasonFilter;
 
-    var response = await _service.GetEpisodesBySeason(id, seasonFilter ?? 1);
+    var response = await _service.GetEpisodesBySeason(id, seasonFilter ?? 1, includeDisabled: true);
 
     if (response.IsSuccess)
     {

@@ -131,7 +131,7 @@ public sealed class ContentService(
       return Result<IEnumerable<Episode>>
         .Success(response?.Episodes ?? Enumerable.Empty<Episode>());
     
-    response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season);
+    response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled: false);
     _cacheService.SetValue(cacheKey, response);
 
     return Result<IEnumerable<Episode>>

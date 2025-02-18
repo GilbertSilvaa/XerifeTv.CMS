@@ -82,7 +82,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
       .ToListAsync();
   }
 
-  public async Task<SeriesEntity?> GetEpisodesBySeasonAsync(string serieId, int season)
+  public async Task<SeriesEntity?> GetEpisodesBySeasonAsync(string serieId, int season, bool includeDisabled)
   {
     var filter = Builders<SeriesEntity>.Filter.Eq(r => r.Id, serieId);
     var projection = Builders<SeriesEntity>.Projection.Expression(
@@ -91,7 +91,10 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         Id = r.Id,
         Title = r.Title,
         NumberSeasons = r.NumberSeasons,
-        Episodes = r.Episodes.Where(e => e.Season == season).OrderBy(e => e.Number).ToList()
+        Episodes = r.Episodes
+          .Where(e => e.Season == season && (!e.Disabled || includeDisabled))
+          .OrderBy(e => e.Number)
+          .ToList()
       }
     );
     
