@@ -56,6 +56,7 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
         g => new ItemsByCategory<MovieEntity>(
           g.Key, 
           g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
+      .Match(g => g.Items.Any())
       .ToListAsync();
   }
 }
