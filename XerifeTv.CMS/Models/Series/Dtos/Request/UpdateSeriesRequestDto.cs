@@ -12,6 +12,7 @@ public class UpdateSeriesRequestDto
   public int ParentalRating { get; init; }
   public float Review { get; init; }
   public int NumberSeasons { get; init; }
+  public bool Disabled { get; init; } = false;
 
   public SeriesEntity ToEntity()
   {
@@ -26,7 +27,8 @@ public class UpdateSeriesRequestDto
       ReleaseYear = ReleaseYear,
       ParentalRating = ParentalRating,
       NumberSeasons = NumberSeasons,
-      Review = Review
+      Review = Review,
+      Disabled = Disabled
     };
   }
 }

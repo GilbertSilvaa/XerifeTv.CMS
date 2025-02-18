@@ -110,7 +110,12 @@ public sealed class ContentService(
     
     response = await _seriesRepository.GetByFilterAsync(
       new GetSeriesByFilterRequestDto(
-        ESeriesSearchFilter.CATEGORY, category, limit ?? limitTotalResult, 1));
+        ESeriesSearchFilter.CATEGORY, 
+        category, 
+        limit ?? limitTotalResult, 
+        currentPage: 1,
+        isIncludeDisabled: false));
+    
     _cacheService.SetValue(cacheKey, response);
 
     return Result<IEnumerable<GetSeriesContentResponseDto>>
@@ -171,7 +176,12 @@ public sealed class ContentService(
         isIncludeDisabled: false));
 
     var seriesTask = _seriesRepository.GetByFilterAsync(
-      new GetSeriesByFilterRequestDto(ESeriesSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
+      new GetSeriesByFilterRequestDto(
+        ESeriesSearchFilter.TITLE, 
+        title, 
+        limit ?? limitTotalResult, 
+        currentPage: 1,
+        isIncludeDisabled: false));
 
     var channelsTask = _channelRepository.GetByFilterAsync(
       new GetChannelsByFilterRequestDto(

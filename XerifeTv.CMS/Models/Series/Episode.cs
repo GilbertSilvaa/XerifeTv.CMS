@@ -10,5 +10,5 @@ public class Episode : BaseEntity
   public int Number { get; set; }
   public int Season { get; set; }
   public Video? Video { get; set; }
-  public bool? Disabled { get; set; } = false;
+  public bool Disabled { get; set; } = false;
 }

@@ -22,7 +22,12 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
     if (filter is ESeriesSearchFilter && !string.IsNullOrEmpty(search))
     {
       result = await _service.GetByFilter(
-        new GetSeriesByFilterRequestDto(filter, search, limitResultsPage, currentPage));
+        new GetSeriesByFilterRequestDto(
+          filter, 
+          search, 
+          limitResultsPage, 
+          currentPage,
+          isIncludeDisabled: true));
 
       ViewBag.Search = search;
       ViewBag.Filter = filter.ToString()?.ToLower();
