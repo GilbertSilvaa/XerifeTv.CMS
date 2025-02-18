@@ -174,7 +174,12 @@ public sealed class ContentService(
       new GetSeriesByFilterRequestDto(ESeriesSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
 
     var channelsTask = _channelRepository.GetByFilterAsync(
-      new GetChannelsByFilterRequestDto(EChannelSearchFilter.TITLE, title, limit ?? limitTotalResult, 1));
+      new GetChannelsByFilterRequestDto(
+        EChannelSearchFilter.TITLE, 
+        title, 
+        limit ?? limitTotalResult, 
+        currentPage: 1,
+        isIncludeDisabled: false));
       
     await Task.WhenAll(moviesTask, seriesTask, channelsTask);
     

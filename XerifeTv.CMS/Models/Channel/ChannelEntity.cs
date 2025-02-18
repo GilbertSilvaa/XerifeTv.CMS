@@ -9,5 +9,5 @@ public sealed class ChannelEntity : BaseEntity
   public string Category { get; set; } = string.Empty;
   public string LogoUrl { get; set; } = string.Empty;
   public Video? Video { get; set; }
-  public bool? Disabled { get; set; } = false;
+  public bool Disabled { get; set; } = false;
 }

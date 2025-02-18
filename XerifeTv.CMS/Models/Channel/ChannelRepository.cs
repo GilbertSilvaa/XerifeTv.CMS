@@ -7,6 +7,7 @@ using XerifeTv.CMS.Models.Channel.Interfaces;
 using XerifeTv.CMS.Models.Channel.Enums;
 using XerifeTv.CMS.MongoDB;
 using MongoDB.Driver;
+using MongoDB.Driver.Linq;
 
 namespace XerifeTv.CMS.Models.Channel;
 
@@ -17,9 +18,14 @@ public sealed class ChannelRepository(IOptions<DBSettings> options)
   {
     Expression<Func<ChannelEntity, bool>> filterExpression = dto.Filter switch
     {
-      EChannelSearchFilter.TITLE => r => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase),
-      EChannelSearchFilter.CATEGORY => r => r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase),
-      _ => r => r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase)
+      EChannelSearchFilter.TITLE => r => 
+        r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+      
+      EChannelSearchFilter.CATEGORY => r => 
+        r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+      
+      _ => r => 
+        r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
     };
 
     FilterDefinition<ChannelEntity> filter = Builders<ChannelEntity>.Filter.Where(filterExpression);
@@ -43,7 +49,9 @@ public sealed class ChannelRepository(IOptions<DBSettings> options)
       .Group(
         r => r.Category,
         g => 
-          new ItemsByCategory<ChannelEntity>(g.Key, g.OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
+          new ItemsByCategory<ChannelEntity>(
+            g.Key, 
+            g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
       .ToListAsync();
   }
 }

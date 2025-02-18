@@ -22,7 +22,12 @@ public class ChannelsController(IChannelService _service, ILogger<ChannelsContro
     if (filter is EChannelSearchFilter && !string.IsNullOrEmpty(search))
     {
       result = await _service.GetByFilter(
-        new GetChannelsByFilterRequestDto(filter, search, limitResultsPage, currentPage));
+        new GetChannelsByFilterRequestDto(
+          filter, 
+          search, 
+          limitResultsPage, 
+          currentPage,
+          isIncludeDisabled: true));
 
       ViewBag.Search = search;
       ViewBag.Filter = filter.ToString()?.ToLower();
