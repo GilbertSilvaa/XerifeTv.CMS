@@ -75,10 +75,10 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
       .Aggregate()
       .Group(
         r => r.Category,
-        g => 
-          new ItemsByCategory<SeriesEntity>(
-            g.Key, 
-            g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
+        g => new ItemsByCategory<SeriesEntity>(
+          g.Key, 
+          g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
+      .Match(g => g.Items.Any())
       .ToListAsync();
   }
 
