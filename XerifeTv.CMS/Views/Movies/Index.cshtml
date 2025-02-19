@@ -94,6 +94,15 @@
               CC
             </span>
           }
+          
+          @if (@movie.Disabled)
+          {
+            <span 
+              class="position-absolute text-danger"
+              style="top: 6px; left: 8px; font-size: 24px;">
+              <i class="fa-solid fa-circle-exclamation"></i>
+            </span>
+          }
         </div>
 
         <div class="card-body">

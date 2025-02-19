@@ -74,14 +74,25 @@
     @foreach (var serie in Model)
     {
       <div class="card col-md-4 col-xl-2 pt-1">
-        <img 
-          src="@serie.PosterUrl"
-          onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
-          class="card-img-top" 
-          alt="@serie.Title" 
-          loading="lazy" 
-          style="height: 14rem;">
-        
+        <div class="w-auto h-100 position-relative">
+          <img
+            src="@serie.PosterUrl"
+            onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
+            class="card-img-top"
+            alt="@serie.Title"
+            loading="lazy"
+            style="height: 14rem;">
+
+          @if (@serie.Disabled)
+          {
+            <span
+              class="position-absolute text-danger"
+              style="top: 6px; left: 8px; font-size: 24px;">
+              <i class="fa-solid fa-circle-exclamation"></i>
+            </span>
+          }  
+        </div>
+
         <div class="card-body">
           <h5 class="card-title text-nowrap overflow-hidden text-truncate">@serie.Title</h5>
           <p class="card-text">@serie.Category</p>
@@ -93,19 +104,19 @@
 
             @if (!User.IsInRole("visitor"))
             {
-              <a 
-                class="btn btn-sm btn-primary" 
-                asp-controller="Series" 
-                asp-action="Form" 
+              <a
+                class="btn btn-sm btn-primary"
+                asp-controller="Series"
+                asp-action="Form"
                 asp-route-id="@serie.Id">
                 <i class="fa-solid fa-pen-to-square"></i>
               </a>
             }
 
-            <a 
-              class="btn btn-sm btn-info" 
-              asp-controller="Series" 
-              asp-action="Episodes" 
+            <a
+              class="btn btn-sm btn-info"
+              asp-controller="Series"
+              asp-action="Episodes"
               asp-route-id="@serie.Id">
               <i class="fa-solid fa-list"></i>
             </a>
