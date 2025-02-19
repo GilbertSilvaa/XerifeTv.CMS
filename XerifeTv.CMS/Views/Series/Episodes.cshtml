@@ -75,11 +75,22 @@
       <div class="card mb-3 col-md-12 col-lg-8 col-xl-5">
         <div class="row g-0">
           <div class="col-md-4">
-            <img 
-              src="@episode.BannerUrl" 
-              class="img-fluid rounded-start h-100 w-100" 
-              alt="@episode.Title"
-              style="max-height: 250px;">
+            <div class="w-auto h-100 position-relative">
+              <img
+                src="@episode.BannerUrl"
+                class="img-fluid rounded-start h-100 w-100"
+                alt="@episode.Title"
+                style="max-height: 250px;">
+              
+              @if (@episode.Disabled)
+              {
+                <span
+                  class="position-absolute text-danger"
+                  style="top: 6px; left: 8px; font-size: 24px;">
+                  <i class="fa-solid fa-circle-exclamation"></i>
+                </span>
+              }
+            </div>
           </div>
           <div class="col-md-8">
             <div class="card-body">

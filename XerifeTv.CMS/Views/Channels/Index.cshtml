@@ -74,41 +74,53 @@
   @await Html.PartialAsync("_VideoModal")
 
   <div class="row gap-3">
-    @foreach (var Channel in Model)
+    @foreach (var channel in Model)
     {
       <div class="card col-md-4 col-xl-2 pt-1">
-        <img 
-          src="@Channel.LogoUrl"
-          onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
-          class="card-img-top" 
-          alt="@Channel.Title" 
-          loading="lazy" 
-          style="height: 9rem;">
-        
+        <div class="w-auto h-100 position-relative">
+          <img
+            src="@channel.LogoUrl"
+            onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
+            class="card-img-top"
+            alt="@channel.Title"
+            loading="lazy"
+            style="height: 9rem;"/>
+
+          @if (channel.Disabled)
+          {
+            <span
+              class="position-absolute text-danger"
+              style="top: 6px; left: 8px; font-size: 24px;">
+              <i class="fa-solid fa-circle-exclamation"></i>
+            </span>
+          }
+          
+        </div>
+
         <div class="card-body">
-          <h5 class="card-title text-nowrap overflow-hidden text-truncate">@Channel.Title</h5>
-          <p class="card-text">@Channel.Category</p>
+          <h5 class="card-title text-nowrap overflow-hidden text-truncate">@channel.Title</h5>
+          <p class="card-text">@channel.Category</p>
 
           <div class="d-flex gap-1">
             @if (!User.IsInRole("visitor"))
             {
-              <a 
-                class="btn btn-sm btn-primary" 
-                asp-controller="Channels" 
-                asp-action="Form" 
-                asp-route-id="@Channel.Id">
+              <a
+                class="btn btn-sm btn-primary"
+                asp-controller="Channels"
+                asp-action="Form"
+                asp-route-id="@channel.Id">
                 <i class="fa-solid fa-pen-to-square"></i>
               </a>
             }
 
-            <a 
-              class="btn btn-sm btn-secondary" 
-              data-bs-toggle="modal" 
+            <a
+              class="btn btn-sm btn-secondary"
+              data-bs-toggle="modal"
               data-bs-target="#videoModal"
-              data-bs-title="@Channel.Title"
-              data-bs-banner="@Channel.LogoUrl"
-              data-bs-video-url="@Channel.Video?.Url"
-              data-bs-video-format="@Channel.Video?.StreamFormat">
+              data-bs-title="@channel.Title"
+              data-bs-banner="@channel.LogoUrl"
+              data-bs-video-url="@channel.Video?.Url"
+              data-bs-video-format="@channel.Video?.StreamFormat">
               <i class="fa-solid fa-play"></i>
             </a>
           </div>
