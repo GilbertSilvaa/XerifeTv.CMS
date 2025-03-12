@@ -186,16 +186,16 @@
       </div>
       
       <div class="modal-footer d-flex justify-content-between">
+        <button type="submit" class="btn btn-primary">
+          @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
+        </button>
+
         @if (!string.IsNullOrEmpty(Model?.Id))
         {
           <button type="button" class="btn btn-danger" onclick="remove('@Model?.Id')">
             Excluir
           </button>
         }
-
-        <button type="submit" class="btn btn-primary">
-          @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
-        </button>
       </div>
     </form>
   </div>
