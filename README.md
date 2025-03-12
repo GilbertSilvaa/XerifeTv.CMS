@@ -1,18 +1,21 @@
-![Logo](https://i.ibb.co/tD717gs/logo.png)
+![Logo](https://i.ibb.co/whNKg9YH/logo.png)
 #
 
 XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OTT) streaming platforms. This project enables efficient organization and management of movies, series, episodes, and TV channels, providing a comprehensive solution for digital content providers.
 
 ####
-![screenshot](https://i.ibb.co/0C7Kjjp/Screenshot-4.png)
+![screenshot](https://i.ibb.co/4RxSf7qy/Screenshot-from-2025-03-12-12-04-01.png)
 
 ####
 ## ✔ Key Features:
-- [X]  **Content Management:** Easily register, edit, and organize movies, series, episodes, and TV channels.
-- [X]  **JWT Authentication:** Secure authentication system based on JSON Web Tokens.
-- [X]  **Swagger Documentation:** REST API routes documented with Swagger.
-- [X]  **API Content Route Caching:** Store the data returned from the content API in cache.
-- [X]  **Supabase Storage Integration:** Store files (.vtt, images, etc...) in storage bucket.
+- [X]  **Content Management:** Easily register, edit, and organize movies, series, episodes, and TV channels.  
+- [X]  **User Roles & Permissions:** Granular access control for administrators, content managers, and visitors.  
+- [X]  **JWT Authentication:** Secure authentication system based on JSON Web Tokens.  
+- [X]  **External Content API:** Provide a REST API to securely expose registered content for consumption by external applications and websites. 
+- [X]  **API Caching for External Content:** Optimize performance by caching responses from the External Content API, reducing server load and improving response times.  
+- [X]  **Supabase Storage Integration:** Store files (.vtt, images, etc...) in a storage bucket.  
+- [X]  **Swagger Documentation:** REST API routes documented with Swagger.  
+- [ ]  **Refresh Token Implementation:** Enhance authentication security by adding refresh token support.  
 
 ## 🚀 Technologies:
 - C#
