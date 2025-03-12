@@ -3,10 +3,15 @@
 
   forms.forEach(form => {
     if (form.method.toUpperCase() === 'POST') {
-      const elements = form.querySelectorAll('input, select, button');
+      const elements = form.querySelectorAll('input, select, button, textarea');
 
-      form.addEventListener('submit', () =>
-        elements.forEach(element => element.disabled = true));
+      form.addEventListener('submit', function() {
+        elements.forEach(element => {
+          element.tagName.toLowerCase() === 'button'
+            ? element.disabled = true
+            : element.setAttribute('readonly', true);
+        });
+      });
     }
   });
 });
