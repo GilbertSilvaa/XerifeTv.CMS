@@ -39,7 +39,7 @@
             src="@Model.PosterUrl"
             onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
             alt="poster" 
-            class="w-25 h-100 top-50 position-absolute" 
+            class="d-none d-md-block w-25 h-100 top-50 position-absolute" 
             style="left: 1rem; border: 3px solid #FFF; border-radius: 1rem;" />
 
           <h5 class="position-absolute" style="top: 0.5rem; right: 0.5rem;">
@@ -53,8 +53,8 @@
           </h5>
         </div>
 
-        <div class="w-100 d-flex gap-1">
-          <div style="min-width: 30%">
+        <div class="w-100 d-flex gap-1 justify-content-center">
+          <div class="d-none d-md-block" style="min-width: 30%">
             <div style="margin-top: 55%;" class="text-center">
               <span class="text-warning"><i class="fa-solid fa-star"></i></span>
               <span class="fst-italic">@Model.Review.ToString("0.0")</span>
