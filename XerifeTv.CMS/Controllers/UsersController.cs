@@ -57,11 +57,11 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
       HttpOnly = true,
       Secure = true,
       SameSite = SameSiteMode.Strict,
-      Expires = DateTime.UtcNow.AddDays(30)
+      Expires = DateTime.UtcNow.AddHours(1)
     };
-
-    var token = response.Data?.Token ?? string.Empty;
-    Response.Cookies.Append("token", token, cookieOptions);
+    
+    Response.Cookies.Append("token", response.Data.Token, cookieOptions);
+    Response.Cookies.Append("refreshToken", response.Data.RefreshToken, cookieOptions);
 
     _logger.LogInformation($"{User.Identity?.Name} logged into the system");
 
