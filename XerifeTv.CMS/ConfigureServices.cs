@@ -58,26 +58,16 @@ public static class ConfigureServices
   private static IServiceCollection AddAuthAuthorization(
     this IServiceCollection services, IConfiguration _configuration)
   {
-    services.AddAuthentication(o =>
+    services.AddAuthentication(options =>
     {
-      o.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-      o.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+      options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+      options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     })
-    .AddJwtBearer(o =>
+    .AddJwtBearer(options =>
     {
-      o.TokenValidationParameters = new TokenValidationParameters
-      {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
-        ValidateIssuerSigningKey = true,
-        ValidIssuer = _configuration["Jwt:Issuer"],
-        ValidAudience = _configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(
-          Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? string.Empty))
-      };
+      options.TokenValidationParameters = TokenService.GetTokenValidationParameters(_configuration);
 
-      o.Events = new JwtBearerEvents
+      options.Events = new JwtBearerEvents
       {
         OnMessageReceived = context =>
         {
@@ -93,9 +83,9 @@ public static class ConfigureServices
 
   public static IServiceCollection AddSwagger(this IServiceCollection services)
   {
-    services.AddSwaggerGen(c =>
+    services.AddSwaggerGen(options =>
     {
-      c.SwaggerDoc("v1", new OpenApiInfo
+      options.SwaggerDoc("v1", new OpenApiInfo
       {
         Version = "v1",
         Title = "Content API",

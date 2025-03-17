@@ -74,7 +74,9 @@ public sealed class UserService(
           new Error("401", "credenciais invalidas"));
 
       return Result<LoginUserResponseDto>.Success(
-        new LoginUserResponseDto(_tokenService.GenerateToken(response)));
+        new LoginUserResponseDto(
+          _tokenService.GenerateToken(response), 
+          _tokenService.GenerateRefreshToken(response)));
     }
     catch (Exception ex)
     {

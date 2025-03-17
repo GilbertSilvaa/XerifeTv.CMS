@@ -1,4 +1,5 @@
 using XerifeTv.CMS;
+using XerifeTv.CMS.Middlewares;
 using XerifeTv.CMS.MongoDB;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -29,6 +30,8 @@ if (!app.Environment.IsDevelopment())
   app.UseHsts();
 }
 
+app.UseMiddleware<RefreshTokenMiddleware>();
+
 app.UseStatusCodePages(context =>
 {
   var response = context.HttpContext.Response;
@@ -57,10 +60,10 @@ app.UseAuthorization();
 
 app.UseSwagger();
 
-app.UseSwaggerUI(c =>
+app.UseSwaggerUI(options =>
 {
-  c.SwaggerEndpoint("/swagger/v1/swagger.json", "Content API version 1");
-  c.RoutePrefix = "Api";
+  options.SwaggerEndpoint("/swagger/v1/swagger.json", "Content API version 1");
+  options.RoutePrefix = "Api";
 });
 
 app.MapControllerRoute(
