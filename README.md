@@ -16,7 +16,7 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 - [X]  **Supabase Storage Integration:** Store files (.vtt, images, etc...) in a storage bucket.  
 - [X]  **Swagger Documentation:** REST API routes documented with Swagger.  
 - [X]  **Light/Dark Theme:** Enable users to switch between light and dark themes.
-- [ ]  **Refresh Token Implementation:** Enhance authentication security by adding refresh token support.  
+- [X]  **Refresh Token Implementation:** Enhance authentication security by adding refresh token support.  
 ## 🚀 Technologies:
 - C#
 - ASP.NET Core
