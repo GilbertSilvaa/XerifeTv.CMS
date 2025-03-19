@@ -10,6 +10,14 @@ namespace XerifeTv.CMS.Controllers;
 [Authorize(Roles = "admin")]
 public class UsersController(IUserService _service, ILogger<UsersController> _logger) : Controller
 {
+  private readonly CookieOptions _cookieOptions = new CookieOptions
+  {
+    HttpOnly = true,
+    Secure = true,
+    SameSite = SameSiteMode.Strict,
+    Expires = DateTime.UtcNow.AddHours(6)
+  };
+  
   public async Task<IActionResult> Index(MessageView? messageView)
   {
     ViewData["Message"] = messageView;
@@ -51,17 +59,9 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
       return View();
     }
-
-    var cookieOptions = new CookieOptions
-    {
-      HttpOnly = true,
-      Secure = true,
-      SameSite = SameSiteMode.Strict,
-      Expires = DateTime.UtcNow.AddHours(1)
-    };
     
-    Response.Cookies.Append("token", response.Data.Token, cookieOptions);
-    Response.Cookies.Append("refreshToken", response.Data.RefreshToken, cookieOptions);
+    Response.Cookies.Append("token", response.Data.Token, _cookieOptions);
+    Response.Cookies.Append("refreshToken", response.Data.RefreshToken, _cookieOptions);
 
     _logger.LogInformation($"{User.Identity?.Name} logged into the system");
 
@@ -106,5 +106,34 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     _logger.LogInformation($"{User.Identity?.Name} tried to access a page for which he is not authorized");
 
     return View();
+  }
+
+  [AllowAnonymous]
+  public async Task<IActionResult> RefreshSession(string? successRedirectUrl = null)
+  {
+    var refreshToken = Request.Cookies["refreshToken"];
+    
+    if (string.IsNullOrEmpty(refreshToken)) 
+      return RedirectToAction("SignIn");
+    
+    var response = await _service.TryRefreshSession(refreshToken);
+    
+    if (response.IsFailure) 
+      return RedirectToAction("SignIn");
+    
+    var (newToken,newRefreshToken) = response.Data;
+
+    if (!string.IsNullOrEmpty(newToken) && !string.IsNullOrEmpty(newRefreshToken))
+    {
+      Response.Cookies.Append("token", newToken, _cookieOptions);
+      Response.Cookies.Append("refreshToken", newRefreshToken, _cookieOptions);
+      
+      if (string.IsNullOrEmpty(successRedirectUrl))
+        return RedirectToAction("Index", "Home");
+        
+      return Redirect(successRedirectUrl);
+    }
+    
+    return RedirectToAction("SignIn");
   }
 }

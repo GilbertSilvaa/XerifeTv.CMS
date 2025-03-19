@@ -106,4 +106,26 @@ public sealed class UserService(
       return Result<bool>.Failure(error);
     }
   }
+
+  public async Task<Result<(string? newToken, string? newRefreshToken)>> TryRefreshSession(string refreshToken)
+  {
+    try
+    {
+      var (isValid, userName) = await _tokenService.ValidateTokenAsync(refreshToken);
+      
+      if (!isValid) 
+        return Result<(string?, string?)>.Failure(new Error("401", "token invalid"));
+      
+      var user = await _repository.GetByUserNameAsync(userName);
+      
+      return Result<(string?, string?)>.Success((
+        _tokenService.GenerateToken(user), 
+        _tokenService.GenerateRefreshToken(user)));
+    }
+    catch (Exception ex)
+    {
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<(string?, string?)>.Failure(error);
+    }
+  }
 }
