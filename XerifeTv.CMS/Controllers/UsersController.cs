@@ -74,6 +74,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     _logger.LogInformation($"{User.Identity?.Name} logged out of the system");
 
     Response.Cookies.Delete("token");
+    Response.Cookies.Delete("refreshToken");
     return RedirectToAction("Index", "Home");
   }
 
