@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Models.Abstractions;
 using XerifeTv.CMS.Models.Abstractions.Services;
 
 namespace XerifeTv.CMS.Controllers;
 
+[Authorize]
 public class StorageFilesController(
   IStorageFilesService _service, 
   ILogger<StorageFilesController> _logger) : Controller

@@ -10,4 +10,5 @@ public interface IUserService
   Task<Result<LoginUserResponseDto>> Login(LoginUserRequestDto dto);
   Task<Result<PagedList<GetUserRequestDto>>> Get(int currentPage, int limit);
   Task<Result<bool>> Delete(string id);
+  Task<Result<(string? newToken, string? newRefreshToken)>> TryRefreshSession(string refreshToken);
 }

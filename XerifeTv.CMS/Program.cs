@@ -1,5 +1,4 @@
 using XerifeTv.CMS;
-using XerifeTv.CMS.Middlewares;
 using XerifeTv.CMS.MongoDB;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -30,14 +29,15 @@ if (!app.Environment.IsDevelopment())
   app.UseHsts();
 }
 
-app.UseMiddleware<RefreshTokenMiddleware>();
-
 app.UseStatusCodePages(context =>
 {
   var response = context.HttpContext.Response;
 
   if (response.StatusCode == 401)
-    response.Redirect("/Users/SignIn");
+  {
+    var originalUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+    response.Redirect($"/Users/RefreshSession?successRedirectUrl={originalUrl}");
+  }
 
   if (response.StatusCode == 403)
     response.Redirect("/Users/UserUnauthorized");
