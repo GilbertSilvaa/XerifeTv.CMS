@@ -1,5 +1,5 @@
 ﻿<div
-  class="modal fade"
+  class="modal fade importFromExcelModal"
   id="importFromExcelModal"
   tabindex="-1"
   aria-labelledby="importFromExcelModal-Label"
@@ -17,22 +17,41 @@
       </div>
 
       <div class="modal-body">
-        <div class="w-100">
+        <div class="w-100 d-flex flex-column gap-4">
+          <div class="w-100 p-3 d-flex justify-content-between align-items-center rounded-2 bg-body-secondary">
+            <div class="d-flex justify-content-center align-items-center gap-2">
+              <img 
+                src="~/assets/icons/spreadsheet_icon.png" 
+                alt="spreadsheet_icon"
+                style="height: 24px"/>
+              <span class="fw-bold">Template da Planilha</span>
+            </div>
+            <a
+              href="https://ursqtxeiqhbgjdeplxih.supabase.co/storage/v1/object/public/filetemplates/template_spreadshhet_movies.xlsx"
+              download="spreadshhet_movies.xlsx"
+              class="btn btn-sm btn-secondary shadow-sm">
+              Download
+            </a>
+          </div>
+          
           <div>
             <label for="importExcelFile" class="btn-xl-upload-file">
-              <i class="fa-solid fa-cloud-arrow-up"></i> 
+              <i class="fa-solid fa-cloud-arrow-up"></i>
               Selecione um Arquivo
             </label>
-            <input 
-              id="importExcelFile" 
-              type="file" 
-              class="d-none" 
+            <input
+              id="importExcelFile"
+              type="file"
+              class="d-none importExcelFile"
               accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
 
-            <div 
+            <div
               class="file-description d-flex justify-content-between align-items-center"
               style="font-weight: 500; font-size: 14px;">
-              <span class="file-uploaded-name d-flex align-items-center gap-2"></span>
+              <span class="file-uploaded-name d-flex align-items-center gap-2">
+                <i></i>
+                <span></span>
+              </span>
               <span class="supported-formats">Formatos: .CSV, .XLS, .XLSX</span>
             </div>
           </div>
@@ -40,7 +59,7 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-success shadow-sm btn-submit" disabled>Cadastrar</button>
+        <button type="button" class="btn btn-success shadow-sm btn-excel-file-submit" disabled>Cadastrar</button>
       </div>
     </div>
   </div>

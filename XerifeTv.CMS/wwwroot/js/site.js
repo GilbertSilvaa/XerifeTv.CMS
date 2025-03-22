@@ -49,12 +49,13 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // upload excel file 
-  $('#importExcelFile').on('change', function (){
+  $('.importExcelFile').on('change', function (){
     const file = $(this).prop('files')[0];
     if (!file) return;
     
-    $('.file-uploaded-name').html(`<i class="fa-solid fa-file-excel"></i> ${file.name}`);
-    $('.btn-submit').prop('disabled', false);
+    $('.file-uploaded-name i').addClass('fa-solid fa-file-excel');
+    $('.file-uploaded-name span').text(file.name);
+    $('.btn-excel-file-submit').prop('disabled', false);
     
     const fileReader = new FileReader();
     
@@ -63,5 +64,13 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     fileReader.readAsDataURL(file);
+  });
+
+  // when closing the modal reset form
+  $('.importFromExcelModal').on('hidden.bs.modal', () => {
+    $('.importExcelFile').val('');
+    $('.file-uploaded-name i').removeClass('fa-solid fa-file-excel');
+    $('.file-uploaded-name span').text('');
+    $('.btn-excel-file-submit').prop('disabled', true);
   });
 });
