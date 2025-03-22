@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const data = fileReader.result;
     }
     
-    fileReader.readAsDataURL(file);
+    fileReader.readAsDataURL(file); 
   });
 
   // when closing the modal reset form
