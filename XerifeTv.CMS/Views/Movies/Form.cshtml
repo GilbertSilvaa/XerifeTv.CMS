@@ -10,6 +10,8 @@
   string[] streamFormats = {"mp4", "hls", "dash", "m3u8", "rtmp", "mpeg-ts", "WebM"};
 }
 
+@Html.Partial("_ImportFromExcelModal")
+
 <div class="container">
   <header>
     <div class="d-flex justify-content-between">
@@ -24,7 +26,14 @@
 
       @if (Model is null)
       {
-        <div class="d-none d-lg-flex align-items-center">
+        <div class="d-none d-lg-flex align-items-center gap-3">
+          <button 
+            class="btn btn-sm btn-success d-flex justify-content-center align-items-center gap-2 shadow-none"
+            data-bs-toggle="modal" 
+            data-bs-target="#importFromExcelModal">
+            <i class="fa-regular fa-file-excel"></i> Importar
+          </button>
+
           <form class="input-group input-group-sm" id="imdb-form">
             <span class="input-group-text">Imdb ID</span>
             <input type="text" name="imdbId" class="form-control shadow-none" required>
@@ -98,30 +107,15 @@
             @foreach (int year in parentalRatings)
             {
               <div class="form-check form-check-inline">
-                @{
-                  if (Model?.ParentalRating == year)
-                  {
-                    <input 
-                      class="form-check-input"
-                      type="radio"
-                      name="parentalRating"
-                      id="parentalRating-@year"
-                      value="@year"
-                      checked
-                      required>
-                  }
-                  else
-                  {
-                    <input 
-                      class="form-check-input"
-                      type="radio"
-                      name="parentalRating"
-                      id="parentalRating-@year"
-                      value="@year"
-                      required>
-                  }
-                }
-
+                <input 
+                  class="form-check-input"
+                  type="radio"
+                  name="parentalRating"
+                  id="parentalRating-@year"
+                  value="@year"
+                  @(Model?.ParentalRating == year ? "checked" : "")
+                  required>
+                  
                 <label class="form-check-label" for="parentalRating-@year">
                   @(year == 0 ? "L" : year)
                 </label>

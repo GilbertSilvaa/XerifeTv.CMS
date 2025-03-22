@@ -1,0 +1,48 @@
+﻿<div
+  class="modal fade"
+  id="importFromExcelModal"
+  tabindex="-1"
+  aria-labelledby="importFromExcelModal-Label"
+  aria-hidden="true"
+  data-bs-backdrop="static"
+  data-bs-keyboard="false">
+
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="importFromExcelModal-Label">
+          Cadastrar Filmes via Planilha
+        </h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="w-100">
+          <div>
+            <label for="importExcelFile" class="btn-xl-upload-file">
+              <i class="fa-solid fa-cloud-arrow-up"></i> 
+              Selecione um Arquivo
+            </label>
+            <input 
+              id="importExcelFile" 
+              type="file" 
+              class="d-none" 
+              accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+
+            <div 
+              class="file-description d-flex justify-content-between align-items-center"
+              style="font-weight: 500; font-size: 14px;">
+              <span class="file-uploaded-name d-flex align-items-center gap-2"></span>
+              <span class="supported-formats">Formatos: .CSV, .XLS, .XLSX</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-success shadow-sm btn-submit" disabled>Cadastrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+

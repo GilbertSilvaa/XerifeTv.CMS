@@ -1,6 +1,7 @@
 ﻿window.onload =  () => {
   const theme = localStorage.getItem('theme');
   
+  // check if dark theme
   if (theme === 'dark') {
     $('#change-theme').data('theme', 'light');
     $('#change-theme').find('i').removeClass('fa-moon');
@@ -11,6 +12,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const forms = document.querySelectorAll('form');
 
+  // keeps form fields and buttons disabled during the submit
   forms.forEach(form => {
     if (form.method.toUpperCase() === 'POST') {
       const elements = form.querySelectorAll('input, select, button, textarea');
@@ -25,6 +27,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
+  // change global theme
   $('#change-theme').on('click', function (){
     const theme = $(this).data('theme');
     $('html').attr('data-bs-theme', theme);
@@ -43,5 +46,22 @@ document.addEventListener('DOMContentLoaded', function() {
       $(this).find('i').removeClass('fa-sun');
       $(this).find('i').addClass('fa-moon');
     }
+  });
+  
+  // upload excel file 
+  $('#importExcelFile').on('change', function (){
+    const file = $(this).prop('files')[0];
+    if (!file) return;
+    
+    $('.file-uploaded-name').html(`<i class="fa-solid fa-file-excel"></i> ${file.name}`);
+    $('.btn-submit').prop('disabled', false);
+    
+    const fileReader = new FileReader();
+    
+    fileReader.onload = () => {
+      const data = fileReader.result;
+    }
+    
+    fileReader.readAsDataURL(file);
   });
 });
