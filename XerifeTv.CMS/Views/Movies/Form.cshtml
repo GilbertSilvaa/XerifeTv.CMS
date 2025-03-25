@@ -33,14 +33,6 @@
             data-bs-target="#importFromExcelModal">
             <i class="fa-regular fa-file-excel"></i> Importar
           </button>
-
-          <form class="input-group input-group-sm" id="imdb-form">
-            <span class="input-group-text">Imdb ID</span>
-            <input type="text" name="imdbId" class="form-control shadow-none" required>
-            <button class="btn btn-success shadow-none" type="submit">
-              <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-          </form>
         </div>  
       }
     </div>
@@ -52,26 +44,47 @@
       <input type="hidden" name="id" value="@Model?.Id">
 
       <div class="row mb-3">
-        <div class="col-6">
+        <div class="col-12 col-md-3">
+          <label for="imdbId" class="form-label">Imdb ID</label>
+          <div class="input-group">
+            <input
+              type="text"
+              name="imdbId"
+              id="imdbId"
+              class="form-control"
+              placeholder="tt999999"
+              value="@Model?.ImdbId"
+              required>
+
+            <button 
+              id="btn-get-imdb"
+              class="btn btn-success shadow-none" 
+              type="button">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+          </div>
+        </div>
+        
+        <div class="col-12 col-md-5">
           <label for="title" class="form-label">Titulo</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="title" 
-            name="title" 
-            placeholder="Digite aqui..." 
+          <input
+            type="text"
+            class="form-control"
+            id="title"
+            name="title"
+            placeholder="Digite aqui..."
             value="@Model?.Title"
             required>
         </div>
 
-        <div class="col-6">
+        <div class="col-12 col-md-4">
           <label for="category" class="form-label">Categoria</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="category" 
-            name="category" 
-            placeholder="ação, aventura, comédia..." 
+          <input
+            type="text"
+            class="form-control"
+            id="category"
+            name="category"
+            placeholder="ação, aventura, comédia..."
             value="@Model?.Category"
             required>
         </div>
@@ -287,11 +300,11 @@
       return JSON.parse(data.result);
     }
 
-    $('#imdb-form').submit(async (e) => {
+    $('#btn-get-imdb').click(async (e) => {
       e.preventDefault();
 
-      const formData = new FormData(e.target);
-      const { imdbId } = Object.fromEntries(formData.entries());
+      const imdbId = $('#imdbId').val();
+      if (!imdbId) return;
 
       const response = await getMovieByTmdb(imdbId);
       if (!response) return;
