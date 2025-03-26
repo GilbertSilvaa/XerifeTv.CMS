@@ -8,4 +8,5 @@ public interface IMovieRepository : IBaseRepository<MovieEntity>
 {
   Task<PagedList<MovieEntity>> GetByFilterAsync(GetMoviesByFilterRequestDto dto);
   Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(int limit);
+  Task<MovieEntity?> GetByImdbIdAsync(string imdbId);
 }

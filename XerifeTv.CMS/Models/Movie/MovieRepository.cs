@@ -47,6 +47,13 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
     return new PagedList<MovieEntity>(dto.CurrentPage, totalPages, items);
   }
 
+  public async Task<MovieEntity?> GetByImdbIdAsync(string imdbId)
+  {
+    return await _collection
+      .Find(r => r.ImdbId == imdbId)
+      .FirstOrDefaultAsync();
+  }
+
   public async Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(int limit)
   {
     return await _collection
