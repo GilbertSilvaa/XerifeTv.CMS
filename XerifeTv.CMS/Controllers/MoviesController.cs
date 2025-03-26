@@ -22,6 +22,13 @@ public class MoviesController(
 
     _logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
 
+    if (TempData["ErrorMessage"] is string errorMessage)
+    {
+      ViewData["Message"] = new MessageView(
+        EMessageViewType.ERROR,
+        errorMessage);
+    }
+
     if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
     {
       result = await _service.GetByFilter(
@@ -69,7 +76,10 @@ public class MoviesController(
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> Create(CreateMovieRequestDto dto)
   {
-    await _service.Create(dto);
+    var response = await _service.Create(dto);
+
+    if (response.IsFailure)
+      TempData["ErrorMessage"] = response.Error.Description ?? string.Empty;
 
     _logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
 
@@ -79,7 +89,10 @@ public class MoviesController(
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> Update(UpdateMovieRequestDto dto)
   {
-    await _service.Update(dto);
+    var response = await _service.Update(dto);
+    
+    if (response.IsFailure)
+      TempData["ErrorMessage"] = response.Error.Description ?? string.Empty;
 
     _logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
 

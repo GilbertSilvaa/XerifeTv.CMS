@@ -52,6 +52,11 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
     try
     {
       var entity = dto.ToEntity();
+      
+      if (await _repository.GetByImdbIdAsync(entity.ImdbId) != null)
+        return Result<string>.Failure(
+          new Error("409", $"Filme nao cadastrado. Imdb ID {entity.ImdbId} duplicado"));
+
       var response = await _repository.CreateAsync(entity);
       return Result<string>.Success(response);
     }
@@ -71,6 +76,11 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
 
       if (response is null)
         return Result<string>.Failure(new Error("404", "content not found"));
+
+      if (entity.ImdbId != response.ImdbId)
+        if (await _repository.GetByImdbIdAsync(entity.ImdbId) != null)
+          return Result<string>.Failure(
+            new Error("409", $"Filme nao cadastrado. Imdb ID {entity.ImdbId} duplicado"));
 
       entity.CreateAt = response.CreateAt;
       await _repository.UpdateAsync(entity);
