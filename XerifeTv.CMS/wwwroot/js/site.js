@@ -56,14 +56,6 @@ document.addEventListener('DOMContentLoaded', function() {
     $('.file-uploaded-name i').addClass('fa-solid fa-file-excel');
     $('.file-uploaded-name span').text(file.name);
     $('.btn-excel-file-submit').prop('disabled', false);
-    
-    const fileReader = new FileReader();
-    
-    fileReader.onload = () => {
-      const data = fileReader.result;
-    }
-    
-    fileReader.readAsDataURL(file); 
   });
 
   // when closing the modal reset form
@@ -72,5 +64,32 @@ document.addEventListener('DOMContentLoaded', function() {
     $('.file-uploaded-name i').removeClass('fa-solid fa-file-excel');
     $('.file-uploaded-name span').text('');
     $('.btn-excel-file-submit').prop('disabled', true);
+  });
+  
+  // submit spreadsheet
+  $('.btn-excel-file-submit').on('click', async function (){
+    const file = $('.importExcelFile').prop('files')[0];
+    if (!file) return;
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const [controller, action] = [$(this).data('controller'), $(this).data('action')];
+    
+    try {
+      const response = await fetch(`/${controller}/${action}`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      const data = await response.json();
+      console.log(data);
+    }
+    catch (error) {
+      console.log(error);
+    }
+    finally {
+      console.log('finish...');
+    }
   });
 });

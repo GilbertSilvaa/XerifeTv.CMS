@@ -293,7 +293,7 @@
 </div>
 
 @section scripts {
-  <script defer>
+  <script>
     async function getMovieByTmdb(imdbId) {
       const response = await fetch(`/Movies/GetByImdbId?id=${imdbId}`);
       const data = await response.json();

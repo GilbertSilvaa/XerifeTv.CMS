@@ -124,4 +124,14 @@ public class MoviesController(
       ? response.Content.ReadAsStringAsync()
       : Enumerable.Empty<string>());
   }
+
+  [HttpPost]
+  public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
+  {
+    if (file is null || file.Length == 0) return BadRequest();
+
+    var response = await _service.RegisterBySpreadsheet(file);
+    
+    return Ok();
+  }
 }
