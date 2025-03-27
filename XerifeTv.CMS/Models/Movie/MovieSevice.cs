@@ -1,4 +1,6 @@
-﻿using XerifeTv.CMS.Models.Abstractions;
+﻿using Microsoft.VisualBasic;
+using OfficeOpenXml;
+using XerifeTv.CMS.Models.Abstractions;
 using XerifeTv.CMS.Models.Movie.Dtos.Request;
 using XerifeTv.CMS.Models.Movie.Dtos.Response;
 using XerifeTv.CMS.Models.Movie.Interfaces;
@@ -129,6 +131,60 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
     {
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
       return Result<PagedList<GetMovieResponseDto>>.Failure(error);
+    }
+  }
+
+  public async Task<Result<(int? SuccessCount, int? FailCount)>> RegisterBySpreadsheet(IFormFile file)
+  {
+    try
+    {
+      using var  stream = new MemoryStream();
+      file.CopyTo(stream);
+
+      ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+      using var package = new ExcelPackage(stream);
+      var worksheet = package.Workbook.Worksheets.FirstOrDefault();
+      
+      if (worksheet is null) 
+        return Result<(int?, int?)>.Failure(
+          new Error("400", "empty spreadsheet"));
+
+      var expectedColluns = new List<string>
+      {
+        "IMDB ID (REQUIRED)",
+        "PARENTAL RATING (REQUIRED)",
+        "URL VIDEO (REQUIRED)",
+        "STREAM FORMAT (REQUIRED)",
+        "DURATION (REQUIRED)",
+        "URL SUBTITLES"
+      };
+
+      var spreadsheetColumns = new List<string>();
+      for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
+        spreadsheetColumns.Add(worksheet.Cells[1, col].Text);
+      
+      if (!expectedColluns.SequenceEqual(spreadsheetColumns))
+        return Result<(int?, int?)>.Failure(
+          new Error("415", "spreadsheet in incorrect format"));
+
+      for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
+      {
+        var imdbId = worksheet.Cells[row, 1].Text;
+        var parentalRating = worksheet.Cells[row, 2].Text;
+        var  urlVideo = worksheet.Cells[row, 3].Text;
+        var streamFormat =  worksheet.Cells[row, 4].Text;
+        var duration = worksheet.Cells[row, 5].Text;
+        var urlSubtitles = worksheet.Cells[row, 6].Text;
+        
+        // -- validate each field --
+      }
+
+      return Result<(int?, int?)>.Success((0, 0));
+    }
+    catch (Exception ex)
+    {
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<(int?, int?)>.Failure(error);
     }
   }
 }
