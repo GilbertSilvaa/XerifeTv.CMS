@@ -1,5 +1,5 @@
 ﻿using XerifeTv.CMS.Models.Abstractions;
-using XerifeTv.CMS.Models.Abstractions.Repositories;
+using XerifeTv.CMS.Models.Abstractions.Interfaces;
 using XerifeTv.CMS.Models.Movie.Dtos.Request;
 
 namespace XerifeTv.CMS.Models.Movie.Interfaces;

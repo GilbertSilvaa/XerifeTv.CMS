@@ -1,4 +1,5 @@
 ﻿using Supabase;
+using XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 namespace XerifeTv.CMS.Models.Abstractions.Services;
 

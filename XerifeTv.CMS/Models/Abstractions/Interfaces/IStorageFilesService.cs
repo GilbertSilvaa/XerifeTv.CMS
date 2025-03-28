@@ -1,4 +1,4 @@
-﻿namespace XerifeTv.CMS.Models.Abstractions.Services;
+﻿namespace XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 public interface IStorageFilesService
 {

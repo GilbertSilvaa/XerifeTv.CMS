@@ -146,8 +146,7 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
       var worksheet = package.Workbook.Worksheets.FirstOrDefault();
       
       if (worksheet is null) 
-        return Result<(int?, int?)>.Failure(
-          new Error("400", "empty spreadsheet"));
+        return Result<(int?, int?)>.Failure(new Error("400", "empty spreadsheet"));
 
       var expectedColluns = new List<string>
       {
@@ -164,8 +163,7 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
         spreadsheetColumns.Add(worksheet.Cells[1, col].Text);
       
       if (!expectedColluns.SequenceEqual(spreadsheetColumns))
-        return Result<(int?, int?)>.Failure(
-          new Error("415", "spreadsheet in incorrect format"));
+        return Result<(int?, int?)>.Failure(new Error("415", "spreadsheet in incorrect format"));
 
       for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
       {

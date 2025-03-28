@@ -10,7 +10,7 @@
   string[] streamFormats = {"mp4", "hls", "dash", "m3u8", "rtmp", "mpeg-ts", "WebM"};
 }
 
-@Html.Partial("_ImportFromExcelModal")
+@await Html.PartialAsync("_ImportFromExcelModal")
 
 <div class="container">
   <header>

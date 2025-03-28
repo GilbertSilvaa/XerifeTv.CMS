@@ -1,7 +1,6 @@
-﻿using System.Text;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.OpenApi.Models;
+using XerifeTv.CMS.Models.Abstractions.Interfaces;
 using XerifeTv.CMS.Models.Abstractions.Services;
 using XerifeTv.CMS.Models.Channel;
 using XerifeTv.CMS.Models.Channel.Interfaces;
