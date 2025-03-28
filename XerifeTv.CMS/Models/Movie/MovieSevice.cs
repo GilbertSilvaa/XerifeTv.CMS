@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using OfficeOpenXml;
 using XerifeTv.CMS.Models.Abstractions;
+using XerifeTv.CMS.Models.Abstractions.Exceptions;
 using XerifeTv.CMS.Models.Abstractions.Interfaces;
 using XerifeTv.CMS.Models.Movie.Dtos.Request;
 using XerifeTv.CMS.Models.Movie.Dtos.Response;
@@ -150,17 +151,22 @@ public sealed class MovieSevice(
         "DURATION (REQUIRED)",
         "URL SUBTITLES"
       ];
-      
+
       using var stream = new MemoryStream();
       file.CopyTo(stream);
-      
+
       var spreadsheetResponse = _spreadsheetReaderService.Read(expectedColluns, stream);
       ICollection<SpreadsheetMovieResponseDto> movieList = [];
 
       foreach (var item in spreadsheetResponse)
         movieList.Add(SpreadsheetMovieResponseDto.FromCollunsStr(item));
 
-			return Result<(int?, int?)>.Success((0, 0));
+      return Result<(int?, int?)>.Success((0, 0));
+    }
+    catch (SpreadsheetInvalidException ex)
+    {
+      var error = new Error("400", ex.InnerException?.Message ?? ex.Message);
+      return Result<(int?, int?)>.Failure(error);
     }
     catch (Exception ex)
     {

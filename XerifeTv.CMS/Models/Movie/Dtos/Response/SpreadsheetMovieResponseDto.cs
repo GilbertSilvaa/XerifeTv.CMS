@@ -1,4 +1,5 @@
-﻿using XerifeTv.CMS.Models.Abstractions.ValueObjects;
+﻿using XerifeTv.CMS.Models.Abstractions.Exceptions;
+using XerifeTv.CMS.Models.Abstractions.ValueObjects;
 
 namespace XerifeTv.CMS.Models.Movie.Dtos.Response;
 
@@ -23,14 +24,14 @@ public sealed class SpreadsheetMovieResponseDto
 			|| parentalRating is null 
 			|| videoStreamFormat is null)
 		{
-			throw new ArgumentNullException("some mandatory field is empty");
+			throw new SpreadsheetInvalidException("some mandatory field is empty");
 		}
 		
 		if (!int.TryParse(parentalRating, out int parentalRatingResult))
-			throw new ArgumentException("some parental rating value is not in integer format");
+			throw new SpreadsheetInvalidException("some parental rating value is not in integer format");
 
 		if (!long.TryParse(videoDuration, out long videoDurationResult))
-			throw new ArgumentException("some duration value is not in long format");
+			throw new SpreadsheetInvalidException("some duration value is not in long format");
 
 		return new SpreadsheetMovieResponseDto
 		{

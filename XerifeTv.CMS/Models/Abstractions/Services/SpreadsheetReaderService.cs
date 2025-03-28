@@ -1,4 +1,5 @@
 ﻿using OfficeOpenXml;
+using XerifeTv.CMS.Models.Abstractions.Exceptions;
 using XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 namespace XerifeTv.CMS.Models.Abstractions.Services;
@@ -13,14 +14,14 @@ public class SpreadsheetReaderService : ISpreadsheetReaderService
 			var worksheet = package.Workbook.Worksheets.FirstOrDefault();
 			
 			if (worksheet is null)
-				throw new Exception("empty spreadsheet or not found");
+				throw new SpreadsheetInvalidException("empty spreadsheet or not found");
 			
 			var spreadsheetColumns = new List<string>();
 			for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
 				spreadsheetColumns.Add(worksheet.Cells[1, col].Text);
 			
 			if (!colluns.SequenceEqual(spreadsheetColumns))
-				throw new Exception("spreadsheet in incorrect format");
+				throw new SpreadsheetInvalidException("spreadsheet in incorrect format");
 
 			ICollection<string> rowItemValues = [];
 			ICollection<string[]> result = [];
