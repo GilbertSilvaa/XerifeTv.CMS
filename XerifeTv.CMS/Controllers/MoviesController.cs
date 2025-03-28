@@ -112,17 +112,13 @@ public class MoviesController(
   }
 
   [HttpGet]
-  public async Task<JsonResult> GetByImdbId(string id)
+  public async Task<IActionResult> GetByImdbId(string imdbId)
   {
-    var client = new HttpClient();
-    var url = $"https://api.themoviedb.org/3/movie/{id}";
-
-    HttpResponseMessage response = await client.GetAsync(
-      $"{url}?api_key={_configuration["Tmdb:Key"]}&language=pt-BR&page=1");
-
-    return Json(response.IsSuccessStatusCode 
-      ? response.Content.ReadAsStringAsync()
-      : Enumerable.Empty<string>());
+    if (string.IsNullOrEmpty(imdbId)) return BadRequest();
+    
+    var response = await _service.GetByImdbId(imdbId);
+    
+    return response.IsFailure ? BadRequest() : Ok(response.Data);
   }
 
   [HttpPost]

@@ -295,9 +295,8 @@
 @section scripts {
   <script>
     async function getMovieByTmdb(imdbId) {
-      const response = await fetch(`/Movies/GetByImdbId?id=${imdbId}`);
-      const data = await response.json();
-      return JSON.parse(data.result);
+      const response = await fetch(`/Movies/GetByImdbId?imdbId=${imdbId}`);
+      return await response.json();
     }
 
     $('#btn-get-imdb').click(async (e) => {
@@ -312,11 +311,10 @@
       $('#title').val(response.title);
       $('#category').val(response.genres[0]?.name?.toLowerCase());
       $('#synopsis').val(response.overview);
-      $('#releaseYear').val(response.release_date.split('-')[0]);
-      $('#review').val(response.vote_average.toString());
-      $('#posterUrl').val(`https://image.tmdb.org/t/p/original${response.poster_path}`);
-      $('#bannerUrl').val(`https://image.tmdb.org/t/p/original${response.backdrop_path}`);
-      $('#parentalRating-18').attr('checked', Boolean(response.adult));
+      $('#releaseYear').val(response.releaseYear);
+      $('#review').val(response.voteAverage);
+      $('#posterUrl').val(response.posterUrl);
+      $('#bannerUrl').val(response.bannerUrl);
     });
     
     $('#disabled').change(e => e.target.value = e.target.checked);

@@ -6,12 +6,14 @@ using XerifeTv.CMS.Models.Abstractions.Interfaces;
 using XerifeTv.CMS.Models.Movie.Dtos.Request;
 using XerifeTv.CMS.Models.Movie.Dtos.Response;
 using XerifeTv.CMS.Models.Movie.Interfaces;
+using JsonConvert = Newtonsoft.Json.JsonConvert;
 
 namespace XerifeTv.CMS.Models.Movie;
 
 public sealed class MovieSevice(
   IMovieRepository _repository,
-  ISpreadsheetReaderService _spreadsheetReaderService) : IMovieService
+  ISpreadsheetReaderService _spreadsheetReaderService,
+  IConfiguration _configuration) : IMovieService
 {
   public async Task<Result<PagedList<GetMovieResponseDto>>> Get(int currentPage, int limit)
   {
@@ -86,7 +88,7 @@ public sealed class MovieSevice(
       if (entity.ImdbId != response.ImdbId)
         if (await _repository.GetByImdbIdAsync(entity.ImdbId) != null)
           return Result<string>.Failure(
-            new Error("409", $"Filme nao cadastrado. Imdb ID {entity.ImdbId} duplicado"));
+            new Error("409", $"Filme nao atualizado. Imdb ID {entity.ImdbId} duplicado"));
 
       entity.CreateAt = response.CreateAt;
       await _repository.UpdateAsync(entity);
@@ -138,6 +140,36 @@ public sealed class MovieSevice(
     }
   }
 
+  public async Task<Result<GetMovieByImdbResponseDto?>> GetByImdbId(string imdbId)
+  {
+    try
+    {
+      var client = new HttpClient();
+      var url = $"https://api.themoviedb.org/3/movie/{imdbId}";
+      
+      var response = await client.GetAsync(
+        $"{url}?api_key={_configuration["Tmdb:Key"]}&language=pt-BR&page=1");
+      
+      if (!response.IsSuccessStatusCode) 
+        return Result<GetMovieByImdbResponseDto>.Failure(
+          new Error("500", response.ReasonPhrase));
+      
+      var responseJsonString = await response.Content.ReadAsStringAsync();
+      var result = JsonConvert.DeserializeObject<GetMovieByImdbResponseDto>(responseJsonString);
+
+      if (result is null)
+        return Result<GetMovieByImdbResponseDto>.Failure(
+          new Error("404", "content not found"));
+
+      return Result<GetMovieByImdbResponseDto?>.Success(result);
+    }
+    catch (Exception ex)
+    {
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<GetMovieByImdbResponseDto>.Failure(error);
+    }
+  }
+
   public async Task<Result<(int? SuccessCount, int? FailCount)>> RegisterBySpreadsheet(IFormFile file)
   {
     try
@@ -160,6 +192,12 @@ public sealed class MovieSevice(
 
       foreach (var item in spreadsheetResponse)
         movieList.Add(SpreadsheetMovieResponseDto.FromCollunsStr(item));
+
+      foreach (var movieItem in movieList)
+      {
+        var response = await GetByImdbId(movieItem.ImdbId);
+        var movieDto = response.Data;
+      }
 
       return Result<(int?, int?)>.Success((0, 0));
     }
