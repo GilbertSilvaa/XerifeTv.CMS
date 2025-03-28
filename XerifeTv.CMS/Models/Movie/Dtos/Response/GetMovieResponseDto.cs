@@ -3,7 +3,7 @@ using XerifeTv.CMS.Helpers;
 
 namespace XerifeTv.CMS.Models.Movie.Dtos.Response;
 
-public class GetMovieResponseDto
+public sealed class GetMovieResponseDto
 {
   public string Id { get; private set; } = string.Empty;
   public string ImdbId { get; private set; } = string.Empty;

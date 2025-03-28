@@ -154,9 +154,13 @@ public sealed class MovieSevice(
       using var stream = new MemoryStream();
       file.CopyTo(stream);
       
-      var result = _spreadsheetReaderService.Read(expectedColluns, stream);
+      var spreadsheetResponse = _spreadsheetReaderService.Read(expectedColluns, stream);
+      ICollection<SpreadsheetMovieResponseDto> movieList = [];
 
-      return Result<(int?, int?)>.Success((0, 0));
+      foreach (var item in spreadsheetResponse)
+        movieList.Add(SpreadsheetMovieResponseDto.FromCollunsStr(item));
+
+			return Result<(int?, int?)>.Success((0, 0));
     }
     catch (Exception ex)
     {
