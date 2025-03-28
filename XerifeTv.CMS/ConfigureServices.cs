@@ -51,6 +51,7 @@ public static class ConfigureServices
     services.AddScoped<ITokenService, TokenService>();
     services.AddScoped<ICacheService, CacheService>();
     services.AddScoped<IStorageFilesService, StorageFilesService>();
+    services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
     return services;
   }
 
