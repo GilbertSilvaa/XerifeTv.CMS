@@ -127,7 +127,15 @@ public class MoviesController(
     if (file is null || file.Length == 0) return BadRequest();
 
     var response = await _service.RegisterBySpreadsheet(file);
+
+    if (response.IsFailure) return BadRequest();
+
+    object responseData = new
+    {
+      SuccessCount = response.Data.SuccessCount,
+      FailCount = response.Data.FailCount
+    };
     
-    return Ok();
+    return Ok(responseData);
   }
 }

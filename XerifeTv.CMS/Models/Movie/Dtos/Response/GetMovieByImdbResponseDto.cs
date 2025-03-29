@@ -9,7 +9,7 @@ public class GetMovieByImdbResponseDto
   public List<GenreDto> Genres { get; set; }
   
   [JsonProperty("vote_average")]
-  public double VoteAverage { get; set; } = 0.0;
+  public float VoteAverage { get; set; }
 
   private string _posterUrl = string.Empty;
   [JsonProperty("poster_path")]

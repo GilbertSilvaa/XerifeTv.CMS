@@ -193,13 +193,43 @@ public sealed class MovieSevice(
       foreach (var item in spreadsheetResponse)
         movieList.Add(SpreadsheetMovieResponseDto.FromCollunsStr(item));
 
+      int successCount = 0;
+      int failCount = 0;
+      
       foreach (var movieItem in movieList)
       {
-        var response = await GetByImdbId(movieItem.ImdbId);
-        var movieDto = response.Data;
+        var movieByImdbresponse = await GetByImdbId(movieItem.ImdbId);
+
+        if (movieByImdbresponse.IsFailure)
+        {
+          failCount++;
+          continue;
+        }
+
+        var createMovieDto = new CreateMovieRequestDto
+        {
+          ImdbId = movieItem.ImdbId,
+          Title = movieByImdbresponse.Data.Title,
+          Synopsis = movieByImdbresponse.Data.Overview,
+          Category = movieByImdbresponse.Data.Genres.FirstOrDefault()?.Name,
+          PosterUrl = movieByImdbresponse.Data.PosterUrl,
+          BannerUrl = movieByImdbresponse.Data.BannerUrl,
+          ReleaseYear = int.Parse(movieByImdbresponse.Data.ReleaseYear),
+          Review = movieByImdbresponse.Data.VoteAverage,
+          ParentalRating = movieItem.ParentalRating,
+          VideoUrl = movieItem.Video.Url,
+          VideoDuration = movieItem.Video.Duration,
+          VideoStreamFormat =  movieItem.Video.StreamFormat,
+          VideoSubtitle =  movieItem.Video.Subtitle
+        };
+
+        var response = await Create(createMovieDto);
+        
+        if (response.IsSuccess) successCount++;
+        else failCount++;
       }
 
-      return Result<(int?, int?)>.Success((0, 0));
+      return Result<(int?, int?)>.Success((successCount, failCount));
     }
     catch (SpreadsheetInvalidException ex)
     {
