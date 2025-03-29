@@ -63,20 +63,58 @@ document.addEventListener('DOMContentLoaded', function() {
     $('.importExcelFile').val('');
     $('.file-uploaded-name i').removeClass('fa-solid fa-file-excel');
     $('.file-uploaded-name span').text('');
-    $('.btn-excel-file-submit').prop('disabled', true);
+    $('.btn-excel-file-submit').text('Cadastrar').prop('disabled', true);
   });
+
+  // emulates the progress of the progress bar
+  const emulateProgressBarAction = () => {
+    let [
+      progressAction1TimeOut,
+      progressAction2TimeOut,
+      progressAction3TimeOut
+    ] = [0, 0, 0];
+
+    progressAction1TimeOut = setTimeout(() => {
+      $('.process .progress-bar').css('width', '25%');
+      $('.process span.status-percent').text('25%');
+
+      progressAction2TimeOut = setTimeout(() => {
+        $('.process .progress-bar').css('width', '55%');
+        $('.process span.status-percent').text('55%');
+
+        progressAction3TimeOut = setTimeout(() => {
+          $('.process .progress-bar').css('width', '80%');
+          $('.process span.status-percent').text('80%');
+        }, 6000);
+      }, 6000);
+    }, 5000);
+
+    return [
+      progressAction1TimeOut,
+      progressAction2TimeOut,
+      progressAction3TimeOut
+    ];
+  }
   
   // submit spreadsheet
   $('.btn-excel-file-submit').on('click', async function (){
+    const btn = this;
+    
     const file = $('.importExcelFile').prop('files')[0];
     if (!file) return;
     
     const formData = new FormData();
     formData.append('file', file);
     
-    const [controller, action] = [$(this).data('controller'), $(this).data('action')];
+    const [controller, action] = [$(btn).data('controller'), $(btn).data('action')];
+    const progressBarEmulateTimeOuts =  emulateProgressBarAction();
     
     try {
+      $(btn).text('Processando...').prop('disabled', true);
+      $('.select-file-container').hide();
+      $('.process-file-container').show();
+      $('.importFromExcelModal .btn-close').prop('disabled', true);
+      
       const response = await fetch(`/${controller}/${action}`, {
         method: 'POST',
         body: formData
@@ -84,12 +122,21 @@ document.addEventListener('DOMContentLoaded', function() {
       
       const data = await response.json();
       console.log(data);
+
+      $('.process .progress-bar').css('width', '100%');
+      $('.process span.status-percent').text('100%');
+      $('.process span.status-text').text('Processo de cadastros finalizado.');
+      
+      setTimeout(() => {
+        $('.process-file-container').hide();
+        $('.finish-process-container').show();
+      }, 2000);
     }
     catch (error) {
       console.log(error);
     }
     finally {
-      console.log('finish...');
+      progressBarEmulateTimeOuts.forEach(timeOut => clearTimeout(timeOut));
     }
   });
 });
