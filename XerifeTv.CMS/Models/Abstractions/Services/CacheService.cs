@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Caching.Memory;
+using XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 namespace XerifeTv.CMS.Models.Abstractions.Services;
 

@@ -4,6 +4,7 @@ namespace XerifeTv.CMS.Models.Movie.Dtos.Request;
 
 public class CreateMovieRequestDto
 {
+  public string ImdbId { get; init; } = string.Empty;
   public string Title { get; init; } = string.Empty;
   public string Synopsis { get; init; } = string.Empty;
   public string Category { get; init; } = string.Empty;
@@ -22,6 +23,7 @@ public class CreateMovieRequestDto
     return new MovieEntity
     {
       Title = Title,
+      ImdbId = ImdbId,
       Synopsis = Synopsis,
       Category = Category,
       PosterUrl = PosterUrl,

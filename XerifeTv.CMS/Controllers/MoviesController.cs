@@ -22,6 +22,13 @@ public class MoviesController(
 
     _logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
 
+    if (TempData["ErrorMessage"] is string errorMessage)
+    {
+      ViewData["Message"] = new MessageView(
+        EMessageViewType.ERROR,
+        errorMessage);
+    }
+
     if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
     {
       result = await _service.GetByFilter(
@@ -69,7 +76,10 @@ public class MoviesController(
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> Create(CreateMovieRequestDto dto)
   {
-    await _service.Create(dto);
+    var response = await _service.Create(dto);
+
+    if (response.IsFailure)
+      TempData["ErrorMessage"] = response.Error.Description ?? string.Empty;
 
     _logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
 
@@ -79,7 +89,10 @@ public class MoviesController(
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> Update(UpdateMovieRequestDto dto)
   {
-    await _service.Update(dto);
+    var response = await _service.Update(dto);
+    
+    if (response.IsFailure)
+      TempData["ErrorMessage"] = response.Error.Description ?? string.Empty;
 
     _logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
 
@@ -99,16 +112,30 @@ public class MoviesController(
   }
 
   [HttpGet]
-  public async Task<JsonResult> GetByImdbId(string id)
+  public async Task<IActionResult> GetByImdbId(string imdbId)
   {
-    var client = new HttpClient();
-    var url = $"https://api.themoviedb.org/3/movie/{id}";
+    if (string.IsNullOrEmpty(imdbId)) return BadRequest();
+    
+    var response = await _service.GetByImdbId(imdbId);
+    
+    return response.IsFailure ? BadRequest() : Ok(response.Data);
+  }
 
-    HttpResponseMessage response = await client.GetAsync(
-      $"{url}?api_key={_configuration["Tmdb:Key"]}&language=pt-BR&page=1");
+  [HttpPost]
+  public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
+  {
+    if (file is null || file.Length == 0) return BadRequest();
 
-    return Json(response.IsSuccessStatusCode 
-      ? response.Content.ReadAsStringAsync()
-      : Enumerable.Empty<string>());
+    var response = await _service.RegisterBySpreadsheet(file);
+
+    if (response.IsFailure) return BadRequest();
+
+    object responseData = new
+    {
+      SuccessCount = response.Data.SuccessCount,
+      FailCount = response.Data.FailCount
+    };
+    
+    return Ok(responseData);
   }
 }

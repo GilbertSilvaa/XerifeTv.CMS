@@ -9,11 +9,11 @@ using XerifeTv.CMS.Models.Series.Dtos.Request;
 using XerifeTv.CMS.Models.Series.Enums;
 using XerifeTv.CMS.Models.Channel.Interfaces;
 using XerifeTv.CMS.Models.Series;
-using XerifeTv.CMS.Models.Abstractions.Services;
 using XerifeTv.CMS.Models.Movie;
 using XerifeTv.CMS.Models.Channel;
 using XerifeTv.CMS.Models.Channel.Dtos.Request;
 using XerifeTv.CMS.Models.Channel.Enums;
+using XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 namespace XerifeTv.CMS.Models.Content;
 

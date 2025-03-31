@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Models.Abstractions.Repositories;
+﻿using XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 namespace XerifeTv.CMS.Models.User.Interfaces;
 

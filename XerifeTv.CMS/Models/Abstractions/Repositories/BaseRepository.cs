@@ -2,6 +2,7 @@
 using MongoDB.Driver;
 using XerifeTv.CMS.MongoDB;
 using Microsoft.Extensions.Options;
+using XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 namespace XerifeTv.CMS.Models.Abstractions.Repositories;
 

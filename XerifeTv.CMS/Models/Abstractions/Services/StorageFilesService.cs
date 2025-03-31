@@ -1,16 +1,17 @@
 ﻿using Supabase;
+using XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 namespace XerifeTv.CMS.Models.Abstractions.Services;
 
 public class StorageFilesService : IStorageFilesService
 {
-  private readonly string[] _acceptedExtensions = new[] { ".vtt" };
+	private readonly string[] _acceptedExtensions = [".vtt"];
   private readonly Client? _client = default;
 
   public StorageFilesService(IConfiguration _configuration)
   {
     _client = new Supabase.Client(
-      _configuration["Supabase:Url"], 
+      _configuration["Supabase:Url"]!, 
       _configuration["Supabase:Key"]);
   }
   
