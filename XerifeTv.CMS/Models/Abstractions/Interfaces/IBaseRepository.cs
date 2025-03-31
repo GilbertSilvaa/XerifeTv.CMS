@@ -1,6 +1,6 @@
 ﻿using XerifeTv.CMS.Models.Abstractions.Entities;
 
-namespace XerifeTv.CMS.Models.Abstractions.Repositories;
+namespace XerifeTv.CMS.Models.Abstractions.Interfaces;
 
 public interface IBaseRepository<T> where T : BaseEntity
 {

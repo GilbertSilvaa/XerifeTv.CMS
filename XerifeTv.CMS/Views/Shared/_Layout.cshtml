@@ -52,10 +52,12 @@
 
 <div class="container-fluid">
   <div
-    class="w-25 alert"
+    class="w-25 alert alert-dismissible fade show"
     role="alert"
     id="message-box"
-    style="display: none; position: absolute; bottom: 0.5rem; right: 0.5rem;">
+    style="display: none; position: absolute; bottom: 0.5rem; right: 0.5rem; z-index: 999;">
+    <span></span>
+    <button type="button" class="btn-close shadow-sm" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
 
   <div class="row flex-nowrap">
@@ -167,9 +169,9 @@
     }
 
     if ('@messageView?.Message') {
-      messageBox.textContent = '@messageView?.Message';
+      messageBox.getElementsByTagName('span')[0].textContent = '@messageView?.Message';
       messageBox.style.display = 'block';
-      setTimeout(() => messageBox.style.display = 'none', 4000);
+      setTimeout(() => messageBox.style.display = 'none', 5000);
     }
 
     function logout() {

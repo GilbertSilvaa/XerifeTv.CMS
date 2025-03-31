@@ -3,9 +3,10 @@ using XerifeTv.CMS.Helpers;
 
 namespace XerifeTv.CMS.Models.Movie.Dtos.Response;
 
-public class GetMovieResponseDto
+public sealed class GetMovieResponseDto
 {
   public string Id { get; private set; } = string.Empty;
+  public string ImdbId { get; private set; } = string.Empty;
   public string Title { get; private set; } = string.Empty;
   public string Synopsis { get; private set; } = string.Empty;
   public string Category { get; private set; } = string.Empty;
@@ -24,6 +25,7 @@ public class GetMovieResponseDto
     return new GetMovieResponseDto
     {
       Id = entity.Id,
+      ImdbId = entity.ImdbId,
       Title = entity.Title,
       Synopsis = entity.Synopsis,
       Category = entity.Category,

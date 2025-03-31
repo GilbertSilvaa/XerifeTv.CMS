@@ -39,3 +39,25 @@ html {
   justify-content: space-between;
   padding: 0;
 }
+
+.btn-xl-upload-file {
+  width: 100%;
+  padding: 6%;
+  border: 2px dashed #808080;
+  opacity: 0.75;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 1.4rem;
+  user-select: none;
+  transition: 0.4s;
+  margin-bottom: 0.8rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  
+  &:hover {
+    opacity: 1;
+  }
+}
