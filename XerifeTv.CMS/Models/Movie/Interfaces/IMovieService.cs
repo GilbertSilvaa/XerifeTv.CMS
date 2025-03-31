@@ -13,5 +13,5 @@ public interface IMovieService
   Task<Result<bool>> Delete(string id);
   Task<Result<PagedList<GetMovieResponseDto>>> GetByFilter(GetMoviesByFilterRequestDto dto);
   Task<Result<GetMovieByImdbResponseDto?>> GetByImdbId(string imdbId);
-  Task<Result<(int? SuccessCount, int? FailCount)>> RegisterBySpreadsheet(IFormFile file);
+  Task<Result<(int? SuccessCount, int? FailCount, string[] errorList)>> RegisterBySpreadsheet(IFormFile file);
 }

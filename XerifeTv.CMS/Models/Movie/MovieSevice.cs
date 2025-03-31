@@ -152,14 +152,14 @@ public sealed class MovieSevice(
       
       if (!response.IsSuccessStatusCode) 
         return Result<GetMovieByImdbResponseDto>.Failure(
-          new Error("500", response.ReasonPhrase));
+          new Error("400", $"[{imdbId}] IMDB API retornou: {response.ReasonPhrase}"));
       
       var responseJsonString = await response.Content.ReadAsStringAsync();
       var result = JsonConvert.DeserializeObject<GetMovieByImdbResponseDto>(responseJsonString);
 
       if (result is null)
         return Result<GetMovieByImdbResponseDto>.Failure(
-          new Error("404", "content not found"));
+          new Error("404", $"Imdb ID: {imdbId} invalido"));
 
       return Result<GetMovieByImdbResponseDto?>.Success(result);
     }
@@ -170,7 +170,7 @@ public sealed class MovieSevice(
     }
   }
 
-  public async Task<Result<(int? SuccessCount, int? FailCount)>> RegisterBySpreadsheet(IFormFile file)
+  public async Task<Result<(int? SuccessCount, int? FailCount, string[] errorList)>> RegisterBySpreadsheet(IFormFile file)
   {
     try
     {
@@ -186,15 +186,27 @@ public sealed class MovieSevice(
 
       using var stream = new MemoryStream();
       file.CopyTo(stream);
+      
+      int successCount = 0;
+      int failCount = 0;
+      ICollection<string> errorList = [];
 
       var spreadsheetResponse = _spreadsheetReaderService.Read(expectedColluns, stream);
       ICollection<SpreadsheetMovieResponseDto> movieList = [];
 
       foreach (var item in spreadsheetResponse)
-        movieList.Add(SpreadsheetMovieResponseDto.FromCollunsStr(item));
-
-      int successCount = 0;
-      int failCount = 0;
+      {
+        try
+        {
+          var spreadsheetMovieDto = SpreadsheetMovieResponseDto.FromCollunsStr(item);
+          movieList.Add(spreadsheetMovieDto);
+        }
+        catch (SpreadsheetInvalidException ex)
+        {
+          failCount++;
+          errorList.Add(ex.Message);
+        }
+      }
       
       foreach (var movieItem in movieList)
       {
@@ -203,6 +215,7 @@ public sealed class MovieSevice(
         if (movieByImdbresponse.IsFailure)
         {
           failCount++;
+          errorList.Add(movieByImdbresponse.Error.Description);
           continue;
         }
 
@@ -224,22 +237,29 @@ public sealed class MovieSevice(
         };
 
         var response = await Create(createMovieDto);
-        
-        if (response.IsSuccess) successCount++;
-        else failCount++;
+
+        if (response.IsSuccess)
+        {
+           successCount++;
+        }
+        else
+        {
+          failCount++;
+          errorList.Add(response.Error.Description);
+        }
       }
 
-      return Result<(int?, int?)>.Success((successCount, failCount));
+      return Result<(int?, int?, string[])>.Success((successCount, failCount, errorList.ToArray()));
     }
     catch (SpreadsheetInvalidException ex)
     {
       var error = new Error("400", ex.InnerException?.Message ?? ex.Message);
-      return Result<(int?, int?)>.Failure(error);
+      return Result<(int?, int?, string[])>.Failure(error);
     }
     catch (Exception ex)
     {
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<(int?, int?)>.Failure(error);
+      return Result<(int?, int?, string[])>.Failure(error);
     }
   }
 }
