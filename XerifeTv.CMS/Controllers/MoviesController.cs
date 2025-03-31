@@ -128,12 +128,14 @@ public class MoviesController(
 
     var response = await _service.RegisterBySpreadsheet(file);
 
-    if (response.IsFailure) return BadRequest();
+    if (response.IsFailure) 
+      return BadRequest(response.Error.Description ?? string.Empty);
 
     object responseData = new
     {
       SuccessCount = response.Data.SuccessCount,
-      FailCount = response.Data.FailCount
+      FailCount = response.Data.FailCount,
+      ErrorList = response.Data.errorList
     };
     
     return Ok(responseData);

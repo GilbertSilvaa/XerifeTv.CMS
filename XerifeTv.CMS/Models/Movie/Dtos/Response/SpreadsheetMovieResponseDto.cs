@@ -18,20 +18,21 @@ public sealed class SpreadsheetMovieResponseDto
 		string? videoDuration = cols[4];
 		string? videoSubtitleUrl = cols[5];
 
-		if (imdbId is null 
-			|| videoUrl is null 
-			|| videoDuration is null
-			|| parentalRating is null 
-			|| videoStreamFormat is null)
-		{
-			throw new SpreadsheetInvalidException("some mandatory field is empty");
-		}
+		List<string?> requiredValues = [
+			imdbId, 
+			videoUrl, 
+			videoDuration, 
+			parentalRating,
+			videoStreamFormat];
+
+		if (requiredValues.Any(v => string.IsNullOrEmpty(v)))
+			throw new SpreadsheetInvalidException($"[{imdbId}] algum campo obrigatorio esta vazio");
 		
 		if (!int.TryParse(parentalRating, out int parentalRatingResult))
-			throw new SpreadsheetInvalidException("some parental rating value is not in integer format");
+			throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa em formato invalido");
 
 		if (!long.TryParse(videoDuration, out long videoDurationResult))
-			throw new SpreadsheetInvalidException("some duration value is not in long format");
+			throw new SpreadsheetInvalidException($"[{imdbId}] duracao em formato invalido");
 
 		return new SpreadsheetMovieResponseDto
 		{
