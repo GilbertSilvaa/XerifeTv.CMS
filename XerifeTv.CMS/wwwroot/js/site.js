@@ -112,8 +112,8 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       $(btn).text('Processando...').prop('disabled', true);
       $('.select-file-container').hide();
+      $('.importFromExcelModal .btn-close').hide();
       $('.process-file-container').show();
-      $('.importFromExcelModal .btn-close').prop('disabled', true);
       
       const response = await fetch(`/${controller}/${action}`, {
         method: 'POST',
@@ -121,8 +121,10 @@ document.addEventListener('DOMContentLoaded', function() {
       });
       
       const data = await response.json();
-      console.log(data);
-
+      
+      $('.finish-process-container .success-count').text(data.successCount);
+      $('.finish-process-container .fail-count').text(data.failCount);
+      
       $('.process .progress-bar').css('width', '100%');
       $('.process span.status-percent').text('100%');
       $('.process span.status-text').text('Processo de cadastros finalizado.');
@@ -130,6 +132,9 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => {
         $('.process-file-container').hide();
         $('.finish-process-container').show();
+        
+        $(btn).text('Pronto').prop('disabled', false);
+        $(btn).off().click(() => location.replace(`/${controller}`));
       }, 2000);
     }
     catch (error) {
