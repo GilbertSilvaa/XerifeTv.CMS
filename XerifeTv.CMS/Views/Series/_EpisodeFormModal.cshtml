@@ -1,10 +1,7 @@
-﻿@using XerifeTv.CMS.Models.Series;
+﻿@using XerifeTv.CMS.Helpers
+@using XerifeTv.CMS.Models.Series;
 
 @model Episode?;
-
-@{
-  string[] streamFormats = {"mp4", "hls", "dash", "m3u8", "rtmp", "mpeg-ts", "WebM"};
-}
 
 <div 
   class="modal fade" 
@@ -116,7 +113,7 @@
               name="videoStreamFormat" 
               required>
               <option selected value="">Selecione uma opção</option>
-              @foreach (string format in streamFormats)
+              @foreach (var format in StreamFormatsHelper.Vod)
               {
                 if (format == Model?.Video?.StreamFormat)
                 {

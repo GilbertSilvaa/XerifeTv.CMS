@@ -1,13 +1,10 @@
-﻿@using XerifeTv.CMS.Models.Movie.Dtos.Response;
+﻿@using XerifeTv.CMS.Helpers
+@using XerifeTv.CMS.Models.Movie.Dtos.Response;
 
 @model GetMovieResponseDto?
 
 @{
   ViewData["Title"] = "Filmes";
-
-  int[] parentalRatings = {0, 10, 12, 14, 16, 18};
-
-  string[] streamFormats = {"mp4", "hls", "dash", "m3u8", "rtmp", "mpeg-ts", "WebM"};
 }
 
 @await Html.PartialAsync("_ImportFromExcelModal")
@@ -117,7 +114,7 @@
         <div class="col-sm-3 col-lg-5 px-4">
           <label class="form-label">Classificação Indicativa</label>
           <div>
-            @foreach (int year in parentalRatings)
+            @foreach (var year in ParentalRatingHelper.ParentalRatingList)
             {
               <div class="form-check form-check-inline">
                 <input 
@@ -197,7 +194,7 @@
             name="videoStreamFormat" 
             required>
             <option selected value="">Selecione uma opção</option>
-            @foreach (string format in streamFormats)
+            @foreach (var format in StreamFormatsHelper.Vod)
             {
               if (Model?.Video?.StreamFormat == format)
               {

@@ -1,11 +1,10 @@
-﻿@using XerifeTv.CMS.Models.Channel.Dtos.Response;
+﻿@using XerifeTv.CMS.Helpers
+@using XerifeTv.CMS.Models.Channel.Dtos.Response;
 
 @model GetChannelResponseDto?
 
 @{
   ViewData["Title"] = "Canais";
-  
-  string[] streamFormats = {"hls", "dash", "m3u8"};
 }
 
 <div class="container">
@@ -88,7 +87,7 @@
             name="videoStreamFormat" 
             required>
             <option selected value="">Selecione uma opção</option>
-            @foreach (string format in streamFormats)
+            @foreach (var format in StreamFormatsHelper.Streaming)
             {
               if (Model?.Video?.StreamFormat == format)
               {

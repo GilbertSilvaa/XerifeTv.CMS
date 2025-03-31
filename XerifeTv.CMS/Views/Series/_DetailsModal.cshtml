@@ -1,16 +1,7 @@
-﻿@using XerifeTv.CMS.Models.Series.Dtos.Response;
+﻿@using XerifeTv.CMS.Helpers
+@using XerifeTv.CMS.Models.Series.Dtos.Response;
 
 @model GetSeriesResponseDto
-
-@{
-  Dictionary<int, string> parentalRatingColors = new();
-  parentalRatingColors.Add(0, "#0d915b");
-  parentalRatingColors.Add(10, "#0d6591");
-  parentalRatingColors.Add(12, "#94971a");
-  parentalRatingColors.Add(14, "#cf6a10");
-  parentalRatingColors.Add(16, "#ab1616");
-  parentalRatingColors.Add(18, "#232323");
-}
 
 <div 
   class="modal fade" 
@@ -43,7 +34,9 @@
             style="left: 1rem; border: 3px solid #FFF; border-radius: 1rem;" />
 
           <h5 class="position-absolute" style="top: 0.5rem; right: 0.5rem;">
-            <span class="badge text-bg-secondary" style="background: @parentalRatingColors[Model.ParentalRating] !important;">
+            <span 
+              class="badge text-bg-secondary" 
+              style="background: @ParentalRatingHelper.ParentalRatingColors[Model.ParentalRating] !important;">
               @(Model.ParentalRating == 0 ? "L" : Model.ParentalRating)
             </span>
           </h5>
