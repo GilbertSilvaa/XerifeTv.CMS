@@ -211,7 +211,7 @@ public sealed class MovieSevice(
           ImdbId = movieItem.ImdbId,
           Title = movieByImdbresponse.Data.Title,
           Synopsis = movieByImdbresponse.Data.Overview,
-          Category = movieByImdbresponse.Data.Genres.FirstOrDefault()?.Name,
+          Category = movieByImdbresponse.Data.Genres.FirstOrDefault()?.Name.ToLower(),
           PosterUrl = movieByImdbresponse.Data.PosterUrl,
           BannerUrl = movieByImdbresponse.Data.BannerUrl,
           ReleaseYear = int.Parse(movieByImdbresponse.Data.ReleaseYear),

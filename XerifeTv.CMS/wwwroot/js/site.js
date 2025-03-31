@@ -98,8 +98,9 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // submit spreadsheet
   $('.btn-excel-file-submit').on('click', async function (){
-    const btn = this;
+    if (!confirm('Confirmar ação?')) return;
     
+    const btn = this;
     const file = $('.importExcelFile').prop('files')[0];
     if (!file) return;
     
