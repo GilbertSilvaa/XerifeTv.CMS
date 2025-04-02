@@ -42,7 +42,7 @@ public sealed class UserService(
       var userByName = await _repository.GetByUserNameAsync(entity.UserName);
 
       if (userByName is not null)
-        return Result<string>.Failure(new Error("409", "username ja registrado"));
+        return Result<string>.Failure(new Error("409", "Username ja registrado"));
 
       entity.Password = new HashPassword(_configuration).Encrypt(dto.Password);
 
@@ -64,14 +64,14 @@ public sealed class UserService(
 
       if (response is null)
         return Result<LoginUserResponseDto>.Failure(
-          new Error("404", "usuario nao encontrado"));
+          new Error("404", "Usuario nao encontrado"));
 
       var isPasswordCorrect =
         new HashPassword(_configuration).Verify(dto.Password, response.Password);
 
       if (!isPasswordCorrect)
         return Result<LoginUserResponseDto>.Failure(
-          new Error("401", "credenciais invalidas"));
+          new Error("401", "Credenciais invalidas"));
 
       return Result<LoginUserResponseDto>.Success(
         new LoginUserResponseDto(
@@ -92,10 +92,10 @@ public sealed class UserService(
       var response = await _repository.GetAsync(id);
 
       if (response is null)
-        return Result<bool>.Failure(new Error("404", "user not found"));
+        return Result<bool>.Failure(new Error("404", "Usuario nao encontrado"));
 
       if (response.Role == Enums.EUserRole.ADMIN)
-        return Result<bool>.Failure(new Error("403", "user cannot be deleted"));
+        return Result<bool>.Failure(new Error("403", "Usuario nao pode ser deletado"));
 
       await _repository.DeleteAsync(id);
       return Result<bool>.Success(true);
@@ -114,13 +114,13 @@ public sealed class UserService(
       var (isValid, userName) = await _tokenService.ValidateTokenAsync(refreshToken);
       
       if (!isValid) 
-        return Result<(string?, string?)>.Failure(new Error("401", "token invalid"));
+        return Result<(string?, string?)>.Failure(new Error("401", "Token invalido"));
       
-      var user = await _repository.GetByUserNameAsync(userName);
+      var user = await _repository.GetByUserNameAsync(userName!);
       
       return Result<(string?, string?)>.Success((
-        _tokenService.GenerateToken(user), 
-        _tokenService.GenerateRefreshToken(user)));
+        _tokenService.GenerateToken(user!), 
+        _tokenService.GenerateRefreshToken(user!)));
     }
     catch (Exception ex)
     {

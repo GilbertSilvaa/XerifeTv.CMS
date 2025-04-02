@@ -20,7 +20,7 @@ public class StorageFilesService : IStorageFilesService
     var fileExtension = Path.GetExtension(fileName);
 
     if (!_acceptedExtensions.Contains(fileExtension))
-      return Result<string>.Failure(new Error("400", $"file extension {fileExtension} is not accepted."));
+      return Result<string>.Failure(new Error("400", $"Extensao de arquivo {fileExtension} invalida"));
 
     await _client.InitializeAsync();
     
@@ -32,7 +32,7 @@ public class StorageFilesService : IStorageFilesService
       .Upload(ms.ToArray(), fileName, new() {Upsert = true});
 
     if (response == null) 
-      return Result<string>.Failure(new Error("400", "error uploading file"));
+      return Result<string>.Failure(new Error("400", "Erro no uploading do arqivo"));
 
     var urlFile = $"{_client.Auth.Options.Url.Split("/auth")[0]}/storage/v1/object/public/{response}";
     return Result<string>.Success(urlFile);
