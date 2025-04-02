@@ -8,11 +8,12 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 
 ####
 ## ✔ Key Features:
-- [X]  **Content Management:** Easily register, edit, and organize movies, series, episodes, and TV channels.  
+- [X]  **Content Management:** Easily register, edit, and organize movies, series, episodes, and TV channels.
+- [X]  **Batch Movie Upload:** Streamline content management by importing multiple movies at once via spreadsheet.
 - [X]  **User Roles & Permissions:** Granular access control for administrators, content managers, and visitors.  
 - [X]  **JWT Authentication:** Secure authentication system based on JSON Web Tokens.  
-- [X]  **External Content API:** Provide a REST API to securely expose registered content for consumption by external applications and websites.  
-- [X]  **API Caching for External Content:** Optimize performance by caching responses from the External Content API. 
+- [X]  **External Content API:** Provide a REST API to securely expose registered content for consumption.  
+- [X]  **API Caching for External Content:** Optimize performance by caching responses from the External Content API.
 - [X]  **Supabase Storage Integration:** Store files (.vtt, images, etc...) in a storage bucket.  
 - [X]  **Swagger Documentation:** REST API routes documented with Swagger.  
 - [X]  **Light/Dark Theme:** Enable users to switch between light and dark themes.
