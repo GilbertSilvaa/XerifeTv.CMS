@@ -1,4 +1,5 @@
-﻿using XerifeTv.CMS.Models.Abstractions.Exceptions;
+﻿using XerifeTv.CMS.Helpers;
+using XerifeTv.CMS.Models.Abstractions.Exceptions;
 using XerifeTv.CMS.Models.Abstractions.ValueObjects;
 
 namespace XerifeTv.CMS.Models.Movie.Dtos.Response;
@@ -28,11 +29,18 @@ public sealed class SpreadsheetMovieResponseDto
 		if (requiredValues.Any(v => string.IsNullOrEmpty(v)))
 			throw new SpreadsheetInvalidException($"[{imdbId}] algum campo obrigatorio esta vazio");
 		
-		if (!int.TryParse(parentalRating, out int parentalRatingResult))
+		if (!int.TryParse(parentalRating, out var parentalRatingResult))
 			throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa em formato invalido");
-
-		if (!long.TryParse(videoDuration, out long videoDurationResult))
+		
+		if (!long.TryParse(videoDuration, out var videoDurationResult))
 			throw new SpreadsheetInvalidException($"[{imdbId}] duracao em formato invalido");
+		
+		if (!ParentalRatingHelper.ParentalRatingList.Contains(parentalRatingResult))
+			throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa invalida"); 
+		
+		if (!StreamFormatsHelper.Streaming.Contains(videoStreamFormat) 
+		    && !StreamFormatsHelper.Vod.Contains(videoStreamFormat))
+			throw new SpreadsheetInvalidException($"[{imdbId}] stream format invalido"); 
 
 		return new SpreadsheetMovieResponseDto
 		{

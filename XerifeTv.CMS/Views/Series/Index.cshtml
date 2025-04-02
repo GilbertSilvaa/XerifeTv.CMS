@@ -136,7 +136,7 @@
   @if (ViewBag.TotalPages > 1)
   {
     <nav class="mt-5">
-      <ul class="pagination justify-content-center">
+      <ul class="pagination d-flex justify-content-center overflow-auto">
         <li class="page-item @(!ViewBag.HasPrevPage ? "disabled" : "")">
           <a 
             class="page-link" 
