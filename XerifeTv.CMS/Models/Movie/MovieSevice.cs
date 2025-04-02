@@ -43,7 +43,7 @@ public sealed class MovieSevice(
 
       if (response is null) 
         return Result<GetMovieResponseDto?>
-          .Failure(new Error("404", "content not found"));
+          .Failure(new Error("404", "Conteudo nao encontrado"));
 
       return Result<GetMovieResponseDto?>
         .Success(GetMovieResponseDto.FromEntity(response));
@@ -83,7 +83,7 @@ public sealed class MovieSevice(
       var response = await _repository.GetAsync(entity.Id);
 
       if (response is null)
-        return Result<string>.Failure(new Error("404", "content not found"));
+        return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
 
       if (entity.ImdbId != response.ImdbId)
         if (await _repository.GetByImdbIdAsync(entity.ImdbId) != null)
@@ -108,7 +108,7 @@ public sealed class MovieSevice(
       var response = await _repository.GetAsync(id);
 
       if (response is null)
-        return Result<bool>.Failure(new Error("404", "content not found"));
+        return Result<bool>.Failure(new Error("404", "Conteudo nao encontrado"));
 
       await _repository.DeleteAsync(id);
       return Result<bool>.Success(true);
@@ -146,19 +146,19 @@ public sealed class MovieSevice(
     {
       var client = new HttpClient();
       var url = $"https://api.themoviedb.org/3/movie/{imdbId}";
-      
-      var response = await client.GetAsync(
-        $"{url}?api_key={_configuration["Tmdb:Key"]}&language=pt-BR&page=1");
+      var tmdbKey = _configuration["Tmdb:Key"];
+
+			var response = await client.GetAsync($"{url}?api_key={tmdbKey}&language=pt-BR&page=1");
       
       if (!response.IsSuccessStatusCode) 
-        return Result<GetMovieByImdbResponseDto>.Failure(
+        return Result<GetMovieByImdbResponseDto?>.Failure(
           new Error("400", $"[{imdbId}] IMDB API retornou: {response.ReasonPhrase}"));
       
       var responseJsonString = await response.Content.ReadAsStringAsync();
       var result = JsonConvert.DeserializeObject<GetMovieByImdbResponseDto>(responseJsonString);
 
       if (result is null)
-        return Result<GetMovieByImdbResponseDto>.Failure(
+        return Result<GetMovieByImdbResponseDto?>.Failure(
           new Error("404", $"Imdb ID: {imdbId} invalido"));
 
       return Result<GetMovieByImdbResponseDto?>.Success(result);
@@ -166,7 +166,7 @@ public sealed class MovieSevice(
     catch (Exception ex)
     {
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<GetMovieByImdbResponseDto>.Failure(error);
+      return Result<GetMovieByImdbResponseDto?>.Failure(error);
     }
   }
 
@@ -215,25 +215,25 @@ public sealed class MovieSevice(
         if (movieByImdbresponse.IsFailure)
         {
           failCount++;
-          errorList.Add(movieByImdbresponse.Error.Description);
+          errorList.Add(movieByImdbresponse.Error.Description ?? string.Empty);
           continue;
         }
 
         var createMovieDto = new CreateMovieRequestDto
         {
           ImdbId = movieItem.ImdbId,
-          Title = movieByImdbresponse.Data.Title,
-          Synopsis = movieByImdbresponse.Data.Overview,
-          Category = movieByImdbresponse.Data.Genres.FirstOrDefault()?.Name.ToLower(),
-          PosterUrl = movieByImdbresponse.Data.PosterUrl,
-          BannerUrl = movieByImdbresponse.Data.BannerUrl,
-          ReleaseYear = int.Parse(movieByImdbresponse.Data.ReleaseYear),
-          Review = movieByImdbresponse.Data.VoteAverage,
+          Title = movieByImdbresponse.Data?.Title ?? string.Empty,
+          Synopsis = movieByImdbresponse.Data?.Overview ?? string.Empty,
+          Category = movieByImdbresponse.Data?.Genres.FirstOrDefault()?.Name.ToLower() ?? string.Empty,
+          PosterUrl = movieByImdbresponse.Data?.PosterUrl ?? string.Empty,
+          BannerUrl = movieByImdbresponse.Data?.BannerUrl ?? string.Empty,
+          ReleaseYear = int.Parse(movieByImdbresponse.Data?.ReleaseYear ?? "0"),
+          Review = movieByImdbresponse.Data?.VoteAverage ?? 0,
           ParentalRating = movieItem.ParentalRating,
-          VideoUrl = movieItem.Video.Url,
-          VideoDuration = movieItem.Video.Duration,
-          VideoStreamFormat =  movieItem.Video.StreamFormat,
-          VideoSubtitle =  movieItem.Video.Subtitle
+          VideoUrl = movieItem.Video?.Url ?? string.Empty,
+          VideoDuration = movieItem.Video?.Duration ?? 0,
+          VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
+          VideoSubtitle = movieItem.Video?.Subtitle
         };
 
         var response = await Create(createMovieDto);
@@ -245,7 +245,7 @@ public sealed class MovieSevice(
         else
         {
           failCount++;
-          errorList.Add(response.Error.Description);
+          errorList.Add(response.Error?.Description ?? string.Empty);
         }
       }
 

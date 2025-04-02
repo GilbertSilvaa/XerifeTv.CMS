@@ -35,7 +35,7 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
 
       if (response is null)
         return Result<GetChannelResponseDto?>
-          .Failure(new Error("404", "content not found"));
+          .Failure(new Error("404", "Conteudo nao encontrado"));
 
       return Result<GetChannelResponseDto?>
         .Success(GetChannelResponseDto.FromEntity(response));
@@ -70,7 +70,7 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
       var response = await _repository.GetAsync(entity.Id);
 
       if (response is null)
-        return Result<string>.Failure(new Error("404", "content not found"));
+        return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
 
       entity.CreateAt = response.CreateAt;
       await _repository.UpdateAsync(entity);
@@ -90,7 +90,7 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
       var response = await _repository.GetAsync(id);
 
       if (response is null)
-        return Result<bool>.Failure(new Error("404", "content not found"));
+        return Result<bool>.Failure(new Error("404", "Conteudo nao encontrado"));
 
       await _repository.DeleteAsync(id);
       return Result<bool>.Success(true);
