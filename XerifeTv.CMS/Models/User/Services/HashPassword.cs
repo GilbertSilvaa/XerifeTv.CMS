@@ -1,9 +1,10 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
+using XerifeTv.CMS.Models.User.Interfaces;
 
-namespace XerifeTv.CMS.Models.User.Common;
+namespace XerifeTv.CMS.Models.User.Services;
 
-public class HashPassword(IConfiguration _configuration)
+public sealed class HashPassword(IConfiguration _configuration) : IHashPassword
 {
   private const int keySize = 55;
   private const int interations = 450000;
