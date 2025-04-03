@@ -11,7 +11,7 @@ namespace XerifeTv.CMS.Controllers;
 [Authorize]
 public class SeriesController(ISeriesService _service, ILogger<SeriesController> _logger) : Controller
 {
-  private const int limitResultsPage = 15;
+  private const int limitResultsPage = 20;
 
   public async Task<IActionResult> Index(int? currentPage, ESeriesSearchFilter? filter, string? search)
   {

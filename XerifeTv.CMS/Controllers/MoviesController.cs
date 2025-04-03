@@ -14,7 +14,7 @@ public class MoviesController(
   ILogger<MoviesController> _logger,
   IConfiguration _configuration) : Controller
 {
-  private const int limitResultsPage = 15;
+  private const int limitResultsPage = 20;
 
   public async Task<IActionResult> Index(int? currentPage, EMovieSearchFilter? filter, string? search)
   {

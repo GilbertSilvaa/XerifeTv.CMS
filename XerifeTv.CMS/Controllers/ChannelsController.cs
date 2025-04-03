@@ -11,7 +11,7 @@ namespace XerifeTv.CMS.Controllers;
 [Authorize]
 public class ChannelsController(IChannelService _service, ILogger<ChannelsController> _logger) : Controller
 {
-  private const int limitResultsPage = 15;
+  private const int limitResultsPage = 20;
 
   public async Task<IActionResult> Index(int? currentPage, EChannelSearchFilter? filter, string? search)
   {

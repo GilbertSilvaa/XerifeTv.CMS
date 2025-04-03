@@ -12,7 +12,7 @@ public class HomeController(IDashboardService _service, ILogger<HomeController> 
   {
     var response = await _service.Get();
 
-    _logger.LogInformation($"{User.Identity.Name} accessed the dashboard page");
+    _logger.LogInformation($"{User.Identity?.Name} accessed the dashboard page");
 
     if (response.IsSuccess) return View(response.Data);
 
