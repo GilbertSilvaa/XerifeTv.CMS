@@ -1,5 +1,4 @@
 ﻿using XerifeTv.CMS.Models.Abstractions;
-using XerifeTv.CMS.Models.User.Common;
 using XerifeTv.CMS.Models.User.Dtos.Request;
 using XerifeTv.CMS.Models.User.Dtos.Response;
 using XerifeTv.CMS.Models.User.Interfaces;
@@ -7,9 +6,9 @@ using XerifeTv.CMS.Models.User.Interfaces;
 namespace XerifeTv.CMS.Models.User;
 
 public sealed class UserService(
+  IHashPassword _hashPassword,
   IUserRepository _repository, 
-  ITokenService _tokenService,
-  IConfiguration _configuration) : IUserService
+  ITokenService _tokenService) : IUserService
 {
   public async Task<Result<PagedList<GetUserRequestDto>>> Get(int currentPage, int limit)
   {
@@ -44,7 +43,7 @@ public sealed class UserService(
       if (userByName is not null)
         return Result<string>.Failure(new Error("409", "Username ja registrado"));
 
-      entity.Password = new HashPassword(_configuration).Encrypt(dto.Password);
+      entity.Password = _hashPassword.Encrypt(dto.Password);
 
       var response = await _repository.CreateAsync(entity);
       return Result<string>.Success(response);
@@ -66,8 +65,7 @@ public sealed class UserService(
         return Result<LoginUserResponseDto>.Failure(
           new Error("404", "Usuario nao encontrado"));
 
-      var isPasswordCorrect =
-        new HashPassword(_configuration).Verify(dto.Password, response.Password);
+      var isPasswordCorrect = _hashPassword.Verify(dto.Password, response.Password);
 
       if (!isPasswordCorrect)
         return Result<LoginUserResponseDto>.Failure(

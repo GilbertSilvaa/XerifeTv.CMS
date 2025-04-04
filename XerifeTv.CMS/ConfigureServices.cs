@@ -14,6 +14,7 @@ using XerifeTv.CMS.Models.Series;
 using XerifeTv.CMS.Models.Series.Interfaces;
 using XerifeTv.CMS.Models.User;
 using XerifeTv.CMS.Models.User.Interfaces;
+using XerifeTv.CMS.Models.User.Services;
 
 namespace XerifeTv.CMS;
 
@@ -52,6 +53,7 @@ public static class ConfigureServices
     services.AddScoped<ICacheService, CacheService>();
     services.AddScoped<IStorageFilesService, StorageFilesService>();
     services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
+    services.AddScoped<IHashPassword, HashPassword>();
     return services;
   }
 
