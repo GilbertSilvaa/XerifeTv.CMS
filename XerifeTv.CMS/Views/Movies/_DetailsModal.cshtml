@@ -1,5 +1,5 @@
-﻿@using XerifeTv.CMS.Helpers
-@using XerifeTv.CMS.Models.Movie.Dtos.Response;
+﻿@using XerifeTv.CMS.Modules.Movie.Dtos.Response
+@using XerifeTv.CMS.Shared.Helpers
 
 @model GetMovieResponseDto;
 
@@ -64,7 +64,7 @@
               <span class="badge text-bg-secondary bg-secondary">@Model.Category</span>
               <span class="badge text-bg-secondary bg-secondary">@Model.ReleaseYear</span>
               
-              @if (Model.Video.Subtitle != null)
+              @if (Model.Video?.Subtitle != null)
               {
                 <span class="badge text-bg-secondary bg-secondary">CC</span>
               }

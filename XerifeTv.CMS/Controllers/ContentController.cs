@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using XerifeTv.CMS.Models.Content.Interfaces;
+using XerifeTv.CMS.Modules.Content.Interfaces;
 
 namespace XerifeTv.CMS.Controllers;
 

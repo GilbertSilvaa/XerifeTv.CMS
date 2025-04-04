@@ -1,18 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using XerifeTv.CMS.Models.Movie.Enums;
-using XerifeTv.CMS.Models.Movie.Dtos.Request;
-using XerifeTv.CMS.Models.Movie.Interfaces;
-using XerifeTv.CMS.Models.Abstractions;
-using XerifeTv.CMS.Models.Movie.Dtos.Response;
 using Microsoft.AspNetCore.Authorization;
+using XerifeTv.CMS.Modules.Movie.Enums;
+using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Modules.Movie.Dtos.Request;
+using XerifeTv.CMS.Modules.Movie.Dtos.Response;
+using XerifeTv.CMS.Modules.Common;
 
 namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
-public class MoviesController(
-  IMovieService _service, 
-  ILogger<MoviesController> _logger,
-  IConfiguration _configuration) : Controller
+public class MoviesController(IMovieService _service, ILogger<MoviesController> _logger) : Controller
 {
   private const int limitResultsPage = 20;
 
@@ -133,9 +130,9 @@ public class MoviesController(
 
     object responseData = new
     {
-      SuccessCount = response.Data.SuccessCount,
-      FailCount = response.Data.FailCount,
-      ErrorList = response.Data.errorList
+			response.Data.SuccessCount,
+      response.Data.FailCount,
+      response.Data.ErrorList
     };
     
     return Ok(responseData);

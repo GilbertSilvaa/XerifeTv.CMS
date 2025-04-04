@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using XerifeTv.CMS.Models.Dashboard.Dtos.Response;
-using XerifeTv.CMS.Models.Dashboard.Interfaces;
+using XerifeTv.CMS.Modules.Dashboard.Dtos.Response;
+using XerifeTv.CMS.Modules.Dashboard.Interfaces;
 
 namespace XerifeTv.CMS.Controllers;
 
