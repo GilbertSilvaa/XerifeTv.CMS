@@ -1,10 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using XerifeTv.CMS.Models.Abstractions;
-using XerifeTv.CMS.Models.Channel.Dtos.Request;
-using XerifeTv.CMS.Models.Channel.Dtos.Response;
-using XerifeTv.CMS.Models.Channel.Enums;
-using XerifeTv.CMS.Models.Channel.Interfaces;
+using XerifeTv.CMS.Modules.Channel.Dtos.Request;
+using XerifeTv.CMS.Modules.Channel.Dtos.Response;
+using XerifeTv.CMS.Modules.Channel.Enums;
+using XerifeTv.CMS.Modules.Channel.Interfaces;
+using XerifeTv.CMS.Modules.Common;
 
 namespace XerifeTv.CMS.Controllers;
 

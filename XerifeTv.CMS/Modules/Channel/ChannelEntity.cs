@@ -1,0 +1,13 @@
+﻿using XerifeTv.CMS.Modules.Abstractions.Entities;
+using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
+
+namespace XerifeTv.CMS.Modules.Channel;
+
+public sealed class ChannelEntity : BaseEntity
+{
+  public string Title { get; set; } = string.Empty;
+  public string Category { get; set; } = string.Empty;
+  public string LogoUrl { get; set; } = string.Empty;
+  public Video? Video { get; set; }
+  public bool Disabled { get; set; } = false;
+}

@@ -1,5 +1,5 @@
-using XerifeTv.CMS;
-using XerifeTv.CMS.MongoDB;
+using XerifeTv.CMS.Shared.Database.MongoDB;
+using XerifeTv.CMS.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
 

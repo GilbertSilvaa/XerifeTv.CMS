@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using XerifeTv.CMS.Models.Abstractions;
-using XerifeTv.CMS.Models.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.Common;
 
 namespace XerifeTv.CMS.Controllers;
 
