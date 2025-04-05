@@ -1,4 +1,5 @@
-﻿using XerifeTv.CMS.Modules.Common;
+﻿using SharpCompress.Common;
+using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
 using XerifeTv.CMS.Modules.User.Interfaces;
@@ -95,15 +96,28 @@ public sealed class UserService(
   }
 
   public async Task<Result<string>> Update(UpdateUserRequestDto dto)
-  {
-    try
+	{
+		try
     {
-      var response = await _repository.GetAsync(dto.Id);
+			if (!RegexHelper.IsValidEmail(dto.Email))
+				return Result<string>.Failure(new Error("400", "Email invalido"));
+
+			var response = await _repository.GetAsync(dto.Id);
 
 			if (response is null)
 				return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
 
-      response.Email = dto.Email;
+      var userByName = await _repository.GetByUserNameAsync(dto.UserName);
+
+      if (userByName != null && userByName.Id != response.Id)
+				return Result<string>.Failure(new Error("409", "Username ja registrado"));
+
+      var userByEmail = await _repository.GetByEmailAsync(dto.Email);
+
+			if (userByEmail != null && userByEmail.Id != response.Id)
+				return Result<string>.Failure(new Error("409", "Email ja registrado"));
+
+			response.Email = dto.Email;
 			response.UserName = dto.UserName;
 
       await _repository.UpdateAsync(response);
