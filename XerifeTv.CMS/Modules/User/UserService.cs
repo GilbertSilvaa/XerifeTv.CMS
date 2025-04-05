@@ -40,9 +40,6 @@ public sealed class UserService(
     {
       var entity = dto.ToEntity();
 
-      if (!RegexHelper.IsValidEmail(entity.Email))
-				return Result<string>.Failure(new Error("400", "Email invalido"));
-
 			var userByName = await _repository.GetByUserNameAsync(entity.UserName);
 
       if (userByName != null)
@@ -58,7 +55,11 @@ public sealed class UserService(
       var response = await _repository.CreateAsync(entity);
       return Result<string>.Success(response);
     }
-    catch (Exception ex)
+		catch (ArgumentException ex)
+    {
+			return Result<string>.Failure(new Error("400", ex.Message));
+		}
+		catch (Exception ex)
     {
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
       return Result<string>.Failure(error);
@@ -97,39 +98,40 @@ public sealed class UserService(
 
   public async Task<Result<string>> Update(UpdateUserRequestDto dto)
 	{
-		try
+    try
     {
-			if (!RegexHelper.IsValidEmail(dto.Email))
-				return Result<string>.Failure(new Error("400", "Email invalido"));
+      var user = await _repository.GetAsync(dto.Id);
 
-			var user = await _repository.GetAsync(dto.Id);
-
-			if (user is null)
-				return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
+      if (user is null)
+        return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
 
       var userByName = await _repository.GetByUserNameAsync(dto.UserName);
 
       if (userByName != null && userByName.Id != user.Id)
-				return Result<string>.Failure(new Error("409", "Username ja registrado"));
+        return Result<string>.Failure(new Error("409", "Username ja registrado"));
 
       var userByEmail = await _repository.GetByEmailAsync(dto.Email);
 
-			if (userByEmail != null && userByEmail.Id != user.Id)
-				return Result<string>.Failure(new Error("409", "Email ja registrado"));
+      if (userByEmail != null && userByEmail.Id != user.Id)
+        return Result<string>.Failure(new Error("409", "Email ja registrado"));
 
-			user.Email = dto.Email;
-			user.UserName = dto.UserName;
+      user.Email = dto.Email;
+      user.UserName = dto.UserName;
       user.Role = dto.Role ?? user.Role;
 
       await _repository.UpdateAsync(user);
 
       return Result<string>.Success(user.Id);
+    }
+    catch (ArgumentException ex)
+		{
+			return Result<string>.Failure(new Error("400", ex.Message));
 		}
     catch (Exception ex)
     {
-			var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-			return Result<string>.Failure(error);
-		}
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<string>.Failure(error);
+    }
   }
 
   public async Task<Result<bool>> Delete(string id)

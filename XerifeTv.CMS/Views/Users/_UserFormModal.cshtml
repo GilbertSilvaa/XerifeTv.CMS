@@ -20,9 +20,9 @@ aria-hidden="true">
 
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <form 
-    class="modal-content" 
-    asp-controller="Users"
-    asp-action="@(string.IsNullOrEmpty(Model?.Id) ? "Register" : "Update")">
+      class="modal-content" 
+      asp-controller="Users"
+      asp-action="@(string.IsNullOrEmpty(Model?.Id) ? "Register" : "Update")">
 
       <input type="hidden" name="id" value="@Model?.Id" />
 
@@ -65,12 +65,12 @@ aria-hidden="true">
             <div class="col-12">
               <label for="password" class="form-label">Senha</label>
               <input 
-              type="password"
-              class="form-control"
-              id="password"
-              name="password"
-              placeholder="digite aqui..."
-              required>
+                type="password"
+                class="form-control"
+                id="password"
+                name="password"
+                placeholder="digite aqui..."
+                required>
             </div>
           </div>
         }
