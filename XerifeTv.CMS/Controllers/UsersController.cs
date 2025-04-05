@@ -92,7 +92,22 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     return RedirectToAction("Index");
   }
 
-  public async Task<IActionResult> Delete(string id)
+  [Authorize]
+	public async Task<IActionResult> Update(UpdateUserRequestDto dto)
+	{
+		var response = await _service.Update(dto);
+
+		if (response.IsFailure)
+		  return RedirectToAction("Index", new MessageView(
+				EMessageViewType.ERROR,
+				response.Error.Description ?? string.Empty));
+
+		_logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
+
+		return RedirectToAction("Index");
+	}
+
+	public async Task<IActionResult> Delete(string id)
   {
     await _service.Delete(id);
 

@@ -94,6 +94,29 @@ public sealed class UserService(
     }
   }
 
+  public async Task<Result<string>> Update(UpdateUserRequestDto dto)
+  {
+    try
+    {
+      var response = await _repository.GetAsync(dto.Id);
+
+			if (response is null)
+				return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
+
+      response.Email = dto.Email;
+			response.UserName = dto.UserName;
+
+      await _repository.UpdateAsync(response);
+
+      return Result<string>.Success(response.Id);
+		}
+    catch (Exception ex)
+    {
+			var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+			return Result<string>.Failure(error);
+		}
+  }
+
   public async Task<Result<bool>> Delete(string id)
   {
     try
