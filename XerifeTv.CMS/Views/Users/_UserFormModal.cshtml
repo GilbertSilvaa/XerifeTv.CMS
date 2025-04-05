@@ -39,7 +39,7 @@ aria-hidden="true">
             <input 
             type="text" 
             class="form-control" 
-            id="userName" 
+            id="userName-@Model?.Id" 
             name="userName" 
             placeholder="digite aqui..."
             value="@Model?.UserName"
@@ -51,7 +51,7 @@ aria-hidden="true">
             <input 
             type="email"
             class="form-control"
-            id="email"
+            id="email-@Model?.Id"
             name="email"
             placeholder="email@example.com"
             value="@Model?.Email"
@@ -67,7 +67,7 @@ aria-hidden="true">
               <input 
                 type="password"
                 class="form-control"
-                id="password"
+                id="password-@Model?.Id"
                 name="password"
                 placeholder="digite aqui..."
                 required>
@@ -82,7 +82,7 @@ aria-hidden="true">
               <label for="role" class="form-label">Cargo</label>
               <select 
                 class="form-select"
-                id="role"
+                id="role-@Model?.Id"
                 name="role"
                 required>
                 <option selected value="">Selecione uma opção</option>

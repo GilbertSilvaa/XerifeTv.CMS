@@ -33,7 +33,7 @@
             <label for="season" class="form-label">Temporada</label>
             <select 
               class="form-select" 
-              id="season" 
+              id="season-@Model?.Id" 
               name="season" 
               required>
               <option selected value="">Selecione uma opção</option>
@@ -56,7 +56,7 @@
             <input 
               type="text" 
               class="form-control" 
-              id="number" 
+              id="number-@Model?.Id" 
               name="number" 
               placeholder="18" 
               value="@(Model?.Number > 0 ? Model?.Number : "")"
@@ -70,7 +70,7 @@
             <input 
               type="text" 
               class="form-control" 
-              id="title" 
+              id="title-@Model?.Id" 
               name="title" 
               placeholder="Digite aqui..." 
               value="@Model?.Title"
@@ -84,7 +84,7 @@
             <input 
               type="text" 
               class="form-control" 
-              id="bannerUrl" 
+              id="bannerUrl-@Model?.Id" 
               name="bannerUrl" 
               placeholder="http://imagem.com/image.jpg" 
               value="@Model?.BannerUrl"
@@ -97,7 +97,7 @@
           <input 
             type="text" 
             class="form-control" 
-            id="videoUrl" 
+            id="videoUrl--@Model?.Id" 
             name="videoUrl" 
             placeholder="http://video.com/video.m3u8"
             value="@Model?.Video?.Url"
@@ -109,7 +109,7 @@
             <label for="videoStreamFormat" class="form-label">Stream Format</label>
             <select 
               class="form-select" 
-              id="videoStreamFormat" 
+              id="videoStreamFormat-@Model?.Id" 
               name="videoStreamFormat" 
               required>
               <option selected value="">Selecione uma opção</option>
@@ -132,7 +132,7 @@
             <input 
               type="text" 
               class="form-control duration" 
-              id="videoDuration" 
+              id="videoDuration-@Model?.Id" 
               name="videoDuration" 
               placeholder="3600" 
               value="@Model?.Video?.Duration"
@@ -147,7 +147,7 @@
             <input
               type="text"
               class="form-control videoSubtitle"
-              id="videoSubtitle"
+              id="videoSubtitle-@Model?.Id"
               name="videoSubtitle"
               placeholder="http://video.com/subtitles/video.vtt"
               value="@Model?.Video?.Subtitle"/>
