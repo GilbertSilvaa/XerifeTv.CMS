@@ -1,3 +1,9 @@
-﻿namespace XerifeTv.CMS.Modules.User.Dtos.Request;
+﻿using XerifeTv.CMS.Modules.User.Enums;
 
-public record UpdateUserRequestDto(string Id, string UserName, string Email);
+namespace XerifeTv.CMS.Modules.User.Dtos.Request;
+
+public record UpdateUserRequestDto(
+	string Id, 
+	string UserName, 
+	string Email, 
+	EUserRole? Role);
