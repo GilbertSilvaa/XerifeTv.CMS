@@ -68,11 +68,13 @@ public sealed class UserService(
   {
     try
     {
-      var response = await _repository.GetByUserNameAsync(dto.UserName);
+      var response = RegexHelper.IsValidEmail(dto.UserNameOrEmail) 
+        ? await _repository.GetByEmailAsync(dto.UserNameOrEmail)
+        : await _repository.GetByUserNameAsync(dto.UserNameOrEmail);
 
-      if (response is null)
+			if (response is null)
         return Result<LoginUserResponseDto>.Failure(
-          new Error("404", "Usuario nao encontrado"));
+          new Error("404", "Usuario ou Email nao encontrado"));
 
       var isPasswordCorrect = _hashPassword.Verify(dto.Password, response.Password);
 
