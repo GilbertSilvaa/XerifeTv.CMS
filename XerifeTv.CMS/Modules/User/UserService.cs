@@ -2,6 +2,7 @@
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
 using XerifeTv.CMS.Modules.User.Interfaces;
+using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.User;
 
@@ -38,12 +39,20 @@ public sealed class UserService(
     {
       var entity = dto.ToEntity();
 
-      var userByName = await _repository.GetByUserNameAsync(entity.UserName);
+      if (!RegexHelper.IsValidEmail(entity.Email))
+				return Result<string>.Failure(new Error("400", "Email invalido"));
 
-      if (userByName is not null)
+			var userByName = await _repository.GetByUserNameAsync(entity.UserName);
+
+      if (userByName != null)
         return Result<string>.Failure(new Error("409", "Username ja registrado"));
 
-      entity.Password = _hashPassword.Encrypt(dto.Password);
+			var userByEmail = await _repository.GetByEmailAsync(entity.Email);
+
+      if (userByEmail != null)
+				return Result<string>.Failure(new Error("409", "Email ja registrado"));
+
+			entity.Password = _hashPassword.Encrypt(dto.Password);
 
       var response = await _repository.CreateAsync(entity);
       return Result<string>.Success(response);

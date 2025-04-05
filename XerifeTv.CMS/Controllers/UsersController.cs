@@ -60,8 +60,8 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
       return View();
     }
     
-    Response.Cookies.Append("token", response.Data.Token, _cookieOptions);
-    Response.Cookies.Append("refreshToken", response.Data.RefreshToken, _cookieOptions);
+    Response.Cookies.Append("token", response.Data?.Token ?? string.Empty, _cookieOptions);
+    Response.Cookies.Append("refreshToken", response.Data?.RefreshToken ?? string.Empty, _cookieOptions);
 
     _logger.LogInformation($"{User.Identity?.Name} logged into the system");
 

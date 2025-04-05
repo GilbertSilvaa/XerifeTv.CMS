@@ -28,7 +28,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="row mb-2">
+        <div class="row mb-3">
           <div class="col-6">
             <label for="userName" class="form-label">Nome de Usuário</label>
             <input 
@@ -41,18 +41,31 @@
           </div>
 
           <div class="col-6">
-            <label for="password" class="form-label">Senha</label>
+            <label for="email" class="form-label">E-mail</label>
             <input 
-              type="password" 
-              class="form-control" 
-              id="password" 
-              name="password" 
-              placeholder="digite aqui..." 
+              type="email"
+              class="form-control"
+              id="email"
+              name="email"
+              placeholder="email@example.com"
               required>
           </div>
         </div>
 
-        <div class="row mb-2">
+        <div class="row mb-3">
+          <div class="col-12">
+            <label for="password" class="form-label">Senha</label>
+            <input 
+                type="password" 
+                class="form-control" 
+                id="password" 
+                name="password" 
+                placeholder="digite aqui..." 
+                required>
+          </div>
+        </div>
+
+        <div class="row mb-3">
           <div class="col-12">
             <label for="role" class="form-label">Cargo</label>
             <select 

@@ -13,4 +13,9 @@ public sealed class UserRepository(IOptions<DBSettings> options)
     => await _collection
         .Find(r => r.UserName.Equals(userName))
         .FirstOrDefaultAsync();
+
+  public async Task<UserEntity?> GetByEmailAsync(string email)
+		=> await _collection
+				.Find(r => r.Email.Equals(email))
+				.FirstOrDefaultAsync();
 }

@@ -7,6 +7,7 @@ public class GetUserRequestDto
 {
   public string Id { get; private set; } = string.Empty;
   public string UserName { get; private set; } = string.Empty;
+  public string Email { get; private set; } = string.Empty;
   public EUserRole Role { get; private set; } = EUserRole.COMMON;
   public string RoleName => GetRoleName(Role);
 
@@ -16,6 +17,7 @@ public class GetUserRequestDto
     {
       Id = entity.Id,
       UserName = entity.UserName,
+      Email = entity.Email,
       Role = entity.Role
     };
   }
