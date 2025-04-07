@@ -3,9 +3,10 @@
   
   // check if dark theme
   if (theme === 'dark') {
-    $('#change-theme').data('theme', 'light');
-    $('#change-theme').find('i').removeClass('fa-moon');
-    $('#change-theme').find('i').addClass('fa-sun');
+    const darkThemeCheckbox = $('#darkTheme');
+    $(darkThemeCheckbox).prop('checked', true);
+    $(darkThemeCheckbox).parent().siblings('i.fa-sun').removeClass('text-warning');
+    $(darkThemeCheckbox).parent().siblings('i.fa-moon').addClass('text-warning');
   }
 }
 
@@ -28,23 +29,21 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // change global theme
-  $('#change-theme').on('click', function (){
-    const theme = $(this).data('theme');
-    $('html').attr('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
+  $('#darkTheme').on('change', function (){
+    const isDarkTheme = $(this).prop('checked');
     
-    if (theme === 'dark') {
+    $('html').attr('data-bs-theme', isDarkTheme ? 'dark' : 'light');
+    localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
+    
+    if (isDarkTheme) {
       $('body').addClass('bg-dark');
-      $(this).data('theme', 'light');
-      $(this).find('i').removeClass('fa-moon');
-      $(this).find('i').addClass('fa-sun');
-      $('body').addClass('bg-dark');
+      $(this).parent().siblings('i.fa-sun').removeClass('text-warning');
+      $(this).parent().siblings('i.fa-moon').addClass('text-warning');
     }
     else {
       $('body').removeClass('bg-dark');
-      $(this).data('theme', 'dark');
-      $(this).find('i').removeClass('fa-sun');
-      $(this).find('i').addClass('fa-moon');
+      $(this).parent().siblings('i.fa-moon').removeClass('text-warning');
+      $(this).parent().siblings('i.fa-sun').addClass('text-warning');
     }
   });
 });

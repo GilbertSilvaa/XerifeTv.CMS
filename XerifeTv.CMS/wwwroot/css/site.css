@@ -61,3 +61,11 @@ html {
     opacity: 1;
   }
 }
+
+.side-menu {
+  background: #19212d;
+}
+
+.bg-dark .side-menu {
+  background: #191919;
+}
