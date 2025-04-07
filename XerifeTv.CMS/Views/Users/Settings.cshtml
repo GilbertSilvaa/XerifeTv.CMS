@@ -1,0 +1,66 @@
+﻿@{
+  ViewData["Title"] = "Configurações";
+}
+
+<div class="container">
+  <header>
+    <div class="d-flex align-items-center justify-content-between gap-4">
+      <span class="fs-3 fw-normal">Configurações</span>
+    </div>
+    <hr />
+  </header>
+
+  <div class="d-flex align-items-start">
+    <div 
+      class="nav flex-column nav-pills me-3 d-flex flex-column gap-2 pe-3" 
+      style="min-width: 18%; height: 70vh; border-right: 1px solid #606060;"
+      id="v-pills-tab" 
+      role="tablist"
+      aria-orientation="vertical">
+      <button 
+        class="nav-link d-flex align-items-center justify-content-start gap-2 ps-4 active" 
+        id="v-pills-profile-tab" 
+        data-bs-toggle="pill" 
+        data-bs-target="#v-pills-profile" 
+        type="button" 
+        role="tab" 
+        aria-controls="v-pills-profile" 
+        aria-selected="true">
+        <i class="fa-solid fa-user"></i>
+        <span>Perfil</span>
+      </button>
+
+      <button
+        class="nav-link d-flex align-items-center justify-content-start gap-2 ps-4"
+        id="v-pills-edit-password-tab"
+        data-bs-toggle="pill"
+        data-bs-target="#v-pills-edit-password"
+        type="button"
+        role="tab"
+        aria-controls="v-pills-edit-password"
+        aria-selected="true">
+        <i class="fa-solid fa-key"></i>
+        <span>Alterar Senha</span>
+      </button>
+    </div>
+    <div class="tab-content px-3" id="v-pills-tabContent">
+      <div 
+        class="tab-pane fade show active" 
+        id="v-pills-profile" 
+        role="tabpanel" 
+        aria-labelledby="v-pills-profile-tab" 
+        tabindex="0">
+        Perfil
+      </div>
+
+      <div 
+        class="tab-pane fade" 
+        id="v-pills-edit-password" 
+        role="tabpanel" 
+        aria-labelledby="v-pills-edit-password-tab" 
+        tabindex="0">
+        Alterar Senha
+      </div>
+    </div>
+  </div>
+</div>

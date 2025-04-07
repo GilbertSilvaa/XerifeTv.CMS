@@ -35,7 +35,7 @@
     <script src="https://cdn.jsdelivr.net/npm/videojs-hls-quality-selector/dist/videojs-hls-quality-selector.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-      .nav-link:hover 
+      .side-menu .nav-link:hover 
       {
         background: #191919;
       }
@@ -99,7 +99,7 @@
                   class="nav-link px-2 align-middle fs-6 text-light"
                   style="font-weight: 500;">
 
-                  <i class="fa-solid fa-folder-open"></i> <span class="ms-1 d-none d-sm-inline">Documentação</span></a>
+                 <i class="fa-solid fa-folder-open"></i> <span class="ms-1 d-none d-sm-inline">Documentação</span></a>
                 <ul class="collapse nav flex-column ms-2" id="submenu" data-bs-parent="#menu">
                   <li class="w-100 py-1">
                     <a
@@ -143,8 +143,13 @@
                   </button>
                   <ul class="dropdown-menu">
                     <li>
-                      <a class="dropdown-item text-body" role="button">Editar Perfil</a>
-                      <a class="dropdown-item text-body" role="button">Alterar Senha</a>
+                      <a 
+                        class="dropdown-item text-body" 
+                        role="button" 
+                        asp-action="Settings" 
+                        asp-controller="Users">
+                        Configurações
+                      </a>
                       <a class="dropdown-item text-body" role="button" onclick="logout()">Sair</a>
                     </li>
                   </ul>

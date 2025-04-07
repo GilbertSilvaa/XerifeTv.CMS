@@ -10,7 +10,7 @@ namespace XerifeTv.CMS.Controllers;
 [Authorize(Roles = "admin")]
 public class UsersController(IUserService _service, ILogger<UsersController> _logger) : Controller
 {
-  private readonly CookieOptions _cookieOptions = new CookieOptions
+  private readonly CookieOptions _cookieOptions = new()
   {
     HttpOnly = true,
     Secure = true,
@@ -151,5 +151,11 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     }
     
     return RedirectToAction("SignIn");
+  }
+
+  [Authorize]
+  public async Task<IActionResult> Settings()
+  {
+    return View();
   }
 }
