@@ -77,7 +77,8 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     Response.Cookies.Delete("refreshToken");
     return RedirectToAction("Index", "Home");
   }
-
+  
+  [HttpPost]
   [Authorize(Roles = "admin")]
   public async Task<IActionResult> Register(RegisterUserRequestDto dto)
   {
@@ -93,6 +94,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     return RedirectToAction("Index");
   }
 
+  [HttpPost]
   [Authorize]
 	public async Task<IActionResult> Update(UpdateUserRequestDto dto)
 	{
@@ -107,7 +109,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
 		return RedirectToAction("Index");
 	}
-
+  
   [Authorize(Roles = "admin")]
 	public async Task<IActionResult> Delete(string id)
   {
