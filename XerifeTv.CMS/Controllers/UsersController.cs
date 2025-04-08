@@ -7,7 +7,6 @@ using XerifeTv.CMS.Modules.User.Interfaces;
 
 namespace XerifeTv.CMS.Controllers;
 
-[Authorize(Roles = "admin")]
 public class UsersController(IUserService _service, ILogger<UsersController> _logger) : Controller
 {
   private readonly CookieOptions _cookieOptions = new()
@@ -18,6 +17,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     Expires = DateTime.UtcNow.AddHours(6)
   };
   
+  [Authorize(Roles = "admin")]
   public async Task<IActionResult> Index(MessageView? messageView)
   {
     ViewData["Message"] = messageView;
@@ -78,6 +78,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     return RedirectToAction("Index", "Home");
   }
 
+  [Authorize(Roles = "admin")]
   public async Task<IActionResult> Register(RegisterUserRequestDto dto)
   {
     var response = await _service.Register(dto);
@@ -107,6 +108,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 		return RedirectToAction("Index");
 	}
 
+  [Authorize(Roles = "admin")]
 	public async Task<IActionResult> Delete(string id)
   {
     await _service.Delete(id);

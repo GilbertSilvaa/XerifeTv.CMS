@@ -11,7 +11,9 @@
 
   if (User.IsInRole("admin"))
     pagesView.Add(["Users", "Index", "Usuários", "fa-solid fa-users"]);
-
+  
+  pagesView.Add(["Users", "Settings", "Configurações", "fa-solid fa-gear"]);
+  
   /* pagesView[x][0] => Controller view
    * pagesView[x][1] => Controller action view
    * pagesView[x][2] => Page name in side menu
@@ -38,11 +40,6 @@
       .side-menu .nav-link:hover 
       {
         background: #191919;
-      }
-
-      .dropend .dropdown-toggle::after
-      {
-        display: none !important;
       }
     </style>
 </head>
@@ -122,10 +119,11 @@
                 style="font-weight: 500;"
                 role="button"
                 onclick="logout()">
-                <i class="fa-solid fa-right-from-bracket"></i> <span class="ms-1 d-none d-sm-inline">Sair</span>
+                <i class="fa-solid fa-right-from-bracket"></i> 
+                <span class="ms-1 d-none d-sm-inline">Sair</span>
               </a>
             </li>
-            
+
             <div class="d-flex justify-content-between align-items-center gap-2 w-100">
               <div
                 class="w-100 d-none d-md-flex align-items-center gap-2 mt-1 py-2 px-2 position-relative rounded-2"
@@ -136,23 +134,10 @@
                 <div class="btn-group dropend position-absolute" style="right: 0">
                   <button
                     type="button"
-                    class="btn text-light dropdown-toggle shadow-none"
-                    data-bs-toggle="dropdown"
-                    aria-expanded="false">
-                    <i class="fa-solid fa-ellipsis-vertical"></i>
+                    class="btn text-light shadow-none"
+                    onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket"></i>
                   </button>
-                  <ul class="dropdown-menu">
-                    <li>
-                      <a 
-                        class="dropdown-item text-body" 
-                        role="button" 
-                        asp-action="Settings" 
-                        asp-controller="Users">
-                        Configurações
-                      </a>
-                      <a class="dropdown-item text-body" role="button" onclick="logout()">Sair</a>
-                    </li>
-                  </ul>
                 </div>
               </div>
             </div>
