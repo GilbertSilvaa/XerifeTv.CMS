@@ -2,6 +2,24 @@
   ViewData["Title"] = "Configurações";
 }
 
+<style>
+  .sub-menu-settings 
+  {
+    min-width: 18%; 
+    height: 70vh; 
+    border-right: 1px solid #606060;
+    
+    @@media (max-width: 430px) {
+      min-width: 100%;
+      height: auto;
+      border-right-color: transparent;
+      border-bottom: 1px solid #606060;
+      padding-bottom: 1rem;
+      margin-bottom: 1rem;
+    }
+  }
+</style>
+
 <div class="container">
   <header>
     <div class="d-flex align-items-center justify-content-between gap-4">
@@ -10,10 +28,9 @@
     <hr />
   </header>
 
-  <div class="d-flex align-items-start">
+  <div class="d-flex flex-column flex-md-row align-items-start">
     <div 
-      class="nav flex-column nav-pills me-3 d-flex flex-column gap-2 pe-3" 
-      style="min-width: 18%; height: 70vh; border-right: 1px solid #606060;"
+      class="nav nav-pills me-3 d-flex flex-row flex-md-column gap-2 pe-3 sub-menu-settings" 
       id="v-pills-tab" 
       role="tablist"
       aria-orientation="vertical">
