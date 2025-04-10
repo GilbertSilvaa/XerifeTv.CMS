@@ -12,27 +12,46 @@ public sealed class UserService(
   IUserRepository _repository, 
   ITokenService _tokenService) : IUserService
 {
-  public async Task<Result<PagedList<GetUserRequestDto>>> Get(int currentPage, int limit)
+  public async Task<Result<PagedList<GetUserResponseDto>>> Get(int currentPage, int limit)
   {
     try
     {
       var response = await _repository.GetAsync(currentPage, limit);
 
-      var result = new PagedList<GetUserRequestDto>(
+      var result = new PagedList<GetUserResponseDto>(
         response.CurrentPage,
         response.TotalPageCount,
         response.Items
           .Where(r => r.Role != Enums.EUserRole.ADMIN)
-          .Select(GetUserRequestDto.FromEntity));
+          .Select(GetUserResponseDto.FromEntity));
 
-      return Result<PagedList<GetUserRequestDto>>.Success(result);
+      return Result<PagedList<GetUserResponseDto>>.Success(result);
     }
     catch (Exception ex)
     {
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<PagedList<GetUserRequestDto>>.Failure(error);
+      return Result<PagedList<GetUserResponseDto>>.Failure(error);
     }
   }
+
+  public async Task<Result<GetUserResponseDto?>> GetByUsername(string username)
+  {
+    try
+    {
+      var response = await _repository.GetByUserNameAsync(username);
+      
+      if (response == null)
+        return Result<GetUserResponseDto?>.Failure(
+          new Error("404", "Usuario nao encontrado"));
+
+      return Result<GetUserResponseDto>.Success(GetUserResponseDto.FromEntity(response));
+    }
+    catch (Exception ex)
+    {
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<GetUserResponseDto?>.Failure(error);
+    }
+  } 
 
   public async Task<Result<string>> Register(RegisterUserRequestDto dto)
   {
@@ -115,8 +134,8 @@ public sealed class UserService(
       if (userByEmail != null && userByEmail.Id != user.Id)
         return Result<string>.Failure(new Error("409", "Email ja registrado"));
 
-      user.Email = dto.Email;
-      user.UserName = dto.UserName;
+      user.Email = dto.Email ?? user.Email;
+      user.UserName = dto.UserName ?? user.UserName;
       user.Role = dto.Role ?? user.Role;
 
       await _repository.UpdateAsync(user);

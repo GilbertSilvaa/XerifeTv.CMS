@@ -1,4 +1,8 @@
-﻿@{
+﻿@using XerifeTv.CMS.Modules.User.Dtos.Response
+
+@model GetUserResponseDto
+
+@{
   ViewData["Title"] = "Configurações";
 }
 
@@ -60,14 +64,14 @@
         <span>Alterar Senha</span>
       </button>
     </div>
-    <div class="tab-content px-3" id="v-pills-tabContent">
+    <div class="tab-content px-3 flex-grow-1" id="v-pills-tabContent">
       <div 
         class="tab-pane fade show active" 
         id="v-pills-profile" 
         role="tabpanel" 
         aria-labelledby="v-pills-profile-tab" 
         tabindex="0">
-        Perfil
+        @await Html.PartialAsync("_ProfileForm", @Model)
       </div>
 
       <div 

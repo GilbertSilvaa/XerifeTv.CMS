@@ -29,7 +29,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     if (response.IsSuccess)
       return View(response.Data?.Items);
 
-    return View(Enumerable.Empty<GetUserRequestDto>());
+    return View(Enumerable.Empty<GetUserResponseDto>());
   }
 
   [AllowAnonymous]
@@ -93,22 +93,36 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
     return RedirectToAction("Index");
   }
-
+  
   [HttpPost]
   [Authorize]
-	public async Task<IActionResult> Update(UpdateUserRequestDto dto)
-	{
-		var response = await _service.Update(dto);
+  public async Task<IActionResult> UpdateProfile(UpdateUserRequestDto dto)
+  {
+    var response = await _service.Update(dto);
 
-		if (response.IsFailure)
-		  return RedirectToAction("Index", new MessageView(
-				EMessageViewType.ERROR,
-				response.Error.Description ?? string.Empty));
+    if (response.IsFailure)
+      return RedirectToAction("Settings", new MessageView(
+        EMessageViewType.ERROR,
+        response.Error.Description ?? string.Empty));
+    
+    _logger.LogInformation($"{User.Identity?.Name} updated your own profile");
+    return RedirectToAction("Settings"); 
+  }
+  
+  [HttpPost]
+  [Authorize(Roles = "admin")]
+  public async Task<IActionResult> Update(UpdateUserRequestDto dto)
+  {
+    var response = await _service.Update(dto);
 
-		_logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
-
-		return RedirectToAction("Index");
-	}
+    if (response.IsFailure)
+      return RedirectToAction("Index", new MessageView(
+        EMessageViewType.ERROR,
+        response.Error.Description ?? string.Empty));
+    
+    _logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
+    return RedirectToAction("Index");
+  }
   
   [Authorize(Roles = "admin")]
 	public async Task<IActionResult> Delete(string id)
@@ -158,8 +172,14 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   }
 
   [Authorize]
-  public async Task<IActionResult> Settings()
+  public async Task<IActionResult> Settings(MessageView? messageView)
   {
-    return View();
+    ViewData["Message"] = messageView;
+    
+    var response = await _service.GetByUsername(User.Identity.Name);
+
+    if (response.IsFailure) return Logout();
+    
+    return View(response.Data);
   }
 }

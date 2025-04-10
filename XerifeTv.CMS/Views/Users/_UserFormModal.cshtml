@@ -1,7 +1,7 @@
 ﻿@using XerifeTv.CMS.Modules.User.Enums
 @using XerifeTv.CMS.Modules.User.Dtos.Response
 
-@model GetUserRequestDto?
+@model GetUserResponseDto?
 
 @{
   ICollection<string[]> roles = [];
@@ -37,25 +37,25 @@ aria-hidden="true">
           <div class="col-6">
             <label for="userName" class="form-label">Nome de Usuário</label>
             <input 
-            type="text" 
-            class="form-control" 
-            id="userName-@Model?.Id" 
-            name="userName" 
-            placeholder="digite aqui..."
-            value="@Model?.UserName"
-            required>
+              type="text" 
+              class="form-control" 
+              id="userName-@Model?.Id" 
+              name="userName" 
+              placeholder="digite aqui..."
+              value="@Model?.UserName"
+              required>
           </div>
 
           <div class="col-6">
             <label for="email" class="form-label">E-mail</label>
             <input 
-            type="email"
-            class="form-control"
-            id="email-@Model?.Id"
-            name="email"
-            placeholder="email@example.com"
-            value="@Model?.Email"
-            required>
+              type="email"
+              class="form-control"
+              id="email-@Model?.Id"
+              name="email"
+              placeholder="email@example.com"
+              value="@Model?.Email"
+              required>
           </div>
         </div>
 
