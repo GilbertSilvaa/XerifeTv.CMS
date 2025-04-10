@@ -52,8 +52,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     if (response.IsFailure)
     {
       ViewData["Message"] = new MessageView(
-        EMessageViewType.ERROR,
-        response.Error.Description ?? string.Empty);
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
 
       _logger.LogInformation("There was an unsuccessful login attempt");
 
@@ -86,8 +85,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
     if (response.IsFailure)
       return RedirectToAction("Index", new MessageView(
-        EMessageViewType.ERROR,
-        response.Error.Description ?? string.Empty));
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
 
     _logger.LogInformation($"{User.Identity?.Name} registered a new user");
 
@@ -102,11 +100,30 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
     if (response.IsFailure)
       return RedirectToAction("Settings", new MessageView(
-        EMessageViewType.ERROR,
-        response.Error.Description ?? string.Empty));
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
     
     _logger.LogInformation($"{User.Identity?.Name} updated your own profile");
     return RedirectToAction("Settings"); 
+  }
+
+  [HttpPost]
+  [Authorize]
+  public async Task<IActionResult> UpdatePassword(UpdatePasswordUserRequestDto dto)
+  {
+    if (dto.NewPassword != dto.NewPasswordConfirm) 
+      return RedirectToAction("Settings", new MessageView(
+        EMessageViewType.ERROR, "Confirmacao de senha incorreta"));
+    
+    var response = await _service.UpdatePassword(dto);
+    
+    if (response.IsFailure)
+      return RedirectToAction("Settings", new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
+    
+    _logger.LogInformation($"{User.Identity?.Name} updated your password");
+    
+    return RedirectToAction("Settings", new MessageView(
+      EMessageViewType.SUCCESS, "Senha atualizada com sucesso")); 
   }
   
   [HttpPost]
@@ -117,8 +134,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
     if (response.IsFailure)
       return RedirectToAction("Index", new MessageView(
-        EMessageViewType.ERROR,
-        response.Error.Description ?? string.Empty));
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
     
     _logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
     return RedirectToAction("Index");

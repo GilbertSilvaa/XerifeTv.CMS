@@ -64,7 +64,7 @@
         <span>Alterar Senha</span>
       </button>
     </div>
-    <div class="tab-content px-3 flex-grow-1" id="v-pills-tabContent">
+    <div class="tab-content px-3 py-1 flex-grow-1" id="v-pills-tabContent">
       <div 
         class="tab-pane fade show active" 
         id="v-pills-profile" 
@@ -80,7 +80,7 @@
         role="tabpanel" 
         aria-labelledby="v-pills-edit-password-tab" 
         tabindex="0">
-        Alterar Senha
+        @await Html.PartialAsync("_UpdatePasswordForm", @Model)
       </div>
     </div>
   </div>

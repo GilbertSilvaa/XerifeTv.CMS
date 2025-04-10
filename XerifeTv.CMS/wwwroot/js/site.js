@@ -69,6 +69,6 @@ document.addEventListener('DOMContentLoaded', function() {
       
     $(this).find('input, select, button, textarea')
       .prop('disabled', false)
-      .prop('readonly', true);
+      .prop('readonly', false);
   });
 });

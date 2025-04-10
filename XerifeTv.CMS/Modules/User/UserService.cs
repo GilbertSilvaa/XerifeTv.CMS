@@ -137,7 +137,7 @@ public sealed class UserService(
       user.Email = dto.Email ?? user.Email;
       user.UserName = dto.UserName ?? user.UserName;
       user.Role = dto.Role ?? user.Role;
-
+      
       await _repository.UpdateAsync(user);
 
       return Result<string>.Success(user.Id);
@@ -146,6 +146,32 @@ public sealed class UserService(
 		{
 			return Result<string>.Failure(new Error("400", ex.Message));
 		}
+    catch (Exception ex)
+    {
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<string>.Failure(error);
+    }
+  }
+
+  public async Task<Result<string>> UpdatePassword(UpdatePasswordUserRequestDto dto)
+  {
+    try
+    {
+      var user = await _repository.GetAsync(dto.Id);
+      
+      if  (user is null) 
+        return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
+      
+      var isPasswordCorrect = _hashPassword.Verify(dto.OldPassword, user.Password);
+      
+      if (!isPasswordCorrect)
+        return Result<string>.Failure(new Error("401", "Senha atual incorreta"));
+      
+      user.Password = _hashPassword.Encrypt(dto.NewPassword);
+      await _repository.UpdateAsync(user);
+      
+      return Result<string>.Success(user.Id);
+    }
     catch (Exception ex)
     {
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);

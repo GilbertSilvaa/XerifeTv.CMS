@@ -11,6 +11,7 @@ public interface IUserService
   Task<Result<PagedList<GetUserResponseDto>>> Get(int currentPage, int limit);
   Task<Result<GetUserResponseDto?>> GetByUsername(string userName);
   Task<Result<string>> Update(UpdateUserRequestDto dto);
+  Task<Result<string>> UpdatePassword(UpdatePasswordUserRequestDto dto);
   Task<Result<bool>> Delete(string id);
   Task<Result<(string? newToken, string? newRefreshToken)>> TryRefreshSession(string refreshToken);
 }
