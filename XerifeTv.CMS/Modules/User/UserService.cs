@@ -38,7 +38,7 @@ public sealed class UserService(
   {
     try
     {
-      var response = await _repository.GetByUserNameAsync(username);
+      var response = await _repository.GetByUsernameAsync(username);
       
       if (response == null)
         return Result<GetUserResponseDto?>.Failure(
@@ -59,7 +59,7 @@ public sealed class UserService(
     {
       var entity = dto.ToEntity();
 
-			var userByName = await _repository.GetByUserNameAsync(entity.UserName);
+			var userByName = await _repository.GetByUsernameAsync(entity.UserName);
 
       if (userByName != null)
         return Result<string>.Failure(new Error("409", "Username ja registrado"));
@@ -91,7 +91,7 @@ public sealed class UserService(
     {
       var response = RegexHelper.IsValidEmail(dto.UserNameOrEmail) 
         ? await _repository.GetByEmailAsync(dto.UserNameOrEmail)
-        : await _repository.GetByUserNameAsync(dto.UserNameOrEmail);
+        : await _repository.GetByUsernameAsync(dto.UserNameOrEmail);
 
 			if (response is null)
         return Result<LoginUserResponseDto>.Failure(
@@ -124,7 +124,7 @@ public sealed class UserService(
       if (user is null)
         return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
 
-      var userByName = await _repository.GetByUserNameAsync(dto.UserName);
+      var userByName = await _repository.GetByUsernameAsync(dto.UserName);
 
       if (userByName != null && userByName.Id != user.Id)
         return Result<string>.Failure(new Error("409", "Username ja registrado"));
@@ -184,7 +184,7 @@ public sealed class UserService(
       if (!isValid) 
         return Result<(string?, string?)>.Failure(new Error("401", "Token invalido"));
       
-      var user = await _repository.GetByUserNameAsync(userName!);
+      var user = await _repository.GetByUsernameAsync(userName!);
       
       return Result<(string?, string?)>.Success((
         _tokenService.GenerateToken(user!), 

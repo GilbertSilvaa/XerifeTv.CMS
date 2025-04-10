@@ -9,7 +9,7 @@ namespace XerifeTv.CMS.Modules.User;
 public sealed class UserRepository(IOptions<DBSettings> options)
   : BaseRepository<UserEntity>(ECollection.USERS, options), IUserRepository
 {
-  public async Task<UserEntity?> GetByUserNameAsync(string userName)
+  public async Task<UserEntity?> GetByUsernameAsync(string userName)
     => await _collection
         .Find(r => r.UserName.Equals(userName))
         .FirstOrDefaultAsync();
