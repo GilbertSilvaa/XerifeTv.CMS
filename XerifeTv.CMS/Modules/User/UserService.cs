@@ -3,6 +3,7 @@ using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
 using XerifeTv.CMS.Modules.User.Interfaces;
+using XerifeTv.CMS.Modules.User.Specifications;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.User;
@@ -58,19 +59,16 @@ public sealed class UserService(
     try
     {
       var entity = dto.ToEntity();
+      var emailSpec = new UniqueEmailSpecification(_repository);
+      var usernameSpec = new UniqueUsernameSpecification(_repository);
 
-			var userByName = await _repository.GetByUsernameAsync(entity.UserName);
-
-      if (userByName != null)
-        return Result<string>.Failure(new Error("409", "Username ja registrado"));
-
-			var userByEmail = await _repository.GetByEmailAsync(entity.Email);
-
-      if (userByEmail != null)
-				return Result<string>.Failure(new Error("409", "Email ja registrado"));
+      if (!await emailSpec.IsSatisfiedByAsync(entity))
+        return Result<string>.Failure(new Error("409", "Email ja esta em uso"));
+      
+      if (!await usernameSpec.IsSatisfiedByAsync(entity))
+        return Result<string>.Failure(new Error("409", "Username ja esta em uso"));
 
 			entity.Password = _hashPassword.Encrypt(dto.Password);
-
       var response = await _repository.CreateAsync(entity);
       return Result<string>.Success(response);
     }
@@ -123,16 +121,15 @@ public sealed class UserService(
 
       if (user is null)
         return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
-
-      var userByName = await _repository.GetByUsernameAsync(dto.UserName);
-
-      if (userByName != null && userByName.Id != user.Id)
-        return Result<string>.Failure(new Error("409", "Username ja registrado"));
-
-      var userByEmail = await _repository.GetByEmailAsync(dto.Email);
-
-      if (userByEmail != null && userByEmail.Id != user.Id)
-        return Result<string>.Failure(new Error("409", "Email ja registrado"));
+      
+      var emailSpec = new UniqueEmailSpecification(_repository);
+      var usernameSpec = new UniqueUsernameSpecification(_repository);
+      
+      if (!await emailSpec.IsSatisfiedByAsync(dto.ToEntity()))
+        return Result<string>.Failure(new Error("409", "Email ja esta em uso"));
+      
+      if (!await usernameSpec.IsSatisfiedByAsync(dto.ToEntity()))
+        return Result<string>.Failure(new Error("409", "Username ja esta em uso"));
 
       user.Email = dto.Email ?? user.Email;
       user.UserName = dto.UserName ?? user.UserName;
