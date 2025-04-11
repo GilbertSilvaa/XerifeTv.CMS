@@ -71,4 +71,20 @@ document.addEventListener('DOMContentLoaded', function() {
       .prop('disabled', false)
       .prop('readonly', false);
   });
+  
+  // toggles input visibility (show/hide) when icon button is clicked
+  $('.show-hide-password').on('click', function (event) {
+    const input = $(this).siblings('input');
+    
+    if ($(input).prop('type') === 'password') {
+      $(input).prop('type', 'text');
+      $(this).find('i').removeClass('fa-regular fa-eye-slash');
+      $(this).find('i').addClass('fa-regular fa-eye');
+    }
+    else {
+      $(input).prop('type', 'password');
+      $(this).find('i').removeClass('fa-regular fa-eye');
+      $(this).find('i').addClass('fa-regular fa-eye-slash');
+    }
+  });
 });

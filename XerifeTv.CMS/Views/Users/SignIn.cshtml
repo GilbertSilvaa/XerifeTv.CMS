@@ -42,13 +42,22 @@
     </div>
     <div class="mb-4">
       <label for="password" class="form-label text-light">Senha</label>
-      <input 
-        type="password" 
-        class="form-control"
-        id="password" 
-        name="password" 
-        placeholder="digite aqui..." 
-        required>
+      <div class="input-group">
+        <input 
+          type="password" 
+          class="form-control"
+          id="password" 
+          name="password" 
+          placeholder="digite aqui..." 
+          required>
+
+        <div 
+          class="input-group-text fw-bold show-hide-password" 
+          style="font-size: 12px;" 
+          role="button">
+          <i class="fa-regular fa-eye-slash"></i>
+        </div>
+      </div>
     </div>
 
     <button type="submit" class="btn btn-primary w-100 mt-1">Login</button>
