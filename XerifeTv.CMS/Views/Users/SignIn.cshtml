@@ -24,7 +24,7 @@
   <form 
     asp-controller="Users"
     asp-action="SignIn"
-    class="w-50 p-4 py-5 signin-form">
+    class="w-50 p-4 py-5 signin-form position-relative">
 
     <div class="w-100 d-flex justify-content-center mb-5 py-1">
       <img src="~/assets/logo.png" alt="logo" style="width: 60%;"/>
@@ -61,5 +61,15 @@
     </div>
 
     <button type="submit" class="btn btn-primary w-100 mt-1">Login</button>
+
+    <div 
+      class="w-100 d-flex justify-content-center align-items-center position-absolute"
+      style="right: 0; bottom: -2.5rem;">
+      <a
+        role="button"
+        class="link-offset-2 link-underline link-underline-opacity-0">
+        Esqueci minha senha
+      </a>
+    </div>
   </form>
 </div>
