@@ -3,22 +3,23 @@
 @{
   var messageView = ViewData["Message"] as MessageView;
 
-  ICollection<string[]> pagesView = [];
-  pagesView.Add(["Home", "Index", "Dashboard", "fa-solid fa-chart-simple"]);
-  pagesView.Add(["Movies", "Index", "Filmes", "fa-solid fa-film"]);
-  pagesView.Add(["Series", "Index", "Séries", "fa-solid fa-video"]);
-  pagesView.Add(["Channels", "Index", "Canais", "fa-solid fa-satellite-dish"]);
-
-  if (User.IsInRole("admin"))
-    pagesView.Add(["Users", "Index", "Usuários", "fa-solid fa-users"]);
+  ICollection<string[]> pagesViewSideMenu = [];
+  pagesViewSideMenu.Add(["Home", "Index", "Dashboard", "fa-solid fa-chart-simple"]);
+  pagesViewSideMenu.Add(["Movies", "Index", "Filmes", "fa-solid fa-film"]);
+  pagesViewSideMenu.Add(["Series", "Index", "Séries", "fa-solid fa-video"]);
+  pagesViewSideMenu.Add(["Channels", "Index", "Canais", "fa-solid fa-satellite-dish"]);
   
-  pagesView.Add(["Users", "Settings", "Configurações", "fa-solid fa-gear"]);
+  if (User.IsInRole("admin")) pagesViewSideMenu.Add(["Users", "Index", "Usuários", "fa-solid fa-users"]);
+  
+  pagesViewSideMenu.Add(["Users", "Settings", "Configurações", "fa-solid fa-gear"]);
   
   /* pagesView[x][0] => Controller view
    * pagesView[x][1] => Controller action view
    * pagesView[x][2] => Page name in side menu
    * pagesView[x][3] => Page icon in side menu
   */
+
+  IEnumerable<string> pagesViewWithoutTemplate = [ "SignIn", "Esqueci senha" ];
 }
 
 <!DOCTYPE html>
@@ -69,7 +70,7 @@
 
   <div class="row flex-nowrap">
 
-    @if (ViewData["title"]?.ToString() != "SignIn")
+    @if (!pagesViewWithoutTemplate.Contains(ViewData["title"]?.ToString()))
     {
       <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 side-menu">
         <div class="d-flex flex-column align-items-center align-items-sm-start gap-2 px-2 pt-2 text-white min-vh-100">
@@ -79,7 +80,7 @@
           </a>
 
           <ul class="w-100 nav nav-pills flex-column mb-sm-auto mb-0 mt-3 align-items-center align-items-sm-start" id="menu">
-            @foreach (var pageView in pagesView)
+            @foreach (var pageView in pagesViewSideMenu)
             {
               <li class="w-100 nav-item py-2">
                 <a
