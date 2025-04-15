@@ -35,11 +35,18 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [AllowAnonymous]
   public IActionResult SignIn()
   {
-    if (User.Identity is null) return View();
-
     if (User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
 
+    return View();
+  }
+
+  [AllowAnonymous]
+  public IActionResult EmailResetPasswordForm()
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+    
     return View();
   }
 
