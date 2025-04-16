@@ -11,7 +11,8 @@ namespace XerifeTv.CMS.Modules.User;
 public sealed class UserService(
   IHashPassword _hashPassword,
   IUserRepository _repository, 
-  ITokenService _tokenService) : IUserService
+  ITokenService _tokenService,
+  IEmailService _emailService) : IUserService
 {
   public async Task<Result<PagedList<GetUserResponseDto>>> Get(int currentPage, int limit)
   {
@@ -231,7 +232,9 @@ public sealed class UserService(
       
       user.ResetPasswordGuid = Guid.NewGuid();
       user.ResetPasswordGuidExpires = DateTimeOffset.UtcNow.AddMinutes(10);
+      
       await _repository.UpdateAsync(user);
+      await _emailService.SendEmailResetPasswordAsync(email, user.ResetPasswordGuid.ToString());
 
       return Result<string>.Success(email);
     }

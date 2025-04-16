@@ -75,6 +75,15 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     return View(model: email);
   }
 
+  [AllowAnonymous]
+  public IActionResult ResetPassword(string code)
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+    
+    return View();
+  }
+
   [HttpPost]
   [AllowAnonymous]
   public async Task<IActionResult> SignIn(LoginUserRequestDto dto)
