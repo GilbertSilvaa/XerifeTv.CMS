@@ -23,4 +23,6 @@ public class UserEntity : BaseEntity
 
   public string Password { get; set; } = string.Empty;
   public EUserRole Role { get; set; } = EUserRole.COMMON;
+  public Guid? ResetPasswordGuid { get; set; }
+  public DateTimeOffset? ResetPasswordGuidExpires { get; set; }
 }

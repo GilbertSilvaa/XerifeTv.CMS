@@ -224,10 +224,14 @@ public sealed class UserService(
   {
     try
     {
-      var userByEmail = await _repository.GetByEmailAsync(email);
+      var user = await _repository.GetByEmailAsync(email);
       
-      if (userByEmail is null) 
+      if (user is null) 
         return Result<string>.Failure(new Error("404", "Email nao registrado"));
+      
+      user.ResetPasswordGuid = Guid.NewGuid();
+      user.ResetPasswordGuidExpires = DateTimeOffset.UtcNow.AddMinutes(10);
+      await _repository.UpdateAsync(user);
 
       return Result<string>.Success(email);
     }
