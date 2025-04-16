@@ -219,4 +219,22 @@ public sealed class UserService(
       return Result<(string?, string?)>.Failure(error);
     }
   }
+
+  public async Task<Result<string>> SendEmailResetPassword(string email)
+  {
+    try
+    {
+      var userByEmail = await _repository.GetByEmailAsync(email);
+      
+      if (userByEmail is null) 
+        return Result<string>.Failure(new Error("404", "Email nao registrado"));
+
+      return Result<string>.Success(email);
+    }
+    catch (Exception ex)
+    {
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<string>.Failure(error);
+    }
+  }
 }

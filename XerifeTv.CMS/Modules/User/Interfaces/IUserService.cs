@@ -14,4 +14,5 @@ public interface IUserService
   Task<Result<string>> UpdatePassword(UpdatePasswordUserRequestDto dto);
   Task<Result<bool>> Delete(string id);
   Task<Result<(string? newToken, string? newRefreshToken)>> TryRefreshSession(string refreshToken);
+  Task<Result<string>> SendEmailResetPassword(string email);
 }

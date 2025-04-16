@@ -52,6 +52,31 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
   [HttpPost]
   [AllowAnonymous]
+  public async Task<IActionResult> EmailResetPasswordForm(string email)
+  {
+
+    var response = await _service.SendEmailResetPassword(email);
+
+    if (response.IsFailure)
+    {
+      ViewData["Message"] = new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
+
+      _logger.LogInformation($"{email} tried to send password reset email and failed");
+
+      return View();
+    }
+    
+    ViewData["Message"] = new MessageView(
+      EMessageViewType.SUCCESS, "Email enviado com sucesso");
+    
+    _logger.LogInformation($"{email} tried to send password reset email");
+    
+    return View(model: email);
+  }
+
+  [HttpPost]
+  [AllowAnonymous]
   public async Task<IActionResult> SignIn(LoginUserRequestDto dto)
   {
     var response = await _service.Login(dto);
