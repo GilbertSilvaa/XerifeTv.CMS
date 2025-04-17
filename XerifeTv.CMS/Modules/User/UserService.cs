@@ -244,4 +244,25 @@ public sealed class UserService(
       return Result<string>.Failure(error);
     }
   }
+
+  public async Task<Result<string>> ValidateResetPasswordGuid(Guid guid)
+  {
+    try
+    {
+      var user = await _repository.GetByResetPasswordGuidAsync(guid);
+    
+      if (user is null)
+        return Result<string>.Failure(new Error("404", "Link invalido"));
+    
+      if (user.ResetPasswordGuidExpires <DateTimeOffset.UtcNow)
+        return Result<string>.Failure(new Error("401", "O link expirou"));
+    
+      return Result<string>.Success(user.Id); 
+    }
+    catch (Exception ex)
+    {
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<string>.Failure(error);
+    }
+  }
 }

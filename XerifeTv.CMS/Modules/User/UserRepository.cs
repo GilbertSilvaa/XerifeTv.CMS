@@ -18,4 +18,9 @@ public sealed class UserRepository(IOptions<DBSettings> options)
 		=> await _collection
 				.Find(r => r.Email.Equals(email))
 				.FirstOrDefaultAsync();
+
+  public async Task<UserEntity?> GetByResetPasswordGuidAsync(Guid guid)
+		=> await _collection
+				.Find(r => r.ResetPasswordGuid.Equals(guid))
+				.FirstOrDefaultAsync();
 }

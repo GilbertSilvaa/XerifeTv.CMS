@@ -76,11 +76,28 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   }
 
   [AllowAnonymous]
-  public IActionResult ResetPassword(string code)
+  public async Task<IActionResult> ResetPassword(string code)
   {
     if (User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
     
+    var response = await _service.ValidateResetPasswordGuid(new Guid(code));
+    
+    if (response.IsFailure)
+    {
+      ViewData["Message"] = new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
+      
+      return View();
+    }
+    
+    return View(model: response.Data);
+  }
+  
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto dto)
+  {
     return View();
   }
 
