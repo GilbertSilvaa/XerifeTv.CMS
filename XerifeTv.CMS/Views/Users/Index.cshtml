@@ -1,18 +1,20 @@
 ﻿@using XerifeTv.CMS.Modules.User.Dtos.Response
 
-@model IEnumerable<GetUserRequestDto>;
+@model IEnumerable<GetUserResponseDto>
 
 @{
   ViewData["Title"] = "Usuários";
+
+  var userDtoEmpty = new GetUserResponseDto();
 }
 
 <div class="container">
-  @await Html.PartialAsync("_UserFormModal")
+  @await Html.PartialAsync("_UserFormModal", userDtoEmpty)
 
   <header>
     <div class="d-flex align-items-center justify-content-between gap-4">
       <span class="fs-3 fw-normal">Usuários</span>
-      <a class="btn btn-primary" role="button" data-bs-toggle="modal" data-bs-target="#userFormModal">
+      <a class="btn btn-primary" role="button" data-bs-toggle="modal" data-bs-target="#userFormModal-@userDtoEmpty.Id">
         <i class="fa-solid fa-plus"></i> Cadastrar
       </a>
     </div>
@@ -29,13 +31,17 @@
           </div>
           <div class="card-body d-flex justify-content-between align-items-center">
             <span class="card-text">@user.UserName</span>
-            
-            <a role="button" class="btn btn-danger btn-sm" onclick="deleteUser('@user.Id')">
-              <i class="fa-solid fa-trash"></i>
-            </a>
+
+            <div class="d-flex align-items-center gap-2">
+              <a class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#userFormModal-@user.Id">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </a>
+            </div>
           </div>
         </div>
       </div>
+
+      @await Html.PartialAsync("_UserFormModal", user)
     }
 
     @if (Model?.Count() <= 0)

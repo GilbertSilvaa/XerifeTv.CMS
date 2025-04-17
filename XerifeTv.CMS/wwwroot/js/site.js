@@ -3,9 +3,10 @@
   
   // check if dark theme
   if (theme === 'dark') {
-    $('#change-theme').data('theme', 'light');
-    $('#change-theme').find('i').removeClass('fa-moon');
-    $('#change-theme').find('i').addClass('fa-sun');
+    const darkThemeCheckbox = $('#darkTheme');
+    $(darkThemeCheckbox).prop('checked', true);
+    $(darkThemeCheckbox).parent().siblings('i.fa-sun').removeClass('text-warning');
+    $(darkThemeCheckbox).parent().siblings('i.fa-moon').addClass('text-warning');
   }
 }
 
@@ -28,23 +29,62 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   
   // change global theme
-  $('#change-theme').on('click', function (){
-    const theme = $(this).data('theme');
-    $('html').attr('data-bs-theme', theme);
-    localStorage.setItem('theme', theme);
+  $('#darkTheme').on('change', function (){
+    const isDarkTheme = $(this).prop('checked');
     
-    if (theme === 'dark') {
+    $('html').attr('data-bs-theme', isDarkTheme ? 'dark' : 'light');
+    localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
+    
+    if (isDarkTheme) {
       $('body').addClass('bg-dark');
-      $(this).data('theme', 'light');
-      $(this).find('i').removeClass('fa-moon');
-      $(this).find('i').addClass('fa-sun');
-      $('body').addClass('bg-dark');
+      $(this).parent().siblings('i.fa-sun').removeClass('text-warning');
+      $(this).parent().siblings('i.fa-moon').addClass('text-warning');
     }
     else {
       $('body').removeClass('bg-dark');
-      $(this).data('theme', 'dark');
-      $(this).find('i').removeClass('fa-sun');
-      $(this).find('i').addClass('fa-moon');
+      $(this).parent().siblings('i.fa-moon').removeClass('text-warning');
+      $(this).parent().siblings('i.fa-sun').addClass('text-warning');
+    }
+  });
+  
+  // forms with disabled fields that can be enabled with an edit/save button
+  $('.unblock-form').on('click', function (event){
+    if ($(this).prop('type') !== 'submit') {
+      event.preventDefault();
+      $(this).parent('form').find('input[disabled]').prop('disabled', false);
+      $(this).parent('form').find('input[type!=hidden]').first().focus();
+      $(this).text($(this).data('title'));
+      $(this).prop('type', 'submit');
+    }
+  });
+  
+  // forms that require confirmation to be submitted
+  $('form[data-confirm]').on('submit', function (event) {
+    event.preventDefault();
+    
+    if (confirm($(this).data('confirm'))) {
+      $(this).off('submit').submit();
+      return;
+    }
+      
+    $(this).find('input, select, button, textarea')
+      .prop('disabled', false)
+      .prop('readonly', false);
+  });
+  
+  // toggles input visibility (show/hide) when icon button is clicked
+  $('.show-hide-password').on('click', function (event) {
+    const input = $(this).siblings('input');
+    
+    if ($(input).prop('type') === 'password') {
+      $(input).prop('type', 'text');
+      $(this).find('i').removeClass('fa-regular fa-eye-slash');
+      $(this).find('i').addClass('fa-regular fa-eye');
+    }
+    else {
+      $(input).prop('type', 'password');
+      $(this).find('i').removeClass('fa-regular fa-eye');
+      $(this).find('i').addClass('fa-regular fa-eye-slash');
     }
   });
 });

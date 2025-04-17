@@ -24,33 +24,53 @@
   <form 
     asp-controller="Users"
     asp-action="SignIn"
-    class="w-50 p-4 py-5 signin-form">
+    class="w-50 p-4 py-5 signin-form position-relative">
 
     <div class="w-100 d-flex justify-content-center mb-5 py-1">
       <img src="~/assets/logo.png" alt="logo" style="width: 60%;"/>
     </div>
 
     <div class="mb-3">
-      <label for="userName" class="form-label text-light">Nome de Usuário</label>
+      <label for="userNameOrEmail" class="form-label text-light">Usuário ou E-mail</label>
       <input 
         type="text" 
         class="form-control" 
-        id="userName" 
-        name="userName" 
+        id="userNameOrEmail" 
+        name="userNameOrEmail" 
         placeholder="digite aqui..." 
         required>
     </div>
     <div class="mb-4">
       <label for="password" class="form-label text-light">Senha</label>
-      <input 
-        type="password" 
-        class="form-control"
-        id="password" 
-        name="password" 
-        placeholder="digite aqui..." 
-        required>
+      <div class="input-group">
+        <input 
+          type="password" 
+          class="form-control"
+          id="password" 
+          name="password" 
+          placeholder="digite aqui..." 
+          required>
+
+        <div 
+          class="input-group-text fw-bold show-hide-password" 
+          style="font-size: 12px;" 
+          role="button">
+          <i class="fa-regular fa-eye-slash"></i>
+        </div>
+      </div>
     </div>
 
     <button type="submit" class="btn btn-primary w-100 mt-1">Login</button>
+
+    <div 
+      class="w-100 d-flex justify-content-center align-items-center position-absolute"
+      style="right: 0; bottom: -2.5rem;">
+      <a
+        href="@Url.Action("EmailResetPasswordForm")"
+        role="button"
+        class="link-offset-2 link-underline link-underline-opacity-0">
+        Esqueci minha senha
+      </a>
+    </div>
   </form>
 </div>

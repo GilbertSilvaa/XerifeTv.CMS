@@ -54,6 +54,7 @@ public static class ConfigureServices
     services.AddScoped<IStorageFilesService, StorageFilesService>();
     services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
     services.AddScoped<IHashPassword, HashPassword>();
+    services.AddScoped<IEmailService, EmailService>();
     return services;
   }
 

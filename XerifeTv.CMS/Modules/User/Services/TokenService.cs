@@ -24,7 +24,7 @@ public sealed class TokenService(IConfiguration _configuration) : ITokenService
       new Claim(ClaimTypes.Role, user.Role.ToString().ToLower()),
     };
 
-    int.TryParse(_configuration["Jwt:ExpirationTimeInMinutes"],  out var expireTimeInMinutes);
+		_ = int.TryParse(_configuration["Jwt:ExpirationTimeInMinutes"], out int expireTimeInMinutes);
     
     var tokenOptions = new JwtSecurityToken(
       issuer, 

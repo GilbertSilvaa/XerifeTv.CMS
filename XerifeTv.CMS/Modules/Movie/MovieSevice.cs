@@ -6,6 +6,7 @@ using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Modules.Movie.Specifications;
 using JsonConvert = Newtonsoft.Json.JsonConvert;
 
 namespace XerifeTv.CMS.Modules.Movie;
@@ -60,8 +61,9 @@ public sealed class MovieSevice(
     try
     {
       var entity = dto.ToEntity();
+      var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
       
-      if (await _repository.GetByImdbIdAsync(entity.ImdbId) != null)
+      if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
         return Result<string>.Failure(
           new Error("409", $"Filme nao cadastrado. Imdb ID {entity.ImdbId} duplicado"));
 
@@ -84,9 +86,10 @@ public sealed class MovieSevice(
 
       if (response is null)
         return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
+      
+      var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
 
-      if (entity.ImdbId != response.ImdbId)
-        if (await _repository.GetByImdbIdAsync(entity.ImdbId) != null)
+      if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
           return Result<string>.Failure(
             new Error("409", $"Filme nao atualizado. Imdb ID {entity.ImdbId} duplicado"));
 
