@@ -5,5 +5,7 @@ namespace XerifeTv.CMS.Modules.User.Interfaces;
 
 public interface IUserRepository : IBaseRepository<UserEntity>
 {
-  Task<UserEntity?> GetByUserNameAsync(string userName);
+  Task<UserEntity?> GetByUsernameAsync(string userName);
+  Task<UserEntity?> GetByEmailAsync(string email);
+  Task<UserEntity?> GetByResetPasswordGuidAsync(Guid guid);
 }

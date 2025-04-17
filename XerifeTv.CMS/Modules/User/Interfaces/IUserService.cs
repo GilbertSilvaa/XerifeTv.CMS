@@ -8,7 +8,13 @@ public interface IUserService
 {
   Task<Result<string>> Register(RegisterUserRequestDto dto);
   Task<Result<LoginUserResponseDto>> Login(LoginUserRequestDto dto);
-  Task<Result<PagedList<GetUserRequestDto>>> Get(int currentPage, int limit);
+  Task<Result<PagedList<GetUserResponseDto>>> Get(int currentPage, int limit);
+  Task<Result<GetUserResponseDto?>> GetByUsername(string userName);
+  Task<Result<string>> Update(UpdateUserRequestDto dto);
+  Task<Result<string>> UpdatePassword(UpdatePasswordUserRequestDto dto);
+  Task<Result<ValidateResetPasswordGuidResponseDto>> ResetPassword(ResetPasswordRequestDto dto);
   Task<Result<bool>> Delete(string id);
   Task<Result<(string? newToken, string? newRefreshToken)>> TryRefreshSession(string refreshToken);
+  Task<Result<string>> SendEmailResetPassword(string email);
+  Task<Result<ValidateResetPasswordGuidResponseDto>> ValidateResetPasswordGuid(Guid guid);
 }

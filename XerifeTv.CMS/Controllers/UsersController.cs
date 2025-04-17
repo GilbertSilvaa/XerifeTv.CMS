@@ -7,10 +7,9 @@ using XerifeTv.CMS.Modules.User.Interfaces;
 
 namespace XerifeTv.CMS.Controllers;
 
-[Authorize(Roles = "admin")]
 public class UsersController(IUserService _service, ILogger<UsersController> _logger) : Controller
 {
-  private readonly CookieOptions _cookieOptions = new CookieOptions
+  private readonly CookieOptions _cookieOptions = new()
   {
     HttpOnly = true,
     Secure = true,
@@ -18,6 +17,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     Expires = DateTime.UtcNow.AddHours(6)
   };
   
+  [Authorize(Roles = "admin")]
   public async Task<IActionResult> Index(MessageView? messageView)
   {
     ViewData["Message"] = messageView;
@@ -29,20 +29,20 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     if (response.IsSuccess)
       return View(response.Data?.Items);
 
-    return View(Enumerable.Empty<GetUserRequestDto>());
+    return View(Enumerable.Empty<GetUserResponseDto>());
   }
 
   [AllowAnonymous]
-  public IActionResult SignIn()
+  public IActionResult SignIn(MessageView? messageView)
   {
-    if (User.Identity is null) return View();
-
     if (User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
+    
+    ViewData["Message"] = messageView;
 
     return View();
   }
-
+  
   [HttpPost]
   [AllowAnonymous]
   public async Task<IActionResult> SignIn(LoginUserRequestDto dto)
@@ -52,22 +52,110 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     if (response.IsFailure)
     {
       ViewData["Message"] = new MessageView(
-        EMessageViewType.ERROR,
-        response.Error.Description ?? string.Empty);
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
 
       _logger.LogInformation("There was an unsuccessful login attempt");
 
       return View();
     }
     
-    Response.Cookies.Append("token", response.Data.Token, _cookieOptions);
-    Response.Cookies.Append("refreshToken", response.Data.RefreshToken, _cookieOptions);
+    Response.Cookies.Append("token", response.Data?.Token ?? string.Empty, _cookieOptions);
+    Response.Cookies.Append("refreshToken", response.Data?.RefreshToken ?? string.Empty, _cookieOptions);
 
     _logger.LogInformation($"{User.Identity?.Name} logged into the system");
 
     return RedirectToAction("Index", "Home");
   }
 
+  [AllowAnonymous]
+  public IActionResult EmailResetPasswordForm()
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+    
+    return View();
+  }
+
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> EmailResetPasswordForm(string email)
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+
+    var response = await _service.SendEmailResetPassword(email);
+
+    if (response.IsFailure)
+    {
+      ViewData["Message"] = new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
+
+      _logger.LogInformation($"{email} tried to send password reset email and failed");
+
+      return View();
+    }
+    
+    ViewData["Message"] = new MessageView(
+      EMessageViewType.SUCCESS, "Email enviado com sucesso");
+    
+    _logger.LogInformation($"{email} tried to send password reset email");
+    
+    return View(model: email);
+  }
+
+  [AllowAnonymous]
+  public async Task<IActionResult> ResetPassword(string code, string? errorMessage)
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+    
+    var response = await _service.ValidateResetPasswordGuid(new Guid(code));
+    
+    if (response.IsFailure)
+    {
+      ViewData["Message"] = new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
+      
+      return View();
+    }
+
+    if (errorMessage != null)
+      ViewData["Message"] = new MessageView(EMessageViewType.ERROR, errorMessage);
+    
+    return View(model: response.Data);
+  }
+  
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto dto)
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+    
+    if (dto.Password != dto.ConfirmPassword)
+    {
+      return RedirectToAction("ResetPassword", new
+      {
+        code = dto.CodeGuid,
+        errorMessage = "Confirmacao de senha incorreta"
+      });
+    }
+    
+    var response = await _service.ResetPassword(dto);
+
+    if (response.IsFailure)
+    {
+      return RedirectToAction("ResetPassword", new
+      {
+        code = dto.CodeGuid,
+        errorMessage = response.Error.Description
+      });
+    }
+    
+    return RedirectToAction("SignIn", new MessageView(
+      EMessageViewType.SUCCESS, "Senha redefinida com sucesso"));
+  }
+  
   [AllowAnonymous]
   public IActionResult Logout()
   {
@@ -77,22 +165,72 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     Response.Cookies.Delete("refreshToken");
     return RedirectToAction("Index", "Home");
   }
-
+  
+  [HttpPost]
+  [Authorize(Roles = "admin")]
   public async Task<IActionResult> Register(RegisterUserRequestDto dto)
   {
     var response = await _service.Register(dto);
 
     if (response.IsFailure)
       return RedirectToAction("Index", new MessageView(
-        EMessageViewType.ERROR,
-        response.Error.Description ?? string.Empty));
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
 
     _logger.LogInformation($"{User.Identity?.Name} registered a new user");
 
     return RedirectToAction("Index");
   }
+  
+  [HttpPost]
+  [Authorize]
+  public async Task<IActionResult> UpdateProfile(UpdateUserRequestDto dto)
+  {
+    var response = await _service.Update(dto);
 
-  public async Task<IActionResult> Delete(string id)
+    if (response.IsFailure)
+      return RedirectToAction("Settings", new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
+    
+    _logger.LogInformation($"{User.Identity?.Name} updated your own profile");
+    return RedirectToAction("Settings"); 
+  }
+
+  [HttpPost]
+  [Authorize]
+  public async Task<IActionResult> UpdatePassword(UpdatePasswordUserRequestDto dto)
+  {
+    if (dto.NewPassword != dto.NewPasswordConfirm) 
+      return RedirectToAction("Settings", new MessageView(
+        EMessageViewType.ERROR, "Confirmacao de senha incorreta"));
+    
+    var response = await _service.UpdatePassword(dto);
+    
+    if (response.IsFailure)
+      return RedirectToAction("Settings", new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
+    
+    _logger.LogInformation($"{User.Identity?.Name} updated your password");
+    
+    return RedirectToAction("Settings", new MessageView(
+      EMessageViewType.SUCCESS, "Senha atualizada com sucesso")); 
+  }
+  
+  [HttpPost]
+  [Authorize(Roles = "admin")]
+  public async Task<IActionResult> Update(UpdateUserRequestDto dto)
+  {
+    var response = await _service.Update(dto);
+
+    if (response.IsFailure)
+      return RedirectToAction("Index", new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
+    
+    _logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
+    return RedirectToAction("Index");
+  }
+  
+  [Authorize(Roles = "admin")]
+	public async Task<IActionResult> Delete(string id)
   {
     await _service.Delete(id);
 
@@ -136,5 +274,17 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     }
     
     return RedirectToAction("SignIn");
+  }
+
+  [Authorize]
+  public async Task<IActionResult> Settings(MessageView? messageView)
+  {
+    ViewData["Message"] = messageView;
+    
+    var response = await _service.GetByUsername(User.Identity.Name);
+
+    if (response.IsFailure) return Logout();
+    
+    return View(response.Data);
   }
 }

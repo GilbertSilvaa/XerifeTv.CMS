@@ -1,4 +1,7 @@
 ﻿@using XerifeTv.CMS.Modules.User.Enums
+@using XerifeTv.CMS.Modules.User.Dtos.Response
+
+@model GetUserResponseDto?
 
 @{
   ICollection<string[]> roles = [];
@@ -7,72 +10,110 @@
 }
 
 <div 
-  class="modal fade" 
-  id="userFormModal" 
-  data-bs-backdrop="static" 
-  data-bs-keyboard="false" 
-  tabindex="-1"
-  aria-labelledby="userFormModalLabel"
-  aria-hidden="true">
+class="modal fade" 
+id="userFormModal-@Model?.Id" 
+data-bs-backdrop="static" 
+data-bs-keyboard="false" 
+tabindex="-1"
+aria-labelledby="userFormModal-@Model?.Id-Label"
+aria-hidden="true">
 
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <form 
       class="modal-content" 
       asp-controller="Users"
-      asp-action="Register">
+      asp-action="@(string.IsNullOrEmpty(Model?.Id) ? "Register" : "Update")">
+
+      <input type="hidden" name="id" value="@Model?.Id" />
 
       <div class="modal-header">
-        <h1 class="modal-title fs-5" id="userFormModalLabel">
-          Cadastrar Usuário
+        <h1 class="modal-title fs-5" id="userFormModal-@Model?.Id-Label">
+          @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar") Usuário
         </h1>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <div class="row mb-2">
+        <div class="row mb-3">
           <div class="col-6">
             <label for="userName" class="form-label">Nome de Usuário</label>
             <input 
               type="text" 
               class="form-control" 
-              id="userName" 
+              id="userName-@Model?.Id" 
               name="userName" 
-              placeholder="digite aqui..." 
+              placeholder="digite aqui..."
+              value="@Model?.UserName"
               required>
           </div>
 
           <div class="col-6">
-            <label for="password" class="form-label">Senha</label>
+            <label for="email" class="form-label">E-mail</label>
             <input 
-              type="password" 
-              class="form-control" 
-              id="password" 
-              name="password" 
-              placeholder="digite aqui..." 
+              type="email"
+              class="form-control"
+              id="email-@Model?.Id"
+              name="email"
+              placeholder="email@example.com"
+              value="@Model?.Email"
               required>
           </div>
         </div>
 
-        <div class="row mb-2">
-          <div class="col-12">
-            <label for="role" class="form-label">Cargo</label>
-            <select 
-              class="form-select" 
-              id="role" 
-              name="role" 
-              required>
-              <option selected value="">Selecione uma opção</option>
-              @foreach (var role in roles)
-              {
-                <option value="@role[0]">@role[1]</option>
-              }
-            </select>
+        @if (string.IsNullOrEmpty(Model?.Id))
+        {
+          <div class="row mb-3">
+            <div class="col-12">
+              <label for="password" class="form-label">Senha</label>
+              <input 
+                type="password"
+                class="form-control"
+                id="password-@Model?.Id"
+                name="password"
+                placeholder="digite aqui..."
+                required>
+            </div>
           </div>
-        </div>
+        }
+
+        @if (User.IsInRole("admin"))
+        {
+          <div class="row mb-3">
+            <div class="col-12">
+              <label for="role" class="form-label">Cargo</label>
+              <select 
+                class="form-select"
+                id="role-@Model?.Id"
+                name="role"
+                required>
+                <option selected value="">Selecione uma opção</option>
+                @foreach (var role in roles)
+                {
+                  if (role[0] == Model?.Role.ToString().ToLower())
+                  {
+                    <option value="@role[0]" selected>@role[1]</option>
+                  }
+                  else
+                  {
+                    <option value="@role[0]">@role[1]</option>
+                  }
+                }
+              </select>
+            </div>
+          </div>
+        }
+        
       </div>
       <div class="modal-footer d-flex justify-content-between">
         <button type="submit" class="btn btn-primary">
-          Cadastrar
+          @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
         </button>
+
+        @if (!string.IsNullOrEmpty(Model?.Id) && User.IsInRole("admin"))
+        {
+          <button type="button" class="btn btn-danger" onclick="deleteUser('@Model?.Id')">
+            Excluir
+          </button>
+        }
       </div>
     </form>
   </div>

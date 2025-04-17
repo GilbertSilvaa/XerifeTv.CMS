@@ -1,0 +1,48 @@
+﻿@using XerifeTv.CMS.Modules.User.Dtos.Response
+
+@model GetUserResponseDto
+
+<form 
+  class="w-100" 
+  asp-action="UpdateProfile" 
+  asp-controller="Users"
+  method="post"
+  data-confirm="Se o nome de usuário for alterado, será necessário fazer login novamente. Deseja continuar?">
+  <input type="hidden" name="id" value="@Model?.Id"/>
+  
+  <div class="row">
+    <div class="col-12 col-lg-6">
+      <label for="username" class="form-label">Nome de Usuário</label>
+      <input
+        type="text"
+        class="form-control"
+        id="username"
+        name="username"
+        placeholder="digite aqui..."
+        value="@Model?.UserName"
+        required
+        disabled>
+    </div>
+
+    <div class="col-12 col-lg-6">
+      <label for="email" class="form-label">E-mail</label>
+      <input
+        type="email"
+        class="form-control"
+        id="email"
+        name="email"
+        placeholder="email@example.com"
+        value="@Model?.Email"
+        required
+        disabled>
+    </div>
+  </div>
+
+  <button
+    type="button"
+    class="btn btn-primary mt-4 unblock-form"
+    data-title="Salvar">
+    Editar
+  </button>
+</form>
+
