@@ -29,8 +29,9 @@ public class EmailService : IEmailService
 		var mailMessage = new MailMessage()
 		{
 			From = new MailAddress(_fromEmail),
-			Subject = "Password Reset",
-			Body = $"Clique no link para redefinir sua senha: \n {resetLink}",
+			Subject = "Redefinir Senha",
+			Body = $@"<h4>Clique no link para redefinir sua senha: {resetLink}</h4><hr/>
+			<span>O link possui um tempo de expiracao de 10 minutos</span>",
 			IsBodyHtml = true
 		};
 		

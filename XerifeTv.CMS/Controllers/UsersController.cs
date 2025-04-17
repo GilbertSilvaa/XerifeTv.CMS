@@ -33,74 +33,16 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   }
 
   [AllowAnonymous]
-  public IActionResult SignIn()
+  public IActionResult SignIn(MessageView? messageView)
   {
     if (User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
+    
+    ViewData["Message"] = messageView;
 
     return View();
-  }
-
-  [AllowAnonymous]
-  public IActionResult EmailResetPasswordForm()
-  {
-    if (User.Identity.IsAuthenticated) 
-      return RedirectToAction("Index", "Home");
-    
-    return View();
-  }
-
-  [HttpPost]
-  [AllowAnonymous]
-  public async Task<IActionResult> EmailResetPasswordForm(string email)
-  {
-
-    var response = await _service.SendEmailResetPassword(email);
-
-    if (response.IsFailure)
-    {
-      ViewData["Message"] = new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
-
-      _logger.LogInformation($"{email} tried to send password reset email and failed");
-
-      return View();
-    }
-    
-    ViewData["Message"] = new MessageView(
-      EMessageViewType.SUCCESS, "Email enviado com sucesso");
-    
-    _logger.LogInformation($"{email} tried to send password reset email");
-    
-    return View(model: email);
-  }
-
-  [AllowAnonymous]
-  public async Task<IActionResult> ResetPassword(string code)
-  {
-    if (User.Identity.IsAuthenticated) 
-      return RedirectToAction("Index", "Home");
-    
-    var response = await _service.ValidateResetPasswordGuid(new Guid(code));
-    
-    if (response.IsFailure)
-    {
-      ViewData["Message"] = new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
-      
-      return View();
-    }
-    
-    return View(model: response.Data);
   }
   
-  [HttpPost]
-  [AllowAnonymous]
-  public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto dto)
-  {
-    return View();
-  }
-
   [HttpPost]
   [AllowAnonymous]
   public async Task<IActionResult> SignIn(LoginUserRequestDto dto)
@@ -125,6 +67,95 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     return RedirectToAction("Index", "Home");
   }
 
+  [AllowAnonymous]
+  public IActionResult EmailResetPasswordForm()
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+    
+    return View();
+  }
+
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> EmailResetPasswordForm(string email)
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+
+    var response = await _service.SendEmailResetPassword(email);
+
+    if (response.IsFailure)
+    {
+      ViewData["Message"] = new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
+
+      _logger.LogInformation($"{email} tried to send password reset email and failed");
+
+      return View();
+    }
+    
+    ViewData["Message"] = new MessageView(
+      EMessageViewType.SUCCESS, "Email enviado com sucesso");
+    
+    _logger.LogInformation($"{email} tried to send password reset email");
+    
+    return View(model: email);
+  }
+
+  [AllowAnonymous]
+  public async Task<IActionResult> ResetPassword(string code, string? errorMessage)
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+    
+    var response = await _service.ValidateResetPasswordGuid(new Guid(code));
+    
+    if (response.IsFailure)
+    {
+      ViewData["Message"] = new MessageView(
+        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
+      
+      return View();
+    }
+
+    if (errorMessage != null)
+      ViewData["Message"] = new MessageView(EMessageViewType.ERROR, errorMessage);
+    
+    return View(model: response.Data);
+  }
+  
+  [HttpPost]
+  [AllowAnonymous]
+  public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto dto)
+  {
+    if (User.Identity.IsAuthenticated) 
+      return RedirectToAction("Index", "Home");
+    
+    if (dto.Password != dto.ConfirmPassword)
+    {
+      return RedirectToAction("ResetPassword", new
+      {
+        code = dto.CodeGuid,
+        errorMessage = "Confirmacao de senha incorreta"
+      });
+    }
+    
+    var response = await _service.ResetPassword(dto);
+
+    if (response.IsFailure)
+    {
+      return RedirectToAction("ResetPassword", new
+      {
+        code = dto.CodeGuid,
+        errorMessage = response.Error.Description
+      });
+    }
+    
+    return RedirectToAction("SignIn", new MessageView(
+      EMessageViewType.SUCCESS, "Senha redefinida com sucesso"));
+  }
+  
   [AllowAnonymous]
   public IActionResult Logout()
   {

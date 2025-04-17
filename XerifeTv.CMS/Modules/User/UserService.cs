@@ -177,6 +177,30 @@ public sealed class UserService(
     }
   }
 
+  public async Task<Result<ValidateResetPasswordGuidResponseDto>> ResetPassword(ResetPasswordRequestDto dto)
+  {
+    try
+    {
+      var user = await _repository.GetAsync(dto.Id);
+      
+      if  (user is null) 
+        return Result<ValidateResetPasswordGuidResponseDto>.Failure(
+          new Error("404", "Usuario nao encontrado"));
+      
+      user.Password = _hashPassword.Encrypt(dto.Password);
+      user.ResetPasswordGuid = Guid.Empty;
+      await _repository.UpdateAsync(user);
+
+      var response = new ValidateResetPasswordGuidResponseDto(user.Id, user.Email, dto.CodeGuid);
+      return Result<ValidateResetPasswordGuidResponseDto>.Success(response);
+    }
+    catch (Exception ex)
+    {
+      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+      return Result<ValidateResetPasswordGuidResponseDto>.Failure(error);
+    }
+  }
+
   public async Task<Result<bool>> Delete(string id)
   {
     try
@@ -245,24 +269,25 @@ public sealed class UserService(
     }
   }
 
-  public async Task<Result<string>> ValidateResetPasswordGuid(Guid guid)
+  public async Task<Result<ValidateResetPasswordGuidResponseDto>> ValidateResetPasswordGuid(Guid guid)
   {
     try
     {
       var user = await _repository.GetByResetPasswordGuidAsync(guid);
     
       if (user is null)
-        return Result<string>.Failure(new Error("404", "Link invalido"));
+        return Result<ValidateResetPasswordGuidResponseDto>.Failure(new Error("404", "Link invalido"));
     
       if (user.ResetPasswordGuidExpires <DateTimeOffset.UtcNow)
-        return Result<string>.Failure(new Error("401", "O link expirou"));
-    
-      return Result<string>.Success(user.Id); 
+        return Result<ValidateResetPasswordGuidResponseDto>.Failure(new Error("401", "O link expirou"));
+
+      var response = new ValidateResetPasswordGuidResponseDto(user.Id, user.Email, guid.ToString());
+      return Result<ValidateResetPasswordGuidResponseDto>.Success(response); 
     }
     catch (Exception ex)
     {
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<string>.Failure(error);
+      return Result<ValidateResetPasswordGuidResponseDto>.Failure(error);
     }
   }
 }
