@@ -87,4 +87,32 @@ document.addEventListener('DOMContentLoaded', function() {
       $(this).find('i').addClass('fa-regular fa-eye-slash');
     }
   });
+  
+  
+  $('.input-tags').on('keydown', function (event) {
+    if (event.key !== 'Enter' && event.key !== ',') return;
+    
+    if ($(this).val() === '') return;
+
+    const tagsValue = $(this).siblings('.input-tags-value ').val();
+    if (tagsValue.indexOf($(this).val()) > -1) {
+      setTimeout(() => $(this).val(''), 1);
+      return;
+    }
+    
+    $(this).siblings('.container-tags ').append(`
+      <div class="rounded-1 bg-secondary text-light py-0 px-2 d-flex justify-content-between align-items-center gap-2">
+        <span class="fw-normal text-nowrap">${ $(this).val().substring(0, 30) }</span>
+        <button
+          type="button"
+          class="btn-close shadow-none"
+          aria-label="Close"
+          style="width: 4px; height: 4px;">
+        </button>
+      </div>
+    `);
+    
+    $(this).siblings('.input-tags-value').val(tagsValue + `${ $(this).val().substring(0, 30) }, `);
+    setTimeout(() => $(this).val(''), 1);
+  })
 });
