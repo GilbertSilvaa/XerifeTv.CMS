@@ -113,6 +113,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
     var update = Builders<SeriesEntity>.Update
       .Set(r => r.Title, entity.Title)
       .Set(r => r.Category, entity.Category)
+      .Set(r => r.Categories, entity.Categories)
       .Set(r => r.Synopsis, entity.Synopsis)
       .Set(r => r.Review, entity.Review)
       .Set(r => r.PosterUrl, entity.PosterUrl)
