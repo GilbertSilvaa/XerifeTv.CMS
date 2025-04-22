@@ -119,44 +119,49 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
 
-    const tagsValue = $(this).siblings('.input-tags-value ').val();
-    
-    if (tagsValue.indexOf($(this).val()) > -1) {
+    $(this).val().split(',').forEach(tag => {
+      const tagsValue = $(this).siblings('.input-tags-value ').val();
+
+      if (tagsValue.indexOf(tag) > -1) {
+        setTimeout(() => $(this).val(''), 1);
+        return;
+      }
+
+      const positionTagIndex = tagsValue.split(',').length;
+
+      $(this).siblings('.container-tags ').append(`
+        <div class="rounded-1 bg-secondary text-light py-0 px-2 d-flex justify-content-between align-items-center gap-2">
+          <span class="fw-normal text-nowrap">${ tag.substring(0, 30) }</span>
+          <button
+            type="button"
+            class="btn-close shadow-none btn-remove-tag"
+            aria-label="Close"
+            data-position="${positionTagIndex}"
+            style="width: 4px; height: 4px;">
+          </button>
+        </div>
+      `);
+
+      $(`.btn-remove-tag[data-position="${positionTagIndex}"]`).click(function () {
+        const $btn = $(this);
+        const $tags = $(this).parent().parent('.container-tags').find('div');
+        var tagsValuesResult = '';
+
+        const currentTagText = $($btn).siblings('span.fw-normal').text().trim();
+        $tags.each(function () {
+          if ($(this).find('span.fw-normal').text().trim() === currentTagText) return;
+          tagsValuesResult += $(this).find('span.fw-normal').text() + ' ,';
+        });
+
+        $($btn).parent().parent().siblings('.input-tags-value').val(tagsValuesResult);
+        $($btn).parent().remove();
+      })
+
+      $(this).siblings('.input-tags-value').val(tagsValue + `${ tag.substring(0, 30) }, `);
       setTimeout(() => $(this).val(''), 1);
-      return;
-    }
-    
-    const positionTagIndex = tagsValue.split(',').length;
-    
-    $(this).siblings('.container-tags ').append(`
-      <div class="rounded-1 bg-secondary text-light py-0 px-2 d-flex justify-content-between align-items-center gap-2">
-        <span class="fw-normal text-nowrap">${ $(this).val().substring(0, 30) }</span>
-        <button
-          type="button"
-          class="btn-close shadow-none btn-remove-tag"
-          aria-label="Close"
-          data-position="${positionTagIndex}"
-          style="width: 4px; height: 4px;">
-        </button>
-      </div>
-    `); 
-    
-    $(`.btn-remove-tag[data-position="${positionTagIndex}"]`).click(function () {
-      const $btn = $(this);
-      const $tags = $(this).parent().parent('.container-tags').find('div');
-      var tagsValuesResult = '';
-      
-      const currentTagText = $($btn).siblings('span.fw-normal').text().trim();
-      $tags.each(function () {
-        if ($(this).find('span.fw-normal').text().trim() === currentTagText) return;
-        tagsValuesResult += $(this).find('span.fw-normal').text() + ' ,';
-      });
-      
-      $($btn).parent().parent().siblings('.input-tags-value').val(tagsValuesResult);
-      $($btn).parent().remove();
     })
-    
-    $(this).siblings('.input-tags-value').val(tagsValue + `${ $(this).val().substring(0, 30) }, `);
-    setTimeout(() => $(this).val(''), 1);
   })
+
+  // populate tags input with existing values in edit mode
+  $('.input-tags').blur();
 });

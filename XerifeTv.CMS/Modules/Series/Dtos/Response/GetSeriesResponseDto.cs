@@ -8,6 +8,7 @@ public class GetSeriesResponseDto
   public string Title { get; private set; } = string.Empty;
   public string Synopsis { get; private set; } = string.Empty;
   public string Category { get; private set; } = string.Empty;
+  public string Categories { get; private set; } = string.Empty;
   public string PosterUrl { get; private set; } = string.Empty;
   public string BannerUrl { get; private set; } = string.Empty;
   public int ReleaseYear { get; private set; }
@@ -25,6 +26,7 @@ public class GetSeriesResponseDto
       Title = entity.Title,
       Synopsis = entity.Synopsis,
       Category = entity.Category,
+      Categories = string.Join(", ", entity.Categories),
       PosterUrl = entity.PosterUrl,
       BannerUrl = entity.BannerUrl,
       ReleaseYear = entity.ReleaseYear,
