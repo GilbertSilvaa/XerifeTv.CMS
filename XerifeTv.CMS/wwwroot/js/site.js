@@ -90,11 +90,15 @@ document.addEventListener('DOMContentLoaded', function() {
   
   
   $('.input-tags').on('keydown', function (event) {
-    if (event.key !== 'Enter' && event.key !== ',') return;
+    if (event.key !== 'Enter' && event.key !== ',' && event.key !== ';') return;
     
-    if ($(this).val() === '') return;
+    if ($(this).val() === '') {
+      setTimeout(() => $(this).val(''), 1);
+      return;
+    }
 
     const tagsValue = $(this).siblings('.input-tags-value ').val();
+    
     if (tagsValue.indexOf($(this).val()) > -1) {
       setTimeout(() => $(this).val(''), 1);
       return;
@@ -105,12 +109,28 @@ document.addEventListener('DOMContentLoaded', function() {
         <span class="fw-normal text-nowrap">${ $(this).val().substring(0, 30) }</span>
         <button
           type="button"
-          class="btn-close shadow-none"
+          class="btn-close shadow-none btn-remove-tag"
           aria-label="Close"
+          data-position="${tagsValue.split(',').length}"
+          data-position-${tagsValue.split(',').length}="true"
           style="width: 4px; height: 4px;">
         </button>
       </div>
-    `);
+    `); 
+    
+    $(`.btn-remove-tag[data-position-${tagsValue.split(',').length}]`).click(function () {
+      const $btn = $(this);
+      const $tags = $(this).parent().parent('.container-tags').find('div');
+      var tagsValuesResult = '';
+      
+      $tags.each(function () {
+        if ($(this).find('span.fw-normal').text().trim() === $($btn).siblings('span.fw-normal').text().trim()) return;
+        tagsValuesResult += $(this).find('span.fw-normal').text() + ' ,';
+      });
+      
+      $($btn).parent().parent().siblings('.input-tags-value').val(tagsValuesResult);
+      $($btn).parent().remove();
+    })
     
     $(this).siblings('.input-tags-value').val(tagsValue + `${ $(this).val().substring(0, 30) }, `);
     setTimeout(() => $(this).val(''), 1);
