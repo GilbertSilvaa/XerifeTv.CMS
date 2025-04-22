@@ -58,9 +58,15 @@
             <input
               type="text"
               class="form-control input-tags"
-              placeholder="ação, aventura, comédia..."
+              placeholder="ação, aventura, comédia...">
+            
+            <input 
+              type="hidden" 
+              name="categories" 
+              class="input-tags-value" 
+              data-required-message="Informe no minino uma categoria" 
               required>
-            <input type="hidden" name="categories" class="input-tags-value"/>
+            
             <div class="w-100 container-tags d-flex flex-wrap gap-1 mt-2"></div>
           </div>
         </div>

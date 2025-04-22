@@ -71,6 +71,28 @@ document.addEventListener('DOMContentLoaded', function() {
       .prop('disabled', false)
       .prop('readonly', false);
   });
+
+  // inputs hidden when requireds
+  $('form').on('submit', function (event) { 
+    event.preventDefault();
+    var isFormValid = true;
+    
+    $(this).find('input[type=hidden]').each(function () {
+      if ($(this).prop('required') && $(this).val() === '') {
+        alert($(this).data('requiredMessage'));
+        isFormValid = false;
+      }
+    })
+
+    if (isFormValid) {
+      $(this).off('submit').submit();
+      return;
+    }
+
+    $(this).find('input, select, button, textarea')
+      .prop('disabled', false)
+      .prop('readonly', false);
+  })
   
   // toggles input visibility (show/hide) when icon button is clicked
   $('.show-hide-password').on('click', function (event) {
@@ -88,9 +110,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
   
-  
-  $('.input-tags').on('keydown', function (event) {
-    if (event.key !== 'Enter' && event.key !== ',' && event.key !== ';') return;
+  // input tags/categories
+  $('.input-tags').on('keydown blur', function (event) {
+    if (event.key !== 'Enter' && event.key !== ',' && event.key !== ';' && event.type !== 'blur') return;
     
     if ($(this).val() === '') {
       setTimeout(() => $(this).val(''), 1);
@@ -104,6 +126,8 @@ document.addEventListener('DOMContentLoaded', function() {
       return;
     }
     
+    const positionTagIndex = tagsValue.split(',').length;
+    
     $(this).siblings('.container-tags ').append(`
       <div class="rounded-1 bg-secondary text-light py-0 px-2 d-flex justify-content-between align-items-center gap-2">
         <span class="fw-normal text-nowrap">${ $(this).val().substring(0, 30) }</span>
@@ -111,20 +135,20 @@ document.addEventListener('DOMContentLoaded', function() {
           type="button"
           class="btn-close shadow-none btn-remove-tag"
           aria-label="Close"
-          data-position="${tagsValue.split(',').length}"
-          data-position-${tagsValue.split(',').length}="true"
+          data-position="${positionTagIndex}"
           style="width: 4px; height: 4px;">
         </button>
       </div>
     `); 
     
-    $(`.btn-remove-tag[data-position-${tagsValue.split(',').length}]`).click(function () {
+    $(`.btn-remove-tag[data-position="${positionTagIndex}"]`).click(function () {
       const $btn = $(this);
       const $tags = $(this).parent().parent('.container-tags').find('div');
       var tagsValuesResult = '';
       
+      const currentTagText = $($btn).siblings('span.fw-normal').text().trim();
       $tags.each(function () {
-        if ($(this).find('span.fw-normal').text().trim() === $($btn).siblings('span.fw-normal').text().trim()) return;
+        if ($(this).find('span.fw-normal').text().trim() === currentTagText) return;
         tagsValuesResult += $(this).find('span.fw-normal').text() + ' ,';
       });
       
