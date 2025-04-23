@@ -75,15 +75,25 @@
         </div>
 
         <div class="col-12 col-md-4">
-          <label for="category" class="form-label">Categoria</label>
-          <input
-            type="text"
-            class="form-control"
-            id="category"
-            name="category"
-            placeholder="ação, aventura, comédia..."
-            value="@Model?.Category"
-            required>
+          <label for="categories" class="form-label">Categorias</label>
+
+          <div class="input-group-tags">
+            <input
+              type="text"
+              id="categories"
+              class="form-control input-tags"
+              placeholder="ação, aventura, comédia..."
+              value="@Model?.Categories">
+
+            <input
+              type="hidden"
+              name="categories"
+              class="input-tags-value"
+              data-required-message="Informe no minino uma categoria"
+              required>
+
+            <div class="w-100 container-tags d-flex flex-wrap gap-1 mt-2"></div>
+          </div>
         </div>
       </div>
 
@@ -306,10 +316,12 @@
       if (!response) return;
 
       $('#title').val(response.title);
-      $('#category').val(response.genres[0]?.name?.toLowerCase());
+      $('#categories').val(response.genres.map(g => g.name.toLowerCase()).join(', '));
+      $('#categories').blur();
+      
       $('#synopsis').val(response.overview);
       $('#releaseYear').val(response.releaseYear);
-      $('#review').val(response.voteAverage);
+      $('#review').val(String(response.voteAverage).replace('.', ','));
       $('#posterUrl').val(response.posterUrl);
       $('#bannerUrl').val(response.bannerUrl);
     });

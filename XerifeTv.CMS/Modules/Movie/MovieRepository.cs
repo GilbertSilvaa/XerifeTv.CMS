@@ -21,7 +21,8 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
         r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
       
       EMovieSearchFilter.CATEGORY => r => 
-        r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+        r.Categories.Any(x => 
+          x.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase)) && (!r.Disabled || dto.IsIncludeDisabled),
       
       EMovieSearchFilter.RELEASE_YEAR => r => 
         r.ReleaseYear.Equals(int.Parse(dto.Search)) && (!r.Disabled || dto.IsIncludeDisabled),
@@ -59,7 +60,7 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
     return await _collection
       .Aggregate()
       .Group(
-        r => r.Category, 
+        r => r.Categories.FirstOrDefault(), 
         g => new ItemsByCategory<MovieEntity>(
           g.Key, 
           g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
