@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Content.Interfaces;
+using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -9,9 +10,14 @@ public class ContentController(IContentService _service, ILogger<ContentControll
 {
   [HttpGet]
   [Route("Movies")]
-  public async Task<IActionResult> Movies(int? limit)
+  public async Task<IActionResult> Movies(string categories = "", int? currentPage = 1, int? limit = 10)
   {
-    var response = await _service.GetMoviesGroupByCategory(limit);
+    var _dto = new GetMoviesGroupByCategoryRequestDto(
+      categories.Split(',').Select(x => x.Trim()).ToList(), 
+      currentPage ?? 1, 
+      limit ?? 5);
+    
+    var response = await _service.GetMoviesGroupByCategory(_dto);
     _logger.LogInformation("Request Content API /Movies");
 
     return Ok(response.IsSuccess ? response.Data : []);

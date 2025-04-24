@@ -8,6 +8,6 @@ namespace XerifeTv.CMS.Modules.Movie.Interfaces;
 public interface IMovieRepository : IBaseRepository<MovieEntity>
 {
   Task<PagedList<MovieEntity>> GetByFilterAsync(GetMoviesByFilterRequestDto dto);
-  Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(int limit);
+  Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(GetMoviesGroupByCategoryRequestDto dto);
   Task<MovieEntity?> GetByImdbIdAsync(string imdbId);
 }

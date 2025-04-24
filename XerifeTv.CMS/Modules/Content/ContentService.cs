@@ -27,14 +27,14 @@ public sealed class ContentService(
   const int limitPartialResult = 2;
 
   public async Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategory(
-    int? limit)
+    GetMoviesGroupByCategoryRequestDto dto)
   {
-    var cacheKey = $"moviesGroupByCategory-{limit}";
+    var cacheKey = $"moviesGroupByCategory-{dto.Categories}-{dto.CurrentPage}-{dto.LimitResults}";
     var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<MovieEntity>>>(cacheKey);
 
     if (response is null)
     {
-      response = await _movieRepository.GetGroupByCategoryAsync(limit ?? limitPartialResult);
+      response = await _movieRepository.GetGroupByCategoryAsync(dto);
       _cacheService.SetValue(cacheKey, response);
     }
     
