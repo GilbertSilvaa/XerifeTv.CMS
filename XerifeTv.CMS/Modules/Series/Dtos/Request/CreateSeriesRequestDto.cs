@@ -6,7 +6,6 @@ public class CreateSeriesRequestDto
 {
   public string Title { get; init; } = string.Empty;
   public string Synopsis { get; init; } = string.Empty;
-  public string Category { get; init; } = string.Empty;
   public string Categories { get; init; } = string.Empty;
   public string PosterUrl { get; init; } = string.Empty;
   public string BannerUrl { get; init; } = string.Empty;
@@ -26,7 +25,6 @@ public class CreateSeriesRequestDto
     {
       Title = Title,
       Synopsis = Synopsis,
-      Category = Category,
       Categories = categorieList,
       PosterUrl = PosterUrl,
       BannerUrl = BannerUrl,

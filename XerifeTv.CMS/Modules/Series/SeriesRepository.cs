@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using System.Linq.Expressions;
 using XerifeTv.CMS.Modules.Abstractions.Repositories;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -47,7 +48,8 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
     Expression<Func<SeriesEntity, bool>> filterExpression = dto.Filter switch
     {
       ESeriesSearchFilter.CATEGORY => r => 
-        r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+        r.Categories.Any(x => 
+          x.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase)) && (!r.Disabled || dto.IsIncludeDisabled),
       
       _ => r => 
         r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
@@ -69,17 +71,24 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
     return new PagedList<SeriesEntity>(dto.CurrentPage, totalPages, items);
   }
 
-  public async Task<IEnumerable<ItemsByCategory<SeriesEntity>>> GetGroupByCategoryAsync(int limit)
+  public async Task<IEnumerable<ItemsByCategory<SeriesEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
   {
-    return await _collection
-      .Aggregate()
-      .Group(
-        r => r.Category,
-        g => new ItemsByCategory<SeriesEntity>(
-          g.Key, 
-          g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
-      .Match(g => g.Items.Any())
-      .ToListAsync();
+    List<ItemsByCategory<SeriesEntity>> result = [];
+
+    foreach (var category in dto.Categories)
+    {
+      var moviesByCategory = await _collection
+        .Find(r => r.Categories.Any(x => x.Equals(category)))
+        .SortByDescending(x => x.CreateAt)
+        .Skip(dto.LimitResults * (dto.CurrentPage - 1))
+        .Limit(dto.LimitResults)
+        .ToListAsync();
+      
+      if (moviesByCategory.Any())
+        result.Add(new ItemsByCategory<SeriesEntity>(category, moviesByCategory));
+    }
+
+    return result;
   }
 
   public async Task<SeriesEntity?> GetEpisodesBySeasonAsync(string serieId, int season, bool includeDisabled)
@@ -112,7 +121,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
     var update = Builders<SeriesEntity>.Update
       .Set(r => r.Title, entity.Title)
-      .Set(r => r.Category, entity.Category)
+      .Set(r => r.Categories, entity.Categories)
       .Set(r => r.Categories, entity.Categories)
       .Set(r => r.Synopsis, entity.Synopsis)
       .Set(r => r.Review, entity.Review)

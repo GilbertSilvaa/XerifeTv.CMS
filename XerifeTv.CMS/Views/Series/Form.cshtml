@@ -27,7 +27,7 @@
       <input type="hidden" name="id" value="@Model?.Id">
 
       <div class="row mb-3">
-        <div class="col-4">
+        <div class="col-7">
           <label for="title" class="form-label">Titulo</label>
           <input 
             type="text" 
@@ -38,20 +38,8 @@
             value="@Model?.Title"
             required>
         </div>
-
-        <div class="col-4">
-          <label for="category" class="form-label">Categoria</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="category" 
-            name="category" 
-            placeholder="ação, aventura, comédia..." 
-            value="@Model?.Category"
-            required>
-        </div>
-
-        <div class="col-4">
+        
+        <div class="col-5">
           <label for="categories" class="form-label">Categorias</label>
           
           <div class="input-group-tags">

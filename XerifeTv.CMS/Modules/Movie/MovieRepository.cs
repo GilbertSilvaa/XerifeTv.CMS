@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using System.Linq.Expressions;
 using XerifeTv.CMS.Modules.Abstractions.Repositories;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -55,7 +56,7 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
       .FirstOrDefaultAsync();
   }
 
-  public async Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(GetMoviesGroupByCategoryRequestDto dto)
+  public async Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
   {
     List<ItemsByCategory<MovieEntity>> result = [];
 

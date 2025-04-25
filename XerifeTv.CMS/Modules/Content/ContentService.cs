@@ -14,6 +14,7 @@ using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Dtos;
 
 namespace XerifeTv.CMS.Modules.Content;
 
@@ -27,7 +28,7 @@ public sealed class ContentService(
   const int limitPartialResult = 2;
 
   public async Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategory(
-    GetMoviesGroupByCategoryRequestDto dto)
+    GetGroupByCategoryRequestDto dto)
   {
     var cacheKey = $"moviesGroupByCategory-{dto.Categories}-{dto.CurrentPage}-{dto.LimitResults}";
     var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<MovieEntity>>>(cacheKey);
@@ -78,14 +79,14 @@ public sealed class ContentService(
   }
 
   public async Task<Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> GetSeriesGroupByCategory(
-    int? limit)
+    GetGroupByCategoryRequestDto dto)
   {
-    var cacheKey = $"seriesGroupByCategory-{limit}";
+    var cacheKey = $"seriesGroupByCategory-{dto.Categories}-{dto.CurrentPage}-{dto.LimitResults}";
     var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<SeriesEntity>>>(cacheKey);
 
     if (response is null)
     {
-      response = await _seriesRepository.GetGroupByCategoryAsync(limit ?? limitPartialResult);
+      response = await _seriesRepository.GetGroupByCategoryAsync(dto);
       _cacheService.SetValue(cacheKey, response);
     }
 
