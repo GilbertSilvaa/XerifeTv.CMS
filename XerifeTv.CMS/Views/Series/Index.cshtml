@@ -95,7 +95,7 @@
 
         <div class="card-body">
           <h5 class="card-title text-nowrap overflow-hidden text-truncate">@serie.Title</h5>
-          <p class="card-text">@serie.Category</p>
+          <p class="card-text">@serie.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
 
           <div class="d-flex gap-1">
             <a class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#seriesDetailsModal-@serie.Id">

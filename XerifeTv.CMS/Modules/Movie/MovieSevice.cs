@@ -225,7 +225,7 @@ public sealed class MovieSevice(
           ImdbId = movieItem.ImdbId,
           Title = movieByImdbresponse.Data?.Title ?? string.Empty,
           Synopsis = movieByImdbresponse.Data?.Overview ?? string.Empty,
-          Category = movieByImdbresponse.Data?.Genres.FirstOrDefault()?.Name.ToLower() ?? string.Empty,
+          Categories = String.Join(", ", movieByImdbresponse.Data?.Genres.Select(g => g.Name.ToLower())),
           PosterUrl = movieByImdbresponse.Data?.PosterUrl ?? string.Empty,
           BannerUrl = movieByImdbresponse.Data?.BannerUrl ?? string.Empty,
           ReleaseYear = int.Parse(movieByImdbresponse.Data?.ReleaseYear ?? "0"),

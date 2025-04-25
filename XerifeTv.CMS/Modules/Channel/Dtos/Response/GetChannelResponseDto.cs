@@ -7,7 +7,7 @@ public class GetChannelResponseDto
 {
   public string Id { get; private set; } = string.Empty;
   public string Title { get; private set; } = string.Empty;
-  public string Category { get; private set; } = string.Empty;
+  public string Categories { get; private set; } = string.Empty;
   public string LogoUrl { get; private set; } = string.Empty;
   public Video? Video { get; private set; }
   public DateTime RegistrationDate { get; private set; }
@@ -19,7 +19,7 @@ public class GetChannelResponseDto
     {
       Id = entity.Id,
       Title = entity.Title,
-      Category = entity.Category, 
+      Categories = string.Join(", ", entity.Categories),
       LogoUrl = entity.LogoUrl,
       Video = entity.Video,
       RegistrationDate = entity.CreateAt,

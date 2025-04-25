@@ -107,7 +107,7 @@
 
         <div class="card-body">
           <h5 class="card-title text-nowrap overflow-hidden text-truncate">@movie?.Title</h5>
-          <p class="card-text">@movie?.Category</p>
+          <p class="card-text">@movie?.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
 
           <div class="d-flex gap-1">
             <a class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#movielDetailsModal-@movie?.Id">

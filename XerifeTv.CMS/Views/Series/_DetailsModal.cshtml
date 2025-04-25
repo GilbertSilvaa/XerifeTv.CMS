@@ -54,13 +54,15 @@
             </div>
           </div>
           <div style="width: 70%; margin-top: 1rem;">
-            <h2 class="overflow-hidden text-truncate ">@Model.Title</h2>
+            <h2 class="overflow-hidden text-truncate ">@Model.Title (@Model.ReleaseYear)</h2>
 
             <p class="mt-3">@Model.Synopsis</p>
             <hr />
             <h5>
-              <span class="badge text-bg-secondary bg-secondary">@Model.Category</span>
-              <span class="badge text-bg-secondary bg-secondary">@Model.ReleaseYear</span>
+              @foreach (var category in Model.Categories.Split(",").Select(x => x.Trim()))
+              {
+                <span class="badge text-bg-secondary bg-secondary">@category</span>
+              }
             </h5>
           </div>
         </div>

@@ -99,7 +99,7 @@
 
         <div class="card-body">
           <h5 class="card-title text-nowrap overflow-hidden text-truncate">@channel.Title</h5>
-          <p class="card-text">@channel.Category</p>
+          <p class="card-text">@channel.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
 
           <div class="d-flex gap-1">
             @if (!User.IsInRole("visitor"))

@@ -7,7 +7,7 @@ public class GetSeriesContentResponseDto
   public string Id { get; private set; } = string.Empty;
   public string Title { get; private set; } = string.Empty;
   public string Synopsis { get; private set; } = string.Empty;
-  public string Category { get; private set; } = string.Empty;
+  public ICollection<string> Categories { get; private set; } = [];
   public string PosterUrl { get; private set; } = string.Empty;
   public string BannerUrl { get; private set; } = string.Empty;
   public int ReleaseYear { get; private set; }
@@ -22,7 +22,7 @@ public class GetSeriesContentResponseDto
       Id = entity.Id,
       Title = entity.Title,
       Synopsis = entity.Synopsis,
-      Category = entity.Category,
+      Categories = entity.Categories,
       PosterUrl = entity.PosterUrl,
       BannerUrl = entity.BannerUrl,
       ReleaseYear = entity.ReleaseYear,
