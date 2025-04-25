@@ -77,15 +77,15 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
     foreach (var category in dto.Categories)
     {
-      var moviesByCategory = await _collection
+      var seriesByCategory = await _collection
         .Find(r => r.Categories.Any(x => x.Equals(category)))
         .SortByDescending(x => x.CreateAt)
         .Skip(dto.LimitResults * (dto.CurrentPage - 1))
         .Limit(dto.LimitResults)
         .ToListAsync();
       
-      if (moviesByCategory.Any())
-        result.Add(new ItemsByCategory<SeriesEntity>(category, moviesByCategory));
+      if (seriesByCategory.Any())
+        result.Add(new ItemsByCategory<SeriesEntity>(category, seriesByCategory));
     }
 
     return result;

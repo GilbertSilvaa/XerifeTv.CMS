@@ -140,14 +140,14 @@ public sealed class ContentService(
   }
 
   public async Task<Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> GetChannelsGroupByCategory(
-    int? limit)
+    GetGroupByCategoryRequestDto dto)
   {
-    var cacheKey = $"channelsGroupByCategory-{limit}";
+    var cacheKey = $"channelsGroupByCategory-{dto.Categories}-{dto.CurrentPage}-{dto.LimitResults}";
     var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<ChannelEntity>>>(cacheKey);
 
     if (response is null)
     {
-      response = await _channelRepository.GetGroupByCategoryAsync(limit?? limitPartialResult);
+      response = await _channelRepository.GetGroupByCategoryAsync(dto);
       _cacheService.SetValue(cacheKey, response);
     }
 

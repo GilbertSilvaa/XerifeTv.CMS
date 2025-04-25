@@ -71,9 +71,14 @@ public class ContentController(IContentService _service, ILogger<ContentControll
 
   [HttpGet]
   [Route("Channels")]
-  public async Task<IActionResult> Channels(int? limit)
+  public async Task<IActionResult> Channels(string categories = "", int? currentPage = 1, int? limit = 10)
   {
-    var response = await _service.GetChannelsGroupByCategory(limit);
+    var _dto = new GetGroupByCategoryRequestDto(
+      categories.Split(',').Select(x => x.Trim()).ToList(), 
+      currentPage ?? 1, 
+      limit ?? 5);
+    
+    var response = await _service.GetChannelsGroupByCategory(_dto);
     _logger.LogInformation("Request Content API /Channels");
 
     return Ok(response.IsSuccess ? response.Data : []);
