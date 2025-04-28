@@ -16,36 +16,6 @@ $('.importFromExcelModal').on('hidden.bs.modal', () => {
   $('.btn-excel-file-submit').text('Cadastrar').prop('disabled', true);
 });
 
-// emulates the progress of the progress bar
-const emulateProgressBarAction = () => {
-  let [
-    progressAction1TimeOut,
-    progressAction2TimeOut,
-    progressAction3TimeOut
-  ] = [0, 0, 0];
-
-  progressAction1TimeOut = setTimeout(() => {
-    $('.process .progress-bar').css('width', '25%');
-    $('.process span.status-percent').text('25%');
-
-    progressAction2TimeOut = setTimeout(() => {
-      $('.process .progress-bar').css('width', '55%');
-      $('.process span.status-percent').text('55%');
-
-      progressAction3TimeOut = setTimeout(() => {
-        $('.process .progress-bar').css('width', '80%');
-        $('.process span.status-percent').text('80%');
-      }, 20000);
-    }, 10000);
-  }, 5000);
-
-  return [
-    progressAction1TimeOut,
-    progressAction2TimeOut,
-    progressAction3TimeOut
-  ];
-}
-
 // submit spreadsheet
 $('.btn-excel-file-submit').on('click', async function (){
   if (!confirm('Confirmar ação?')) return;
@@ -57,14 +27,25 @@ $('.btn-excel-file-submit').on('click', async function (){
   const formData = new FormData();
   formData.append('file', file);
 
-  const [controller, action] = [$(btn).data('controller'), $(btn).data('action')];
-  const progressBarEmulateTimeOuts =  emulateProgressBarAction();
+  const controller = $(btn).data('controller');
+  const action = $(btn).data('action');
+  const actionMonitorProgress = $(btn).data('monitorProgressAction');
+  
+  var monitorProgressInterval = 0;
 
   try {
     $(btn).text('Processando...').prop('disabled', true);
     $('.select-file-container').hide();
     $('.importFromExcelModal .btn-close').hide();
     $('.process-file-container').show();
+    
+    monitorProgressInterval = setInterval(async () => {
+      var progressResponse = await fetch(`/${controller}/${actionMonitorProgress}`);
+      const percent = await progressResponse.json();
+
+      $('.process .progress-bar').css('width', `${percent}%`);
+      $('.process span.status-percent').text(`${percent}%`);
+    }, 2000);
 
     const response = await fetch(`/${controller}/${action}`, {
       method: 'POST',
@@ -91,11 +72,12 @@ $('.btn-excel-file-submit').on('click', async function (){
     const errorItem = document.createElement('li');
     errorItem.textContent = String(error);
     errorItem.classList.add('list-group-item');
+    
     $('.finish-process-container .errorList .list-group').append(errorItem);
     $('.finish-process-container .errorList').show();
   }
   finally {
-    progressBarEmulateTimeOuts.forEach(timeOut => clearTimeout(timeOut));
+    clearInterval(monitorProgressInterval);
 
     $('.process .progress-bar').css('width', '100%');
     $('.process span.status-percent').text('100%');

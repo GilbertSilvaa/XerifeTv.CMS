@@ -16,6 +16,8 @@ public sealed class MovieSevice(
   ISpreadsheetReaderService _spreadsheetReaderService,
   IConfiguration _configuration) : IMovieService
 {
+  private static int _registerBySpreadsheetProgress = 0;
+  
   public async Task<Result<PagedList<GetMovieResponseDto>>> Get(int currentPage, int limit)
   {
     try
@@ -189,7 +191,7 @@ public sealed class MovieSevice(
 
       using var stream = new MemoryStream();
       file.CopyTo(stream);
-      
+
       int successCount = 0;
       int failCount = 0;
       ICollection<string> errorList = [];
@@ -207,8 +209,10 @@ public sealed class MovieSevice(
         {
           failCount++;
           errorList.Add(ex.Message);
+          _registerBySpreadsheetProgress =
+            (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
         }
-      
+
       foreach (var movieItem in movieList)
       {
         var movieByImdbresponse = await GetByImdbId(movieItem.ImdbId);
@@ -217,6 +221,8 @@ public sealed class MovieSevice(
         {
           failCount++;
           errorList.Add(movieByImdbresponse.Error.Description ?? string.Empty);
+          _registerBySpreadsheetProgress =
+            (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
           continue;
         }
 
@@ -240,12 +246,14 @@ public sealed class MovieSevice(
         var response = await Create(createMovieDto);
 
         if (response.IsSuccess)
-           successCount++;
+          successCount++;
         else
         {
           failCount++;
           errorList.Add(response.Error?.Description ?? string.Empty);
         }
+
+        _registerBySpreadsheetProgress = (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
       }
 
       return Result<(int?, int?, string[])>.Success((successCount, failCount, errorList.ToArray()));
@@ -260,5 +268,12 @@ public sealed class MovieSevice(
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
       return Result<(int?, int?, string[])>.Failure(error);
     }
+    finally
+    {
+      _registerBySpreadsheetProgress = 0;
+    }
   }
+  
+  public Result<int> MonitorSpreadsheetRegistration()
+    => Result<int>.Success(_registerBySpreadsheetProgress);
 }

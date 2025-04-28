@@ -137,4 +137,14 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
     
     return Ok(responseData);
   }
+
+  [HttpGet]
+  public IActionResult MonitorSpreadsheetRegistration()
+  {
+    var response = _service.MonitorSpreadsheetRegistration();
+    
+    if (response.IsSuccess) return Ok(response.Data);
+    
+    return BadRequest();
+  }
 }
