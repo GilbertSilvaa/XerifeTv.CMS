@@ -273,7 +273,11 @@ public sealed class MovieSevice(
       _registerBySpreadsheetProgress = 0;
     }
   }
-  
-  public Result<int> MonitorSpreadsheetRegistration()
-    => Result<int>.Success(_registerBySpreadsheetProgress);
+
+  public async Task<Result<int>> MonitorSpreadsheetRegistration()
+  {
+    await Task.CompletedTask;
+    
+    return Result<int>.Success(_registerBySpreadsheetProgress);
+  }
 }

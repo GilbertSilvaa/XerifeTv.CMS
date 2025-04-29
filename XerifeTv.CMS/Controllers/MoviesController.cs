@@ -139,9 +139,9 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
   }
 
   [HttpGet]
-  public IActionResult MonitorSpreadsheetRegistration()
+  public async Task<IActionResult> MonitorSpreadsheetRegistration()
   {
-    var response = _service.MonitorSpreadsheetRegistration();
+    var response = await _service.MonitorSpreadsheetRegistration();
     
     if (response.IsSuccess) return Ok(response.Data);
     

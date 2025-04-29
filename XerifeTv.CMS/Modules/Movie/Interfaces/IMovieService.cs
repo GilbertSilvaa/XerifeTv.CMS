@@ -14,5 +14,5 @@ public interface IMovieService
   Task<Result<PagedList<GetMovieResponseDto>>> GetByFilter(GetMoviesByFilterRequestDto dto);
   Task<Result<GetMovieByImdbResponseDto?>> GetByImdbId(string imdbId);
   Task<Result<(int? SuccessCount, int? FailCount, string[] ErrorList)>> RegisterBySpreadsheet(IFormFile file);
-  Result<int> MonitorSpreadsheetRegistration();
+  Task<Result<int>> MonitorSpreadsheetRegistration();
 }
