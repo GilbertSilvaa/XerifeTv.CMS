@@ -43,9 +43,11 @@ $('.btn-excel-file-submit').on('click', async function (){
       var progressResponse = await fetch(`/${controller}/${actionMonitorProgress}`);
       const percent = await progressResponse.json();
 
-      $('.process .progress-bar').css('width', `${percent}%`);
-      $('.process span.status-percent').text(`${percent}%`);
-    }, 2000);
+      if (percent > 0) {
+        $('.process .progress-bar').css('width', `${percent}%`);
+        $('.process span.status-percent').text(`${percent}%`);
+      }
+    }, 2500);
 
     const response = await fetch(`/${controller}/${action}`, {
       method: 'POST',
