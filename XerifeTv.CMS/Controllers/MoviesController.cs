@@ -97,11 +97,15 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
   {
     if (id is not null)
     {
-      await _service.Delete(id);
+      var response = await _service.Delete(id);
+      
+      TempData["Notification"] = response.IsFailure
+        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
+      
       _logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
     }
     
-    TempData["Notification"] = MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
     return RedirectToAction("Index");
   }
 

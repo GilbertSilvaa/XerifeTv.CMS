@@ -5,6 +5,7 @@ using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
+using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -65,7 +66,11 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> Create(CreateSeriesRequestDto dto)
   {
-    await _service.Create(dto);
+     var response = await _service.Create(dto);
+     
+     TempData["Notification"] = response.IsFailure
+       ? MessageViewHelper.ErrorJson(response.Error.Description)
+       : MessageViewHelper.SuccessJson($"Serie cadastrada com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered the serie {dto.Title}");
 
@@ -75,7 +80,11 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> Update(UpdateSeriesRequestDto dto)
   {
-    await _service.Update(dto);
+    var response = await _service.Update(dto);
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson($"Serie atualizada com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated the serie {dto.Title}");
 
@@ -87,10 +96,15 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
   {
     if (id is not null)
     {
-      await _service.Delete(id);
+      var response = await _service.Delete(id);
+      
+      TempData["Notification"] = response.IsFailure
+        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        : MessageViewHelper.SuccessJson($"Serie deletada com sucesso");
+      
       _logger.LogInformation($"{User.Identity?.Name} removed the serie with id = {id}");
     }
-      
+    
     return RedirectToAction("Index");
   }
 
@@ -117,7 +131,11 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> CreateEpisode(CreateEpisodeRequestDto dto)
   {
-    await _service.CreateEpisode(dto);
+    var response = await _service.CreateEpisode(dto);
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson($"Episodio cadastrado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
@@ -127,7 +145,11 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> UpdateEpisode(UpdateEpisodeRequestDto dto)
   {
-    await _service.UpdateEpisode(dto);
+    var response = await _service.UpdateEpisode(dto);
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson($"Episodio atualizado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
@@ -139,7 +161,12 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
   {
     if (serieId is not null && id is not null)
     {
-      await _service.DeleteEpisode(serieId, id);
+      var response = await _service.DeleteEpisode(serieId, id);
+      
+      TempData["Notification"] = response.IsFailure
+        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        : MessageViewHelper.SuccessJson($"Episodio deletado com sucesso");
+      
       _logger.LogInformation($"{User.Identity?.Name} deleted episode with id = {id} of the serie with id = {serieId}");
     }
       
