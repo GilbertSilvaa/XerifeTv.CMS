@@ -5,6 +5,7 @@ using XerifeTv.CMS.Modules.Movie.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -18,13 +19,6 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
     Result<PagedList<GetMovieResponseDto>>? result;
 
     _logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
-
-    if (TempData["ErrorMessage"] is string errorMessage)
-    {
-      ViewData["Message"] = new MessageView(
-        EMessageViewType.ERROR,
-        errorMessage);
-    }
 
     if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
     {
@@ -74,9 +68,10 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
   public async Task<IActionResult> Create(CreateMovieRequestDto dto)
   {
     var response = await _service.Create(dto);
-
-    if (response.IsFailure)
-      TempData["ErrorMessage"] = response.Error.Description ?? string.Empty;
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} cadastrado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
 
@@ -88,8 +83,9 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
   {
     var response = await _service.Update(dto);
     
-    if (response.IsFailure)
-      TempData["ErrorMessage"] = response.Error.Description ?? string.Empty;
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} atualizado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
 
@@ -101,10 +97,15 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
   {
     if (id is not null)
     {
-      await _service.Delete(id);
+      var response = await _service.Delete(id);
+      
+      TempData["Notification"] = response.IsFailure
+        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
+      
       _logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
     }
-   
+    
     return RedirectToAction("Index");
   }
 
@@ -128,6 +129,10 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
     if (response.IsFailure) 
       return BadRequest(response.Error.Description ?? string.Empty);
 
+    if (response.Data.SuccessCount > 1)
+      TempData["Notification"] = MessageViewHelper
+        .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
+    
     object responseData = new
     {
 			response.Data.SuccessCount,

@@ -1,8 +1,13 @@
 ﻿@using XerifeTv.CMS.Modules.Common
+@using XerifeTv.CMS.Shared.Helpers
 
 @{
-  var messageView = ViewData["Message"] as MessageView;
+  var messageJson = TempData["Notification"] as string;
+  MessageView? messageView = null;
 
+  if (!string.IsNullOrEmpty(messageJson))
+    messageView = MessageViewHelper.JsonStrToMessageView(messageJson);
+  
   ICollection<string[]> pagesViewSideMenu = [];
   pagesViewSideMenu.Add(["Home", "Index", "Dashboard", "fa-solid fa-chart-simple"]);
   pagesViewSideMenu.Add(["Movies", "Index", "Filmes", "fa-solid fa-film"]);
