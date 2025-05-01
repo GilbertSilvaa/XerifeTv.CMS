@@ -129,6 +129,10 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
     if (response.IsFailure) 
       return BadRequest(response.Error.Description ?? string.Empty);
 
+    if (response.Data.SuccessCount > 1)
+      TempData["Notification"] = MessageViewHelper
+        .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
+    
     object responseData = new
     {
 			response.Data.SuccessCount,

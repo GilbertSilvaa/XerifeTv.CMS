@@ -151,8 +151,9 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   {
     var response = await _service.Register(dto);
 
-    if (response.IsFailure)
-      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson("Usuario cadastrado com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} registered a new user");
 
@@ -178,8 +179,11 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [Authorize]
   public async Task<IActionResult> UpdatePassword(UpdatePasswordUserRequestDto dto)
   {
-    if (dto.NewPassword != dto.NewPasswordConfirm) 
+    if (dto.NewPassword != dto.NewPasswordConfirm)
+    {
       TempData["Notification"] = MessageViewHelper.ErrorJson("Confirmacao de senha incorreta");
+      return RedirectToAction("Settings");
+    }
     
     var response = await _service.UpdatePassword(dto);
     
@@ -198,8 +202,9 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   {
     var response = await _service.Update(dto);
 
-    if (response.IsFailure)
-      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson("Usuario atualizado com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
     return RedirectToAction("Index");
@@ -208,7 +213,11 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [Authorize(Roles = "admin")]
 	public async Task<IActionResult> Delete(string id)
   {
-    await _service.Delete(id);
+    var response = await _service.Delete(id);
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson("Usuario deletado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} removed user with id = {id}");
 

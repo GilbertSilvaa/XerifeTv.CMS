@@ -5,6 +5,7 @@ using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Enums;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -65,7 +66,11 @@ public class ChannelsController(IChannelService _service, ILogger<ChannelsContro
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> Create(CreateChannelRequestDto dto)
   {
-    await _service.Create(dto);
+    var response = await _service.Create(dto);
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson($"Canal cadastrado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered the channel {dto.Title}");
 
@@ -75,7 +80,11 @@ public class ChannelsController(IChannelService _service, ILogger<ChannelsContro
   [Authorize(Roles = "admin, common")]
   public async Task<IActionResult> Update(UpdateChannelRequestDto dto)
   {
-    await _service.Update(dto);
+    var response = await _service.Update(dto);
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson($"Canal atualizado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated the channel {dto.Title}");
 
@@ -87,7 +96,12 @@ public class ChannelsController(IChannelService _service, ILogger<ChannelsContro
   {
     if (id is not null)
     {
-      await _service.Delete(id);
+      var response = await _service.Delete(id);
+      
+      TempData["Notification"] = response.IsFailure
+        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        : MessageViewHelper.SuccessJson($"Canal deletado com sucesso");
+      
       _logger.LogInformation($"{User.Identity?.Name} removed the channel with id = {id}");
     }
     
