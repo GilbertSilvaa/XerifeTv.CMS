@@ -3,6 +3,7 @@ using Microsoft.OpenApi.Models;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Services;
 using XerifeTv.CMS.Modules.Channel;
+using XerifeTv.CMS.Modules.Channel.Importers;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Content;
 using XerifeTv.CMS.Modules.Content.Interfaces;
@@ -57,6 +58,7 @@ public static class ConfigureServices
     services.AddScoped<IHashPassword, HashPassword>();
     services.AddScoped<IEmailService, EmailService>();
     services.AddScoped<ISpreadsheetBatchImporter<IMovieService>, MoviesSpreadsheetImporter>();
+    services.AddScoped<ISpreadsheetBatchImporter<IChannelService>, ChannelsSpreadsheetImporter>();
     return services;
   }
 

@@ -16,6 +16,9 @@ public class MoviesSpreadsheetImporter(
   public async Task<Result<string>> ImportAsync(IFormFile file)
   {
     var importId = Guid.NewGuid().ToString();
+    var emptyDto = new ImportSpreadsheetResponseDto(0, 0, [], 0);
+    _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
+    
     HandleImportAsync(file, importId);
     return Result<string>.Success(importId);
   }
@@ -44,9 +47,6 @@ public class MoviesSpreadsheetImporter(
         "DURATION (REQUIRED)",
         "URL SUBTITLES"
       ];
-
-      _cacheService.SetValue<ImportSpreadsheetResponseDto>(
-        importId, new ImportSpreadsheetResponseDto(0,0, [], 0));
       
       using var stream = new MemoryStream();
       file.CopyTo(stream);
@@ -128,12 +128,14 @@ public class MoviesSpreadsheetImporter(
     catch (Exception ex)
     {
       var monitorResponse = await MonitorImportAsync(importId);
+      
       if (monitorResponse.IsSuccess)
       {
         var currentProgress = monitorResponse.Data;
         var failCount = currentProgress.FailCount;
         var errorList = currentProgress.ErrorList.ToList();
         errorList.Add(ex.InnerException?.Message ?? ex.Message);
+        
         var _newDto = new ImportSpreadsheetResponseDto(
           currentProgress.SuccessCount, failCount, errorList.ToArray(), 100);
         _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
