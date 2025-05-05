@@ -4,6 +4,7 @@ using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
 using XerifeTv.CMS.Modules.User.Interfaces;
+using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -18,10 +19,8 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   };
   
   [Authorize(Roles = "admin")]
-  public async Task<IActionResult> Index(MessageView? messageView)
+  public async Task<IActionResult> Index()
   {
-    ViewData["Message"] = messageView;
-
     var response = await _service.Get(1, 20);
 
     _logger.LogInformation($"{User.Identity?.Name} accessed the users page");
@@ -33,13 +32,11 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   }
 
   [AllowAnonymous]
-  public IActionResult SignIn(MessageView? messageView)
+  public IActionResult SignIn()
   {
     if (User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
     
-    ViewData["Message"] = messageView;
-
     return View();
   }
   
@@ -51,11 +48,8 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
     if (response.IsFailure)
     {
-      ViewData["Message"] = new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
-
+      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
       _logger.LogInformation("There was an unsuccessful login attempt");
-
       return View();
     }
     
@@ -87,24 +81,19 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
     if (response.IsFailure)
     {
-      ViewData["Message"] = new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
-
+      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
       _logger.LogInformation($"{email} tried to send password reset email and failed");
-
       return View();
     }
     
-    ViewData["Message"] = new MessageView(
-      EMessageViewType.SUCCESS, "Email enviado com sucesso");
-    
+    TempData["Notification"] = MessageViewHelper.SuccessJson("Email enviado com sucesso");
     _logger.LogInformation($"{email} tried to send password reset email");
     
     return View(model: email);
   }
 
   [AllowAnonymous]
-  public async Task<IActionResult> ResetPassword(string code, string? errorMessage)
+  public async Task<IActionResult> ResetPassword(string code)
   {
     if (User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
@@ -113,14 +102,9 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     
     if (response.IsFailure)
     {
-      ViewData["Message"] = new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty);
-      
+      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
       return View();
     }
-
-    if (errorMessage != null)
-      ViewData["Message"] = new MessageView(EMessageViewType.ERROR, errorMessage);
     
     return View(model: response.Data);
   }
@@ -134,26 +118,21 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     
     if (dto.Password != dto.ConfirmPassword)
     {
-      return RedirectToAction("ResetPassword", new
-      {
-        code = dto.CodeGuid,
-        errorMessage = "Confirmacao de senha incorreta"
-      });
+      TempData["Notification"] = MessageViewHelper.ErrorJson("Confirmacao de senha incorreta");
+      return RedirectToAction("ResetPassword", new { code = dto.CodeGuid });
     }
     
     var response = await _service.ResetPassword(dto);
 
     if (response.IsFailure)
     {
-      return RedirectToAction("ResetPassword", new
-      {
-        code = dto.CodeGuid,
-        errorMessage = response.Error.Description
-      });
+      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
+      return RedirectToAction("ResetPassword", new { code = dto.CodeGuid });
     }
     
-    return RedirectToAction("SignIn", new MessageView(
-      EMessageViewType.SUCCESS, "Senha redefinida com sucesso"));
+    TempData["Notification"] = MessageViewHelper.SuccessJson("Senha redefinida com sucesso");
+    
+    return RedirectToAction("SignIn");
   }
   
   [AllowAnonymous]
@@ -172,10 +151,10 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   {
     var response = await _service.Register(dto);
 
-    if (response.IsFailure)
-      return RedirectToAction("Index", new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
-
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson("Usuario cadastrado com sucesso");
+    
     _logger.LogInformation($"{User.Identity?.Name} registered a new user");
 
     return RedirectToAction("Index");
@@ -186,12 +165,13 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   public async Task<IActionResult> UpdateProfile(UpdateUserRequestDto dto)
   {
     var response = await _service.Update(dto);
-
-    if (response.IsFailure)
-      return RedirectToAction("Settings", new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson("Perfil atualizado com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} updated your own profile");
+    
     return RedirectToAction("Settings"); 
   }
 
@@ -199,20 +179,21 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [Authorize]
   public async Task<IActionResult> UpdatePassword(UpdatePasswordUserRequestDto dto)
   {
-    if (dto.NewPassword != dto.NewPasswordConfirm) 
-      return RedirectToAction("Settings", new MessageView(
-        EMessageViewType.ERROR, "Confirmacao de senha incorreta"));
+    if (dto.NewPassword != dto.NewPasswordConfirm)
+    {
+      TempData["Notification"] = MessageViewHelper.ErrorJson("Confirmacao de senha incorreta");
+      return RedirectToAction("Settings");
+    }
     
     var response = await _service.UpdatePassword(dto);
     
-    if (response.IsFailure)
-      return RedirectToAction("Settings", new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson("Senha atualizada com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} updated your password");
     
-    return RedirectToAction("Settings", new MessageView(
-      EMessageViewType.SUCCESS, "Senha atualizada com sucesso")); 
+    return RedirectToAction("Settings");
   }
   
   [HttpPost]
@@ -221,9 +202,9 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   {
     var response = await _service.Update(dto);
 
-    if (response.IsFailure)
-      return RedirectToAction("Index", new MessageView(
-        EMessageViewType.ERROR, response.Error.Description ?? string.Empty));
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson("Usuario atualizado com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
     return RedirectToAction("Index");
@@ -232,7 +213,11 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [Authorize(Roles = "admin")]
 	public async Task<IActionResult> Delete(string id)
   {
-    await _service.Delete(id);
+    var response = await _service.Delete(id);
+    
+    TempData["Notification"] = response.IsFailure
+      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      : MessageViewHelper.SuccessJson("Usuario deletado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} removed user with id = {id}");
 
@@ -277,10 +262,8 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   }
 
   [Authorize]
-  public async Task<IActionResult> Settings(MessageView? messageView)
+  public async Task<IActionResult> Settings()
   {
-    ViewData["Message"] = messageView;
-    
     var response = await _service.GetByUsername(User.Identity.Name);
 
     if (response.IsFailure) return Logout();

@@ -3,6 +3,7 @@ using MongoDB.Driver;
 using System.Linq.Expressions;
 using XerifeTv.CMS.Modules.Abstractions.Repositories;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -21,7 +22,8 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
         r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
       
       EMovieSearchFilter.CATEGORY => r => 
-        r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+        r.Categories.Any(x => 
+          x.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase)) && (!r.Disabled || dto.IsIncludeDisabled),
       
       EMovieSearchFilter.RELEASE_YEAR => r => 
         r.ReleaseYear.Equals(int.Parse(dto.Search)) && (!r.Disabled || dto.IsIncludeDisabled),
@@ -54,16 +56,23 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
       .FirstOrDefaultAsync();
   }
 
-  public async Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(int limit)
+  public async Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
   {
-    return await _collection
-      .Aggregate()
-      .Group(
-        r => r.Category, 
-        g => new ItemsByCategory<MovieEntity>(
-          g.Key, 
-          g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
-      .Match(g => g.Items.Any())
-      .ToListAsync();
+    List<ItemsByCategory<MovieEntity>> result = [];
+
+    foreach (var category in dto.Categories)
+    {
+      var moviesByCategory = await _collection
+        .Find(r => r.Categories.Any(x => x.Equals(category)))
+        .SortByDescending(x => x.CreateAt)
+        .Skip(dto.LimitResults * (dto.CurrentPage - 1))
+        .Limit(dto.LimitResults)
+        .ToListAsync();
+      
+      if (moviesByCategory.Any())
+        result.Add(new ItemsByCategory<MovieEntity>(category, moviesByCategory)); 
+    }
+
+    return result;
   }
 }

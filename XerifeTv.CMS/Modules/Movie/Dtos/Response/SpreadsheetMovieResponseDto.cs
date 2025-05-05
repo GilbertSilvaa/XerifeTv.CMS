@@ -24,7 +24,8 @@ public sealed class SpreadsheetMovieResponseDto
 			videoUrl, 
 			videoDuration, 
 			parentalRating,
-			videoStreamFormat];
+			videoStreamFormat
+		];
 
 		if (requiredValues.Any(v => string.IsNullOrEmpty(v)))
 			throw new SpreadsheetInvalidException($"[{imdbId}] algum campo obrigatorio esta vazio");

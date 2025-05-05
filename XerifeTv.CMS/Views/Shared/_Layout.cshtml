@@ -1,8 +1,13 @@
 ﻿@using XerifeTv.CMS.Modules.Common
+@using XerifeTv.CMS.Shared.Helpers
 
 @{
-  var messageView = ViewData["Message"] as MessageView;
+  var messageJson = TempData["Notification"] as string;
+  MessageView? messageView = null;
 
+  if (!string.IsNullOrEmpty(messageJson))
+    messageView = MessageViewHelper.JsonStrToMessageView(messageJson);
+  
   ICollection<string[]> pagesViewSideMenu = [];
   pagesViewSideMenu.Add(["Home", "Index", "Dashboard", "fa-solid fa-chart-simple"]);
   pagesViewSideMenu.Add(["Movies", "Index", "Filmes", "fa-solid fa-film"]);
@@ -47,6 +52,14 @@
       {
         background: #252525;
       }
+      
+      #message-box {
+        width: 85%;
+        
+        @@media (min-width: 720px) {
+          width: 25%;
+        }
+      }
     </style>
 </head>
 <body>
@@ -60,7 +73,7 @@
 
 <div class="container-fluid">
   <div
-    class="w-25 alert alert-dismissible fade show"
+    class="alert alert-dismissible fade show"
     role="alert"
     id="message-box"
     style="display: none; position: absolute; bottom: 0.5rem; right: 0.5rem; z-index: 999;">

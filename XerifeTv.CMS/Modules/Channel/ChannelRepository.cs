@@ -8,6 +8,7 @@ using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Repositories;
 using XerifeTv.CMS.Modules.Channel.Dtos.Request;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Dtos;
 
 namespace XerifeTv.CMS.Modules.Channel;
 
@@ -22,8 +23,9 @@ public sealed class ChannelRepository(IOptions<DBSettings> options)
         r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
       
       EChannelSearchFilter.CATEGORY => r => 
-        r.Category.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
-      
+        r.Categories.Any(x => 
+          x.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase)) && (!r.Disabled || dto.IsIncludeDisabled),
+
       _ => r => 
         r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
     };
@@ -42,16 +44,23 @@ public sealed class ChannelRepository(IOptions<DBSettings> options)
     return new PagedList<ChannelEntity>(dto.CurrentPage, totalPages, items);
   }
 
-  public async Task<IEnumerable<ItemsByCategory<ChannelEntity>>> GetGroupByCategoryAsync(int limit)
+  public async Task<IEnumerable<ItemsByCategory<ChannelEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
   {
-    return await _collection
-      .Aggregate()
-      .Group(
-        r => r.Category,
-        g => new ItemsByCategory<ChannelEntity>(
-          g.Key, 
-          g.Where(x => !x.Disabled).OrderByDescending(x => x.CreateAt).Take(limit).ToList()))
-      .Match(g => g.Items.Any())
-      .ToListAsync();
+    List<ItemsByCategory<ChannelEntity>> result = [];
+
+    foreach (var category in dto.Categories)
+    {
+      var channelsByCategory = await _collection
+        .Find(r => r.Categories.Any(x => x.Equals(category)))
+        .SortByDescending(x => x.CreateAt)
+        .Skip(dto.LimitResults * (dto.CurrentPage - 1))
+        .Limit(dto.LimitResults)
+        .ToListAsync();
+      
+      if (channelsByCategory.Any())
+        result.Add(new ItemsByCategory<ChannelEntity>(category, channelsByCategory)); 
+    }
+
+    return result;
   }
 }

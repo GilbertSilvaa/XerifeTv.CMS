@@ -7,6 +7,8 @@
   ViewData["Title"] = "Canais";
 }
 
+@await Html.PartialAsync("_ImportFromExcelModal")
+
 <div class="container">
   <header>
     <div class="d-flex justify-content-between">
@@ -18,6 +20,18 @@
           @(Model is GetChannelResponseDto ? "Editar" : "Cadastrar") Canal
         </span>
       </div>
+      
+      @if (Model is null)
+      {
+        <div class="d-none d-lg-flex align-items-center gap-3">
+          <button
+            class="btn btn-sm btn-success d-flex justify-content-center align-items-center gap-2 shadow-none"
+            data-bs-toggle="modal"
+            data-bs-target="#importFromExcelModal">
+            <i class="fa-regular fa-file-excel"></i> Importar
+          </button>
+        </div>
+      }
     </div>
     <hr />
   </header>
@@ -27,7 +41,7 @@
       <input type="hidden" name="id" value="@Model?.Id">
 
       <div class="row mb-3">
-        <div class="col-6">
+        <div class="col-12 col-md-7">
           <label for="title" class="form-label">Titulo</label>
           <input 
             type="text" 
@@ -39,16 +53,25 @@
             required>
         </div>
 
-        <div class="col-6">
-          <label for="category" class="form-label">Categoria</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="category" 
-            name="category" 
-            placeholder="filmes, documentário, noticias..." 
-            value="@Model?.Category"
-            required>
+        <div class="col-12 col-md-5">
+          <label for="categories" class="form-label">Categorias</label>
+
+          <div class="input-group-tags">
+            <input
+              type="text"
+              class="form-control input-tags"
+              placeholder="ação, aventura, comédia..."
+              value="@Model?.Categories">
+
+            <input
+              type="hidden"
+              name="categories"
+              class="input-tags-value"
+              data-required-message="Informe no minino uma categoria"
+              required>
+
+            <div class="w-100 container-tags d-flex flex-wrap gap-1 mt-2"></div>
+          </div>
         </div>
       </div> 
 
