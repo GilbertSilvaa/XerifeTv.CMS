@@ -45,6 +45,9 @@ public class MoviesSpreadsheetImporter(
         "URL SUBTITLES"
       ];
 
+      _cacheService.SetValue<ImportSpreadsheetResponseDto>(
+        importId, new ImportSpreadsheetResponseDto(0,0, [], 0));
+      
       using var stream = new MemoryStream();
       file.CopyTo(stream);
 

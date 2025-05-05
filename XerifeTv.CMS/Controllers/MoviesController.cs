@@ -149,6 +149,6 @@ public class MoviesController(
     if (response.IsSuccess) 
       return Ok(response.Data);
     
-    return BadRequest();
+    return BadRequest(response.Error.Description ?? string.Empty);
   }
 }

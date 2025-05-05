@@ -49,6 +49,7 @@ $('.btn-excel-file-submit').on('click', async function (){
     
     // monitor progress records
     monitorProgressInterval = setInterval(async () => {
+      
       var monitorResponse = await fetch(`/${controller}/${actionMonitorProgress}?importId=${importId}`);
       const { successCount, failCount, errorList, progressCount } = await monitorResponse.json();
 
@@ -84,6 +85,7 @@ $('.btn-excel-file-submit').on('click', async function (){
           $(btn).off().click(() => location.replace(`/${controller}`));
         }, 1250);
       }
+      
     }, 2500);
   }
   catch (error) {
