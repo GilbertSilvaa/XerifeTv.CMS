@@ -16,8 +16,6 @@ public sealed class MovieSevice(
   ISpreadsheetReaderService _spreadsheetReaderService,
   IConfiguration _configuration) : IMovieService
 {
-  private static int _registerBySpreadsheetProgress = 0;
-  
   public async Task<Result<PagedList<GetMovieResponseDto>>> Get(int currentPage, int limit)
   {
     try
@@ -173,111 +171,5 @@ public sealed class MovieSevice(
       var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
       return Result<GetMovieByImdbResponseDto?>.Failure(error);
     }
-  }
-
-  public async Task<Result<(int? SuccessCount, int? FailCount, string[] ErrorList)>> RegisterBySpreadsheet(IFormFile file)
-  {
-    try
-    {
-      string[] expectedColluns =
-      [
-        "IMDB ID (REQUIRED)",
-        "PARENTAL RATING (REQUIRED)",
-        "URL VIDEO (REQUIRED)",
-        "STREAM FORMAT (REQUIRED)",
-        "DURATION (REQUIRED)",
-        "URL SUBTITLES"
-      ];
-
-      using var stream = new MemoryStream();
-      file.CopyTo(stream);
-
-      int successCount = 0;
-      int failCount = 0;
-      ICollection<string> errorList = [];
-
-      var spreadsheetResponse = _spreadsheetReaderService.Read(expectedColluns, stream);
-      ICollection<SpreadsheetMovieResponseDto> movieList = [];
-
-      foreach (var item in spreadsheetResponse)
-        try
-        {
-          var spreadsheetMovieDto = SpreadsheetMovieResponseDto.FromCollunsStr(item);
-          movieList.Add(spreadsheetMovieDto);
-        }
-        catch (SpreadsheetInvalidException ex)
-        {
-          failCount++;
-          errorList.Add(ex.Message);
-          _registerBySpreadsheetProgress =
-            (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
-        }
-
-      foreach (var movieItem in movieList)
-      {
-        var movieByImdbresponse = await GetByImdbId(movieItem.ImdbId);
-
-        if (movieByImdbresponse.IsFailure)
-        {
-          failCount++;
-          errorList.Add(movieByImdbresponse.Error.Description ?? string.Empty);
-          _registerBySpreadsheetProgress =
-            (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
-          continue;
-        }
-
-        var createMovieDto = new CreateMovieRequestDto
-        {
-          ImdbId = movieItem.ImdbId,
-          Title = movieByImdbresponse.Data?.Title ?? string.Empty,
-          Synopsis = movieByImdbresponse.Data?.Overview ?? string.Empty,
-          Categories = String.Join(", ", movieByImdbresponse.Data?.Genres.Select(g => g.Name.ToLower())),
-          PosterUrl = movieByImdbresponse.Data?.PosterUrl ?? string.Empty,
-          BannerUrl = movieByImdbresponse.Data?.BannerUrl ?? string.Empty,
-          ReleaseYear = int.Parse(movieByImdbresponse.Data?.ReleaseYear ?? "0"),
-          Review = movieByImdbresponse.Data?.VoteAverage ?? 0,
-          ParentalRating = movieItem.ParentalRating,
-          VideoUrl = movieItem.Video?.Url ?? string.Empty,
-          VideoDuration = movieItem.Video?.Duration ?? 0,
-          VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
-          VideoSubtitle = movieItem.Video?.Subtitle
-        };
-
-        var response = await Create(createMovieDto);
-
-        if (response.IsSuccess)
-          successCount++;
-        else
-        {
-          failCount++;
-          errorList.Add(response.Error?.Description ?? string.Empty);
-        }
-
-        _registerBySpreadsheetProgress = (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
-      }
-
-      return Result<(int?, int?, string[])>.Success((successCount, failCount, errorList.ToArray()));
-    }
-    catch (SpreadsheetInvalidException ex)
-    {
-      var error = new Error("400", ex.InnerException?.Message ?? ex.Message);
-      return Result<(int?, int?, string[])>.Failure(error);
-    }
-    catch (Exception ex)
-    {
-      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<(int?, int?, string[])>.Failure(error);
-    }
-    finally
-    {
-      _registerBySpreadsheetProgress = 0;
-    }
-  }
-
-  public async Task<Result<int>> MonitorSpreadsheetRegistration()
-  {
-    await Task.CompletedTask;
-    
-    return Result<int>.Success(_registerBySpreadsheetProgress);
   }
 }

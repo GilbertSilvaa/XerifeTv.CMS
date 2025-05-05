@@ -1,16 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
-public class MoviesController(IMovieService _service, ILogger<MoviesController> _logger) : Controller
+public class MoviesController(
+  IMovieService _service, 
+  ILogger<MoviesController> _logger,
+  ISpreadsheetBatchImporter<IMovieService> _spreadsheetBatchImporter) : Controller
 {
   private const int limitResultsPage = 20;
 
@@ -124,32 +129,26 @@ public class MoviesController(IMovieService _service, ILogger<MoviesController> 
   {
     if (file is null || file.Length == 0) return BadRequest();
 
-    var response = await _service.RegisterBySpreadsheet(file);
+    var response = await _spreadsheetBatchImporter.ImportAsync(file);
 
     if (response.IsFailure) 
       return BadRequest(response.Error.Description ?? string.Empty);
-
-    if (response.Data.SuccessCount > 1)
-      TempData["Notification"] = MessageViewHelper
-        .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
     
-    object responseData = new
-    {
-			response.Data.SuccessCount,
-      response.Data.FailCount,
-      response.Data.ErrorList
-    };
-    
-    return Ok(responseData);
+    return Ok(response.Data);
   }
 
   [HttpGet]
-  public async Task<IActionResult> MonitorSpreadsheetRegistration()
+  public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
   {
-    var response = await _service.MonitorSpreadsheetRegistration();
+    var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+
+    if (response.IsSuccess && response.Data.ProgressCount == 100 && response.Data.SuccessCount > 1)
+      TempData["Notification"] = MessageViewHelper
+        .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
     
-    if (response.IsSuccess) return Ok(response.Data);
+    if (response.IsSuccess) 
+      return Ok(response.Data);
     
-    return BadRequest();
+    return BadRequest(response.Error.Description ?? string.Empty);
   }
 }

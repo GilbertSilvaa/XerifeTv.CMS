@@ -39,35 +39,54 @@ $('.btn-excel-file-submit').on('click', async function (){
     $('.importFromExcelModal .btn-close').hide();
     $('.process-file-container').show();
     
-    monitorProgressInterval = setInterval(async () => {
-      var progressResponse = await fetch(`/${controller}/${actionMonitorProgress}`);
-      const percent = await progressResponse.json();
-
-      if (percent > 0) {
-        $('.process .progress-bar').css('width', `${percent}%`);
-        $('.process span.status-percent').text(`${percent}%`);
-      }
-    }, 2500);
-
+    // submit file
     const response = await fetch(`/${controller}/${action}`, {
       method: 'POST',
       body: formData
     });
+    
+    const importId = await response.text();
+    
+    // monitor progress records
+    monitorProgressInterval = setInterval(async () => {
+      
+      var monitorResponse = await fetch(`/${controller}/${actionMonitorProgress}?importId=${importId}`);
+      const { successCount, failCount, errorList, progressCount } = await monitorResponse.json();
 
-    if (!response.ok) throw await response.text();
-    const { successCount, failCount, errorList } = await response.json();
+      if (progressCount == 0) return;
+      
+      $('.process .progress-bar').css('width', `${progressCount}%`);
+      $('.process span.status-percent').text(`${progressCount}%`);
+      
+      if (progressCount == 100) {
+        clearInterval(monitorProgressInterval);
 
-    $('.finish-process-container .success-count').text(successCount);
-    $('.finish-process-container .fail-count').text(failCount);
+        $('.finish-process-container .success-count').text(successCount);
+        $('.finish-process-container .fail-count').text(failCount);
 
-    $(errorList).each((index, message) => {
-      const errorItem = document.createElement('li');
-      errorItem.textContent = message;
-      errorItem.classList.add('list-group-item');
-      $('.finish-process-container .errorList .list-group').append(errorItem);
-    });
+        $(errorList).each((index, message) => {
+          const errorItem = document.createElement('li');
+          errorItem.textContent = message;
+          errorItem.classList.add('list-group-item');
+          $('.finish-process-container .errorList .list-group').append(errorItem);
+        });
 
-    if (errorList.length > 0) $('.finish-process-container .errorList').show();
+        if (errorList.length > 0) $('.finish-process-container .errorList').show();
+
+        $('.process .progress-bar').css('width', '100%');
+        $('.process span.status-percent').text('100%');
+        $('.process span.status-text').text('Processo de cadastros finalizado.');
+
+        setTimeout(() => {
+          $('.process-file-container').hide();
+          $('.finish-process-container').show();
+
+          $(btn).text('Pronto').prop('disabled', false);
+          $(btn).off().click(() => location.replace(`/${controller}`));
+        }, 1250);
+      }
+      
+    }, 2500);
   }
   catch (error) {
     if (!error) return;
@@ -77,10 +96,8 @@ $('.btn-excel-file-submit').on('click', async function (){
     
     $('.finish-process-container .errorList .list-group').append(errorItem);
     $('.finish-process-container .errorList').show();
-  }
-  finally {
-    clearInterval(monitorProgressInterval);
 
+    clearInterval(monitorProgressInterval);
     $('.process .progress-bar').css('width', '100%');
     $('.process span.status-percent').text('100%');
     $('.process span.status-text').text('Processo de cadastros finalizado.');
