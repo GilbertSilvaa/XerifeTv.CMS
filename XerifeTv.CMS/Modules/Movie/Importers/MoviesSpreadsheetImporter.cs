@@ -127,10 +127,10 @@ public class MoviesSpreadsheetImporter(
     }
     catch (Exception ex)
     {
-      var _monitorResponse = await MonitorImportAsync(importId);
-      if (_monitorResponse.IsSuccess)
+      var monitorResponse = await MonitorImportAsync(importId);
+      if (monitorResponse.IsSuccess)
       {
-        var currentProgress = _monitorResponse.Data;
+        var currentProgress = monitorResponse.Data;
         var failCount = currentProgress.FailCount;
         var errorList = currentProgress.ErrorList.ToList();
         errorList.Add(ex.InnerException?.Message ?? ex.Message);
