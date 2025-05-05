@@ -15,22 +15,9 @@ public class MoviesSpreadsheetImporter(
 {
   public async Task<Result<string>> ImportAsync(IFormFile file)
   {
-    try
-    {
-      var importId = Guid.NewGuid().ToString();
-      HandleImportAsync(file, importId);
-      return Result<string>.Success(importId);
-    }
-    catch (SpreadsheetInvalidException ex)
-    {
-      var error = new Error("400", ex.InnerException?.Message ?? ex.Message);
-      return Result<string>.Failure(error);
-    }
-    catch (Exception ex)
-    {
-      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<string>.Failure(error);
-    }
+    var importId = Guid.NewGuid().ToString();
+    HandleImportAsync(file, importId);
+    return Result<string>.Success(importId);
   }
 
   public async Task<Result<ImportSpreadsheetResponseDto>> MonitorImportAsync(string importId)
@@ -39,7 +26,7 @@ public class MoviesSpreadsheetImporter(
     
     if (response == null)
       return Result<ImportSpreadsheetResponseDto>.Failure(
-        new  Error("400", $"Import Id {importId} does not exist."));
+        new  Error("400", $"Import Id {importId} nao encontrado"));
 
     return Result<ImportSpreadsheetResponseDto>.Success(response);
   }
@@ -124,25 +111,30 @@ public class MoviesSpreadsheetImporter(
         if (response.IsSuccess)
         {
           successCount++;
-          UpdateProgress();
         }
         else
         {
           failCount++;
           errorList.Add(response.Error?.Description ?? string.Empty);
-          UpdateProgress();
         }
 
+        UpdateProgress();
         await Task.Delay(1200);
       }
     }
-    catch (SpreadsheetInvalidException ex)
-    {
-      throw ex;
-    }
     catch (Exception ex)
     {
-      throw ex;
+      var _monitorResponse = await MonitorImportAsync(importId);
+      if (_monitorResponse.IsSuccess)
+      {
+        var currentProgress = _monitorResponse.Data;
+        var failCount = currentProgress.FailCount;
+        var errorList = currentProgress.ErrorList.ToList();
+        errorList.Add(ex.InnerException?.Message ?? ex.Message);
+        var _newDto = new ImportSpreadsheetResponseDto(
+          currentProgress.SuccessCount, failCount, errorList.ToArray(), 100);
+        _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
+      }
     }
   }
 }
