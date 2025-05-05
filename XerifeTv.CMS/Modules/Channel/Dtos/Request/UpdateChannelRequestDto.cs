@@ -9,7 +9,6 @@ public class UpdateChannelRequestDto
   public string Categories { get; init; } = string.Empty;
   public string LogoUrl { get; init; } = string.Empty;
   public string VideoUrl { get; init; } = string.Empty;
-  public long VideoDuration { get; init; }
   public string VideoStreamFormat { get; init; } = string.Empty;
   public bool Disabled { get; init; } = false;
 
@@ -26,7 +25,7 @@ public class UpdateChannelRequestDto
       Title = Title,
       Categories = categorieList,
       LogoUrl = LogoUrl,
-      Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat),
+      Video = new Video(VideoUrl, 0, VideoStreamFormat),
       Disabled = Disabled
     };
   }

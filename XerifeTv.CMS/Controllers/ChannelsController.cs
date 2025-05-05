@@ -107,5 +107,19 @@ public class ChannelsController(IChannelService _service, ILogger<ChannelsContro
     
     return RedirectToAction("Index");
   }
+  
+  [HttpPost]
+  public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
+  {
+    if (file is null || file.Length == 0) return BadRequest();
+    
+    return Ok();
+  }
+
+  [HttpGet]
+  public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
+  {
+    return Ok();
+  }
 }
 

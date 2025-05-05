@@ -28,7 +28,6 @@ public class SpreadsheetReaderService : ISpreadsheetReaderService
 
 			for (int row = 2; row <= worksheet.Dimension.End.Row; row++)
 			{
-				// if there is no imdb id, skip the spreadsheet row
 				if (string.IsNullOrEmpty(worksheet.Cells[row, 1].Text)) continue;
 				
 				for (int col = 1; col <= colluns.Length; col++)

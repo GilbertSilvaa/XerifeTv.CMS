@@ -1,0 +1,146 @@
+﻿<div
+  class="modal fade importFromExcelModal"
+  id="importFromExcelModal"
+  tabindex="-1"
+  aria-labelledby="importFromExcelModal-Label"
+  aria-hidden="true"
+  data-bs-backdrop="static"
+  data-bs-keyboard="false">
+
+  <div class="modal-dialog modal-dialog-scrollable modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="importFromExcelModal-Label">
+          Cadastrar Canais via Planilha
+        </h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <div class="modal-body">
+        
+        <div class="select-file-container">
+          <div class="w-100 d-flex flex-column gap-4">
+            <div class="w-100 p-3 d-flex justify-content-between align-items-center rounded-2 bg-body-secondary">
+              <div class="d-flex justify-content-center align-items-center gap-2">
+                <img
+                  src="~/assets/icons/spreadsheet_icon.png"
+                  alt="spreadsheet_icon"
+                  style="height: 24px"/>
+                <span class="fw-bold">Template da Planilha</span>
+              </div>
+              <a
+                href="https://ursqtxeiqhbgjdeplxih.supabase.co/storage/v1/object/public/filetemplates//template_spreadshhet_channels.xlsx"
+                download="spreadshhet_channels.xlsx"
+                class="btn btn-sm btn-secondary shadow-sm">
+                Download
+              </a>
+            </div>
+
+            <div>
+              <label for="importExcelFile" class="btn-xl-upload-file">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                Selecione um Arquivo
+              </label>
+              <input
+                id="importExcelFile"
+                type="file"
+                class="d-none importExcelFile"
+                accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel">
+
+              <div
+                class="file-description d-flex justify-content-between align-items-center"
+                style="font-weight: 500; font-size: 14px;">
+                <span class="file-uploaded-name d-flex align-items-center gap-2">
+                  <i></i>
+                  <span></span>
+                </span>
+                <span class="supported-formats">Formatos: .CSV, .XLS, .XLSX</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="process-file-container process" style="display: none;">
+          <div class="p-3 d-flex flex-column gap-2">
+            <div class="progress" style="height: 1.75rem">
+              <div
+                class="progress-bar progress-bar-striped progress-bar-animated"
+                role="progressbar"
+                style="width: 0%"
+                aria-valuenow="0"
+                aria-valuemin="0"
+                aria-valuemax="100">
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+              <span class="fs-6 status-text">Processando cadastros, aguarde por favor.</span>
+              <span class="fs-6 status-percent">0%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="finish-process-container" style="display: none;">
+          <div class="d-flex justify-content-center align-items-center flex-column gap-4">
+
+            <div class="w-75 d-flex justify-content-center align-items-center gap-4">
+              <div 
+                class="w-50 p-4 bg-body-tertiary rounded shadow-sm d-flex flex-column align-items-center justify-content-center gap-2">
+                <i class="fa-regular fa-circle-check text-success fs-1"></i>
+                <span class="fs-3 fw-bold success-count">0</span>
+                <span>Itens cadastrados com sucesso</span>
+              </div>
+
+              <div 
+                class="w-50 p-4 bg-body-tertiary rounded shadow-sm d-flex flex-column align-items-center justify-content-center gap-2">
+                <i class="fa-regular fa-circle-xmark text-danger fs-1"></i>
+                <span class="fs-3 fw-bold fail-count">0</span>
+                <span>Itens que retornaram erro</span>
+              </div>
+            </div>
+            
+            <div class="accordion w-75 errorList" style="display: none;">
+              <div class="accordion-item">
+                <h2 class="accordion-header">
+                  <button
+                    class="accordion-button collapsed bg-body-tertiary text-body shadow-none d-flex"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#errorList"
+                    aria-expanded="true"
+                    aria-controls="errorList">
+                    <div class="d-flex align-items-center gap-3">
+                      <i class="fa-solid fa-triangle-exclamation"></i>
+                      <span>Mensagens de erro</span>
+                    </div>
+                  </button>
+                </h2>
+                <div 
+                  id="errorList" 
+                  class="accordion-collapse collapse" 
+                  data-bs-parent="#accordionExample">
+                  <div class="accordion-body p-0">
+                    <ul class="list-group list-group-numbered list-group-flush"></ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div> 
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-success shadow-sm btn-excel-file-submit"
+          data-controller="Channels"
+          data-action="RegisterBySpreadsheet"
+          data-monitor-progress-action="MonitorSpreadsheetRegistration"
+          disabled>
+          Cadastrar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

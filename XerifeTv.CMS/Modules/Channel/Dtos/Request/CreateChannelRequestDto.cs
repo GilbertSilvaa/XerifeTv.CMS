@@ -8,7 +8,6 @@ public class CreateChannelRequestDto
   public string Categories { get; init; } = string.Empty;
   public string LogoUrl { get; init; } = string.Empty;
   public string VideoUrl { get; init; } = string.Empty;
-  public long VideoDuration { get; init; }
   public string VideoStreamFormat { get; init; } = string.Empty;
 
   public ChannelEntity ToEntity()
@@ -23,7 +22,7 @@ public class CreateChannelRequestDto
       Title = Title,
       Categories = categorieList,
       LogoUrl = LogoUrl,
-      Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat)
+      Video = new Video(VideoUrl, 0, VideoStreamFormat)
     };
   }
 }
