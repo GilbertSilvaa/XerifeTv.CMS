@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Dtos.Request;
 using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Enums;
@@ -10,7 +11,10 @@ using XerifeTv.CMS.Shared.Helpers;
 namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
-public class ChannelsController(IChannelService _service, ILogger<ChannelsController> _logger) : Controller
+public class ChannelsController(
+  IChannelService _service, 
+  ILogger<ChannelsController> _logger,
+  ISpreadsheetBatchImporter<IChannelService> _spreadsheetBatchImporter) : Controller
 {
   private const int limitResultsPage = 20;
 
@@ -112,14 +116,28 @@ public class ChannelsController(IChannelService _service, ILogger<ChannelsContro
   public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
   {
     if (file is null || file.Length == 0) return BadRequest();
+
+    var response = await _spreadsheetBatchImporter.ImportAsync(file);
+
+    if (response.IsFailure) 
+      return BadRequest(response.Error.Description ?? string.Empty);
     
-    return Ok();
+    return Ok(response.Data);
   }
 
   [HttpGet]
   public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
   {
-    return Ok();
+    var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+
+    if (response.IsSuccess && response.Data.ProgressCount == 100 && response.Data.SuccessCount > 1)
+      TempData["Notification"] = MessageViewHelper
+        .SuccessJson($"{response.Data.SuccessCount} canais cadastrados com sucesso");
+    
+    if (response.IsSuccess) 
+      return Ok(response.Data);
+    
+    return BadRequest(response.Error.Description ?? string.Empty);
   }
 }
 

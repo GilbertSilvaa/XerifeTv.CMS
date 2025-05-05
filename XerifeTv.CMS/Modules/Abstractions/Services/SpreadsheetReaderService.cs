@@ -1,4 +1,5 @@
-﻿using OfficeOpenXml;
+﻿using MongoDB.Driver.Linq;
+using OfficeOpenXml;
 using XerifeTv.CMS.Modules.Abstractions.Exceptions;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 
@@ -20,7 +21,7 @@ public class SpreadsheetReaderService : ISpreadsheetReaderService
 			for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
 				spreadsheetColumns.Add(worksheet.Cells[1, col].Text);
 			
-			if (!colluns.SequenceEqual(spreadsheetColumns))
+			if (!colluns.SequenceEqual(spreadsheetColumns.Where(c => !string.IsNullOrWhiteSpace(c))))
 				throw new SpreadsheetInvalidException("Planilha em formato incorreto");
 
 			ICollection<string> rowItemValues = [];
