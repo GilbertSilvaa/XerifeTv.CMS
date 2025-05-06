@@ -6,6 +6,7 @@ using XerifeTv.CMS.Modules.Movie.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Shared.Helpers;
 
@@ -14,6 +15,7 @@ namespace XerifeTv.CMS.Controllers;
 [Authorize]
 public class MoviesController(
   IMovieService _service, 
+  IImdbService _imdbService,
   ILogger<MoviesController> _logger,
   ISpreadsheetBatchImporter<IMovieService> _spreadsheetBatchImporter) : Controller
 {
@@ -119,7 +121,7 @@ public class MoviesController(
   {
     if (string.IsNullOrEmpty(imdbId)) return BadRequest();
     
-    var response = await _service.GetByImdbId(imdbId);
+    var response = await _imdbService.GetMovieByImdbIdAsync(imdbId);
     
     return response.IsFailure ? BadRequest() : Ok(response.Data);
   }

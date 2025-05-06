@@ -5,6 +5,7 @@ namespace XerifeTv.CMS.Modules.Series.Dtos.Request;
 public class UpdateSeriesRequestDto
 {
   public string Id { get; init; } = string.Empty;
+  public string ImdbId { get; init; } = string.Empty;
   public string Title { get; init; } = string.Empty;
   public string Synopsis { get; init; } = string.Empty;
   public string Categories { get; init; } = string.Empty;
@@ -26,6 +27,7 @@ public class UpdateSeriesRequestDto
     return new SeriesEntity
     {
       Id = Id,
+      ImdbId = ImdbId,
       Title = Title,
       Synopsis = Synopsis,
       Categories = categorieList,
