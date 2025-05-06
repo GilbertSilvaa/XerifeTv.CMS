@@ -59,15 +59,18 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
   public async Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
   {
     List<ItemsByCategory<MovieEntity>> result = [];
-
+    List<string> uniqueMovieIds = [];
+    
     foreach (var category in dto.Categories)
     {
       var moviesByCategory = await _collection
-        .Find(r => r.Categories.Any(x => x.Equals(category)))
+        .Find(r => r.Categories.Any(x => x.Equals(category)) && !uniqueMovieIds.Contains(r.Id))
         .SortByDescending(x => x.CreateAt)
         .Skip(dto.LimitResults * (dto.CurrentPage - 1))
         .Limit(dto.LimitResults)
         .ToListAsync();
+      
+      uniqueMovieIds.AddRange(moviesByCategory.Select(x => x.Id));
       
       if (moviesByCategory.Any())
         result.Add(new ItemsByCategory<MovieEntity>(category, moviesByCategory)); 

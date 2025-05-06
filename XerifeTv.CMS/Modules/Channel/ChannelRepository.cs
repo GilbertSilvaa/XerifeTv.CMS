@@ -47,18 +47,21 @@ public sealed class ChannelRepository(IOptions<DBSettings> options)
   public async Task<IEnumerable<ItemsByCategory<ChannelEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
   {
     List<ItemsByCategory<ChannelEntity>> result = [];
+    List<string> uniqueChannelIds = [];
 
     foreach (var category in dto.Categories)
     {
       var channelsByCategory = await _collection
-        .Find(r => r.Categories.Any(x => x.Equals(category)))
+        .Find(r => r.Categories.Any(x => x.Equals(category)) && !uniqueChannelIds.Contains(r.Id))
         .SortByDescending(x => x.CreateAt)
         .Skip(dto.LimitResults * (dto.CurrentPage - 1))
         .Limit(dto.LimitResults)
         .ToListAsync();
       
+      uniqueChannelIds.AddRange(channelsByCategory.Select(x => x.Id));
+      
       if (channelsByCategory.Any())
-        result.Add(new ItemsByCategory<ChannelEntity>(category, channelsByCategory)); 
+        result.Add(new ItemsByCategory<ChannelEntity>(category, channelsByCategory));
     }
 
     return result;
