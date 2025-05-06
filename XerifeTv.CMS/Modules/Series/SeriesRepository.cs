@@ -81,15 +81,18 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
   public async Task<IEnumerable<ItemsByCategory<SeriesEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
   {
     List<ItemsByCategory<SeriesEntity>> result = [];
+    List<string> uniqueSeriesIds = [];
 
     foreach (var category in dto.Categories)
     {
       var seriesByCategory = await _collection
-        .Find(r => r.Categories.Any(x => x.Equals(category)))
+        .Find(r => r.Categories.Any(x => x.Equals(category)) && !uniqueSeriesIds.Contains(r.Id))
         .SortByDescending(x => x.CreateAt)
         .Skip(dto.LimitResults * (dto.CurrentPage - 1))
         .Limit(dto.LimitResults)
         .ToListAsync();
+      
+      uniqueSeriesIds.AddRange(seriesByCategory.Select(x => x.Id));
       
       if (seriesByCategory.Any())
         result.Add(new ItemsByCategory<SeriesEntity>(category, seriesByCategory));

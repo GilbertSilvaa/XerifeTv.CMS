@@ -30,7 +30,7 @@ public sealed class ContentService(
   public async Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategory(
     GetGroupByCategoryRequestDto dto)
   {
-    var cacheKey = $"moviesGroupByCategory-{dto.Categories}-{dto.CurrentPage}-{dto.LimitResults}";
+    var cacheKey = $"moviesGroupByCategory-{String.Join("_", dto.Categories)}-{dto.CurrentPage}-{dto.LimitResults}";
     var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<MovieEntity>>>(cacheKey);
 
     if (response is null)
@@ -81,7 +81,7 @@ public sealed class ContentService(
   public async Task<Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> GetSeriesGroupByCategory(
     GetGroupByCategoryRequestDto dto)
   {
-    var cacheKey = $"seriesGroupByCategory-{dto.Categories}-{dto.CurrentPage}-{dto.LimitResults}";
+    var cacheKey = $"seriesGroupByCategory-{String.Join("_", dto.Categories)}-{dto.CurrentPage}-{dto.LimitResults}";
     var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<SeriesEntity>>>(cacheKey);
 
     if (response is null)
@@ -142,7 +142,7 @@ public sealed class ContentService(
   public async Task<Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> GetChannelsGroupByCategory(
     GetGroupByCategoryRequestDto dto)
   {
-    var cacheKey = $"channelsGroupByCategory-{dto.Categories}-{dto.CurrentPage}-{dto.LimitResults}";
+    var cacheKey = $"channelsGroupByCategory-{String.Join("_", dto.Categories)}-{dto.CurrentPage}-{dto.LimitResults}";
     var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<ChannelEntity>>>(cacheKey);
 
     if (response is null)
