@@ -9,6 +9,7 @@ using XerifeTv.CMS.Modules.Content;
 using XerifeTv.CMS.Modules.Content.Interfaces;
 using XerifeTv.CMS.Modules.Dashboard;
 using XerifeTv.CMS.Modules.Dashboard.Interfaces;
+using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Importers;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -59,6 +60,7 @@ public static class ConfigureServices
     services.AddScoped<IEmailService, EmailService>();
     services.AddScoped<ISpreadsheetBatchImporter<IMovieService>, MoviesSpreadsheetImporter>();
     services.AddScoped<ISpreadsheetBatchImporter<IChannelService>, ChannelsSpreadsheetImporter>();
+    services.AddScoped<IImdbService, ImdbService>();
     return services;
   }
 
