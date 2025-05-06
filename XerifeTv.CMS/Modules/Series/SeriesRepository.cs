@@ -70,6 +70,13 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
     return new PagedList<SeriesEntity>(dto.CurrentPage, totalPages, items);
   }
+  
+  public async Task<SeriesEntity?> GetByImdbIdAsync(string imdbId)
+  {
+    return await _collection
+      .Find(r => r.ImdbId == imdbId)
+      .FirstOrDefaultAsync();
+  }
 
   public async Task<IEnumerable<ItemsByCategory<SeriesEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
   {
@@ -120,6 +127,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
     var filter = Builders<SeriesEntity>.Filter.Eq(r => r.Id, entity.Id);
 
     var update = Builders<SeriesEntity>.Update
+      .Set(r => r.ImdbId, entity.ImdbId)
       .Set(r => r.Title, entity.Title)
       .Set(r => r.Categories, entity.Categories)
       .Set(r => r.Categories, entity.Categories)

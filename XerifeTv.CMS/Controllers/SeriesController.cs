@@ -70,7 +70,7 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
      
      TempData["Notification"] = response.IsFailure
        ? MessageViewHelper.ErrorJson(response.Error.Description)
-       : MessageViewHelper.SuccessJson($"Serie cadastrada com sucesso");
+       : MessageViewHelper.SuccessJson($"Serie {dto.ImdbId} cadastrada com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered the serie {dto.Title}");
 
@@ -84,7 +84,7 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
     
     TempData["Notification"] = response.IsFailure
       ? MessageViewHelper.ErrorJson(response.Error.Description)
-      : MessageViewHelper.SuccessJson($"Serie atualizada com sucesso");
+      : MessageViewHelper.SuccessJson($"Serie {dto.ImdbId} atualizada com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated the serie {dto.Title}");
 
