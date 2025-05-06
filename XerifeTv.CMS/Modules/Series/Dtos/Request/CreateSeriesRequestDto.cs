@@ -4,6 +4,7 @@ namespace XerifeTv.CMS.Modules.Series.Dtos.Request;
 
 public class CreateSeriesRequestDto
 {
+  public string ImdbId { get; init; } = string.Empty;
   public string Title { get; init; } = string.Empty;
   public string Synopsis { get; init; } = string.Empty;
   public string Categories { get; init; } = string.Empty;
@@ -23,6 +24,7 @@ public class CreateSeriesRequestDto
     
     return new SeriesEntity
     {
+      ImdbId = ImdbId,
       Title = Title,
       Synopsis = Synopsis,
       Categories = categorieList,

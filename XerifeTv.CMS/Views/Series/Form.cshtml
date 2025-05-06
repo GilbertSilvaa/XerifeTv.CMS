@@ -27,35 +27,56 @@
       <input type="hidden" name="id" value="@Model?.Id">
 
       <div class="row mb-3">
-        <div class="col-12 col-md-7">
-          <label for="title" class="form-label">Titulo</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="title" 
-            name="title" 
-            placeholder="Digite aqui..." 
-            value="@Model?.Title"
-            required>
+        <div class="col-12 col-md-3">
+          <label for="imdbId" class="form-label">Imdb ID</label>
+          <div class="input-group">
+            <input
+              type="text"
+              name="imdbId"
+              id="imdbId"
+              class="form-control"
+              placeholder="tt999999"
+              value="@Model?.ImdbId"
+              required>
+
+            <button
+              id="btn-get-imdb"
+              class="btn btn-success shadow-none"
+              type="button">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </button>
+          </div>
         </div>
         
         <div class="col-12 col-md-5">
+          <label for="title" class="form-label">Titulo</label>
+          <input
+            type="text"
+            class="form-control"
+            id="title"
+            name="title"
+            placeholder="Digite aqui..."
+            value="@Model?.Title"
+            required>
+        </div>
+
+        <div class="col-12 col-md-4">
           <label for="categories" class="form-label">Categorias</label>
-          
+
           <div class="input-group-tags">
             <input
               type="text"
               class="form-control input-tags"
               placeholder="ação, aventura, comédia..."
               value="@Model?.Categories">
-            
-            <input 
-              type="hidden" 
-              name="categories" 
-              class="input-tags-value" 
-              data-required-message="Informe no minino uma categoria" 
+
+            <input
+              type="hidden"
+              name="categories"
+              class="input-tags-value"
+              data-required-message="Informe no minino uma categoria"
               required>
-            
+
             <div class="w-100 container-tags d-flex flex-wrap gap-1 mt-2"></div>
           </div>
         </div>

@@ -8,23 +8,23 @@ namespace XerifeTv.CMS.Modules.Channel.Specifications;
 
 public class UniqueTitleSpecification(IChannelRepository _repository) : ISpecification<ChannelEntity>
 {
-	public async Task<bool> IsSatisfiedByAsync(ChannelEntity entity)
+	public async Task<bool> IsSatisfiedByAsync(ChannelEntity channel)
 	{
 		try
 		{
 			var filterDto = new GetChannelsByFilterRequestDto(
-				EChannelSearchFilter.TITLE, entity.Title, 50, 1, true);
+				EChannelSearchFilter.TITLE, channel.Title, 50, 1, true);
 
 			var channelsByTitle = await _repository.GetByFilterAsync(filterDto);
 
 			var matchingChannels = channelsByTitle.Items
-				.Where(c => c.Title.Equals(entity.Title, StringComparison.OrdinalIgnoreCase))
+				.Where(c => c.Title.Equals(channel.Title, StringComparison.OrdinalIgnoreCase))
 				.ToList();
 
 			if (matchingChannels.Count == 0)
 				return true;
 
-			if (matchingChannels.Count == 1 && matchingChannels[0].Id == entity.Id)
+			if (matchingChannels.Count == 1 && matchingChannels[0].Id == channel.Id)
 				return true;
 
 			return false;
