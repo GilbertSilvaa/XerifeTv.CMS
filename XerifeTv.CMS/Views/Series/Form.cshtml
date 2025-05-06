@@ -235,13 +235,35 @@
 </div>
 
 @section scripts {
-  <script defer>
+  <script>
+    async function getMovieByTmdb(imdbId) {
+      const response = await fetch(`/Series/GetSeriesByImdbId?imdbId=${imdbId}`);
+      return await response.json();
+    }
+
+    $('#btn-get-imdb').click(async (e) => {
+      e.preventDefault();
+
+      const imdbId = $('#imdbId').val();
+      if (!imdbId) return;
+
+      const response = await getMovieByTmdb(imdbId);
+      if (!response) return;
+
+      $('#title').val(response.title);
+      $('#synopsis').val(response.overview);
+      $('#releaseYear').val(response.releaseYear);
+      $('#review').val(String(response.voteAverage).replace('.', ','));
+      $('#posterUrl').val(response.posterUrl);
+      $('#bannerUrl').val(response.bannerUrl);
+    });
+
+    $('#disabled').change(e => e.target.value = e.target.checked);
+    
     function deleteMovie() {
       if (!confirm('Deseja realmente remover a série?')) return;
 
       location.href = '/Series/Delete/@Model?.Id'
     }
-
-    $('#disabled').change(e => e.target.value = e.target.checked);
   </script>
 }

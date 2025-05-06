@@ -2,6 +2,7 @@
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
+using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -10,6 +11,7 @@ namespace XerifeTv.CMS.Modules.Movie.Importers;
 
 public class MoviesSpreadsheetImporter(
   IMovieService _service, 
+  IImdbService _imdbService,
   ICacheService _cacheService,
   ISpreadsheetReaderService _spreadsheetReaderService) : ISpreadsheetBatchImporter<IMovieService>
 {
@@ -82,7 +84,7 @@ public class MoviesSpreadsheetImporter(
 
       foreach (var movieItem in movieList)
       {
-        var movieByImdbresponse = await _service.GetByImdbId(movieItem.ImdbId);
+        var movieByImdbresponse = await _imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
 
         if (movieByImdbresponse.IsFailure)
         {

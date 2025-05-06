@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Enums;
@@ -10,7 +11,10 @@ using XerifeTv.CMS.Shared.Helpers;
 namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
-public class SeriesController(ISeriesService _service, ILogger<SeriesController> _logger) : Controller
+public class SeriesController(
+  ISeriesService _service, 
+  IImdbService _imdbService,
+  ILogger<SeriesController> _logger) : Controller
 {
   private const int limitResultsPage = 20;
 
@@ -171,5 +175,20 @@ public class SeriesController(ISeriesService _service, ILogger<SeriesController>
     }
       
     return RedirectToAction("Episodes", new { id = serieId });
+  }
+
+  [HttpGet]
+  public async Task<IActionResult> GetSeriesByImdbId(string imdbId)
+  {
+    if (string.IsNullOrEmpty(imdbId)) return BadRequest();
+    
+    var response = await _imdbService.GetAllResultsByImdbIdAsync(imdbId);
+    var result = response.Data.TvResults.FirstOrDefault();
+
+    if (response.IsFailure) return BadRequest();
+    
+    if (result == null) return NotFound();
+    
+    return Ok(result);
   }
 }
