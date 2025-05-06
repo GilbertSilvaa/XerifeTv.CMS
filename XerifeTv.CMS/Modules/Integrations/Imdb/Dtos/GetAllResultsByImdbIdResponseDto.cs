@@ -22,10 +22,8 @@ public class GetAllResultsByImdbIdResponseDto
 
 public class TmdbTvShowDto
 {
+	[JsonProperty("name")]
 	public string Title { get; set; } = string.Empty;
-
-	[JsonProperty("original_name")]
-	public string OriginalName { get; set; } = string.Empty;
 
 	public string Overview { get; set; } = string.Empty;
 	
