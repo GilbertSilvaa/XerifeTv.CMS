@@ -8,16 +8,19 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 
 ####
 ## ✔ Key Features:
-- [X]  **Content Management:** Easily register, edit, and organize movies, series, episodes, and TV channels.
-- [X]  **Batch Movie Upload:** Streamline content management by importing multiple movies at once via spreadsheet.
-- [X]  **User Roles & Permissions:** Granular access control for administrators, content managers, and visitors.  
-- [X]  **JWT Authentication:** Secure authentication system based on JSON Web Tokens.  
-- [X]  **External Content API:** Provide a REST API to securely expose registered content for consumption.  
-- [X]  **API Caching for External Content:** Optimize performance by caching responses from the External Content API.
-- [X]  **Supabase Storage Integration:** Store files (.vtt, images, etc...) in a storage bucket.  
-- [X]  **Swagger Documentation:** REST API routes documented with Swagger.  
-- [X]  **Light/Dark Theme:** Enable users to switch between light and dark themes.
-- [X]  **Refresh Token Implementation:** Enhance authentication security by adding refresh token support.  
+
+- [X]  **Content Management:** Easily register, edit, and organize movies, series, episodes, and TV channels.  
+- [X]  **Batch Upload:** Import multiple movies or channels at once using spreadsheets (.xlsx).  
+- [X]  **TMDB API Integration:** Fetch and autocomplete movie and series data using The Movie Database (TMDB) API.  
+- [X]  **Supabase Storage Integration:** Store media files (.vtt, images, etc.) securely in a Supabase bucket.  
+- [X]  **User Roles & Permissions:** Granular access control for administrators, content managers, and viewers.  
+- [X]  **JWT Authentication:** Secure authentication using JSON Web Tokens (JWT).  
+- [X]  **Refresh Token Implementation:** Improve session security with access and refresh token flow.  
+- [X]  **External Content API:** Public REST API to expose registered content for external apps or clients.  
+- [X]  **API Caching:** Improve API response times by caching data from the external content API.  
+- [X]  **Swagger Documentation:** All REST endpoints are documented using Swagger/OpenAPI.  
+- [X]  **Light/Dark Theme:** Allow users to toggle between light and dark modes for better UX.
+ 
 ## 🚀 Technologies:
 - C#
 - ASP.NET Core
@@ -35,8 +38,10 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 
 ### Prerequisites
 
-- **.NET SDK** version 6.0 or higher
-- **MongoDB** installed and running locally or on a remote service
+- [.NET SDK](https://dotnet.microsoft.com/download) version **8.0** or higher  
+- **MongoDB** running locally or accessible remotely  
+- A **[TMDB account](https://www.themoviedb.org/)** to generate your API key  
+- A **[Supabase account](https://supabase.com/)** to manage file storage and access API keys
 
 ### Setup Steps
 
@@ -50,7 +55,7 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 
 #### 3. Configure the MongoDB connection string in the `appsettings.json` file:
     {
-      "MongoDBConfig": {
+        "MongoDBConfig": {
             "ConnectionString": "mongodb://localhost:00000",
             "DatabaseName": "xerifetv_content"
         }
@@ -66,10 +71,12 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 #### 5. Configure the Settings for the JWT token in the `appsettings.json` file:
     {
         "Jwt": {
-            "Key": "jwtkey555jwtksajdkl387432sdasda347823974923ns3676",
+            "Key": "",
             "Issuer": "Xerifetvcms",
-            "Audience": "Xerifetvcms"
-        }
+            "Audience": "Xerifetvcms",
+            "ExpirationTimeInMinutes": "",
+            "RefreshExpirationTimeInMinutes": ""
+        },
     }
 
 #### 6. Configure the Settings for the Supabase in the `appsettings.json` file:
@@ -80,17 +87,37 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
         }
     }
 
-#### 7. Restore dependencies and compile the project:
+#### 7. Configure the settings for the Tmdb API integration in the 'appsettings.json' file:
+    {
+        "Tmdb": {
+            "Key": "examplekey0examplekey0examplekey"
+        }
+    }
+
+### 8. Configure the settings for sending email in the 'appsettings.json' file:
+    {
+        "EmailSettings": {
+            "From": "emailexample@gmail.com",
+            "Password": "exammpplepassword"
+        }
+    }
+
+### 9. Set the base url in the file 'appsettings.json':
+    {
+        "baseUrl": "http://localhost:5003"
+    }
+
+#### 10. Restore dependencies and compile the project:
     dotnet restore
     dotnet build
 
 
-#### 8. Start the server:
+#### 11. Start the server:
     dotnet run
 
 
-#### 9. Access the application in the browser:
-    http://localhost:5000
+#### 12. Access the application in the browser:
+    http://localhost:5003
 
 ## License
 
