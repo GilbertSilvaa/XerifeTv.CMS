@@ -4,7 +4,7 @@
 XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OTT) streaming platforms. This project enables efficient organization and management of movies, series, episodes, and TV channels, providing a comprehensive solution for digital content providers.
 
 ####
-![screenshot](https://i.postimg.cc/3J5y6psp/Frame-1.png)
+![screenshot](https://i.postimg.cc/xT6Xd7kG/Frame-1-1.png)
 
 ####
 ## ✔ Key Features:
