@@ -253,7 +253,7 @@
       $('#title').val(response.title);
       $('#synopsis').val(response.overview);
       $('#releaseYear').val(response.releaseYear);
-      $('#review').val(String(response.voteAverage).replace('.', ','));
+      $('#review').val(String(response.voteAverage).replace(',', '.'));
       $('#posterUrl').val(response.posterUrl);
       $('#bannerUrl').val(response.bannerUrl);
     });
