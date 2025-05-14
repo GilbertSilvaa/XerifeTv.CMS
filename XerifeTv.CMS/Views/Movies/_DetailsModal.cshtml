@@ -33,7 +33,7 @@
             class="d-none d-md-block w-25 h-100 top-50 position-absolute" 
             style="left: 1rem; border: 3px solid #FFF; border-radius: 1rem;" />
 
-          @if (Model.Video?.Subtitle != null)
+          @if (!string.IsNullOrEmpty(Model.Video?.Subtitle))
           {
             <span
               class="badge text-bg-secondary bg-info position-absolute"

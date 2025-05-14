@@ -86,7 +86,7 @@
             alt="@movie.Title"
             loading="lazy" style="height: 14rem;"/>
           
-          @if (@movie?.Video?.Subtitle != null)
+          @if (!string.IsNullOrEmpty(@movie?.Video?.Subtitle))
           {
             <span 
               class="position-absolute rounded-1 fw-bolder p-1 bg-info text-white" 
