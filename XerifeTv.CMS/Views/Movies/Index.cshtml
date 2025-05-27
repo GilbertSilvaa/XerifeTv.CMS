@@ -149,53 +149,5 @@
     }
   </div>
 
-  @if (ViewBag.TotalPages > 1)
-  {
-    <nav class="mt-5">
-      <ul class="pagination d-flex justify-content-center overflow-auto">
-        <li class="page-item @(!ViewBag.HasPrevPage ? "disabled" : "")">
-          <a 
-            class="page-link" 
-            aria-label="Previous" 
-            role="button"
-            asp-controller="Movies"
-            asp-action="Index"
-            asp-route-currentPage="@(ViewBag.CurrentPage - 1)"
-            asp-route-filter="@ViewBag.Filter"
-            asp-route-search="@ViewBag.Search">
-            <span aria-hidden="true">&laquo;</span>
-          </a>
-        </li>
-        
-        @for (var i = 1; i <= ViewBag.TotalPages; i++)
-        {
-           <li class="page-item @(ViewBag.CurrentPage == i ? "active" : "")">
-              <a 
-                class="page-link" 
-                asp-controller="Movies" 
-                asp-action="Index" 
-                asp-route-currentPage="@i"
-                asp-route-filter="@ViewBag.Filter"
-                asp-route-search="@ViewBag.Search">
-                @i
-               </a>
-           </li>  
-        }
-
-        <li class="page-item @(!ViewBag.HasNextPage ? "disabled" : "")">
-          <a 
-            class="page-link" 
-            aria-label="Next" 
-            role="button"
-            asp-controller="Movies"
-            asp-action="Index"
-            asp-route-currentPage="@(ViewBag.CurrentPage + 1)"
-            asp-route-filter="@ViewBag.Filter"
-            asp-route-search="@ViewBag.Search">
-            <span aria-hidden="true">&raquo;</span>
-          </a>
-        </li>
-      </ul>
-    </nav>
-  }
+    @await Html.PartialAsync("_Pagination")
 </div>
