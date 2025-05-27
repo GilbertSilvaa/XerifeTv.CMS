@@ -1,0 +1,116 @@
+﻿@{
+    int currentPage = (int)ViewBag.CurrentPage;
+    int totalPages = (int)ViewBag.TotalPages;
+    int maxPagesToShow = 3;
+    int half = maxPagesToShow / 2;
+    string action = ViewBag.Action ?? "Index";
+    string controller = ViewBag.Controller ?? ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
+    string filter = ViewBag.Filter;
+    string search = ViewBag.Search;
+}
+
+@if (totalPages > 1)
+{
+    <nav class="mt-5">
+        <ul class="pagination d-flex justify-content-center overflow-auto">
+            <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                <a class="page-link"
+                   asp-controller="@controller"
+                   asp-action="@action"
+                   asp-route-currentPage="@(currentPage - 1)"
+                   asp-route-filter="@filter"
+                   asp-route-search="@search">
+                    &laquo;
+                </a>
+            </li>
+
+            @if (totalPages <= maxPagesToShow + 2)
+            {
+                for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(currentPage == i ? "active" : "")">
+                        <a class="page-link"
+                           asp-controller="@controller"
+                           asp-action="@action"
+                           asp-route-currentPage="@i"
+                           asp-route-filter="@filter"
+                           asp-route-search="@search">
+                            @i
+                        </a>
+                    </li>
+                }
+            }
+            else
+            {
+                <li class="page-item @(currentPage == 1 ? "active" : "")">
+                    <a class="page-link"
+                       asp-controller="@controller"
+                       asp-action="@action"
+                       asp-route-currentPage="1"
+                       asp-route-filter="@filter"
+                       asp-route-search="@search">
+                        1
+                    </a>
+                </li>
+
+                if (currentPage - half > 2)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+
+                int start = Math.Max(2, currentPage - half);
+                int end = Math.Min(totalPages - 1, currentPage + half);
+
+                if (currentPage <= half + 2)
+                {
+                    end = Math.Min(1 + maxPagesToShow, totalPages - 1);
+                }
+                else if (currentPage >= totalPages - half - 1)
+                {
+                    start = Math.Max(totalPages - maxPagesToShow, 2);
+                }
+
+                for (int i = start; i <= end; i++)
+                {
+                    <li class="page-item @(currentPage == i ? "active" : "")">
+                        <a class="page-link"
+                           asp-controller="@controller"
+                           asp-action="@action"
+                           asp-route-currentPage="@i"
+                           asp-route-filter="@filter"
+                           asp-route-search="@search">
+                            @i
+                        </a>
+                    </li>
+                }
+
+                if (end < totalPages - 1)
+                {
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                }
+
+                <li class="page-item @(currentPage == totalPages ? "active" : "")">
+                    <a class="page-link"
+                       asp-controller="@controller"
+                       asp-action="@action"
+                       asp-route-currentPage="@totalPages"
+                       asp-route-filter="@filter"
+                       asp-route-search="@search">
+                        @totalPages
+                    </a>
+                </li>
+            }
+
+            <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                <a class="page-link"
+                   asp-controller="@controller"
+                   asp-action="@action"
+                   asp-route-currentPage="@(currentPage + 1)"
+                   asp-route-filter="@filter"
+                   asp-route-search="@search">
+                    &raquo;
+                </a>
+            </li>
+        </ul>
+    </nav>
+}
