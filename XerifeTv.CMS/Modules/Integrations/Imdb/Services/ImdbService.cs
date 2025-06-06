@@ -14,7 +14,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
             var url = $"https://api.themoviedb.org/3/find/{imdbId}";
             var tmdbKey = _configuration["Tmdb:Key"];
 
-            var response = await client.GetAsync($"{url}?api_key={tmdbKey}&external_source=imdb_id");
+            var response = await client.GetAsync($"{url}?api_key={tmdbKey}&external_source=imdb_id&language=pt-BR");
 
             if (!response.IsSuccessStatusCode)
                 return Result<GetAllResultsByImdbIdResponseDto?>.Failure(
@@ -83,7 +83,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
             var url = $"https://api.themoviedb.org/3/tv/{seriesResult.Id}/season/{season}";
             var tmdbKey = _configuration["Tmdb:Key"];
 
-            var response = await client.GetAsync($"{url}?api_key={tmdbKey}");
+            var response = await client.GetAsync($"{url}?api_key={tmdbKey}&language=pt-BR");
 
             if (!response.IsSuccessStatusCode)
                 return Result<GetSeriesEpisodesBySeasonResponseDto?>.Failure(

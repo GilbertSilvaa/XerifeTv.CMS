@@ -13,6 +13,7 @@ public class CreateEpisodeRequestDto
     public long VideoDuration { get; init; }
     public string VideoStreamFormat { get; init; } = string.Empty;
     public string? VideoSubtitle { get; init; }
+    public bool? IsDisabled { get; init; } = false;
 
     public Episode ToEntity()
     {
@@ -22,7 +23,8 @@ public class CreateEpisodeRequestDto
             BannerUrl = BannerUrl,
             Number = Number,
             Season = Season,
-            Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle)
+            Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle),
+            Disabled = IsDisabled ?? false
         };
     }
 }

@@ -211,7 +211,9 @@ public class SeriesController(
             return BadRequest();
         }
 
-        TempData["Notification"] = MessageViewHelper.SuccessJson($"Episodios importados com sucesso");
+        if (response.Data?.ImportedCount > 1)
+            TempData["Notification"] = MessageViewHelper.SuccessJson($"{response.Data?.ImportedCount} episodios importados com sucesso");
+
         return Ok();
     }
 }
