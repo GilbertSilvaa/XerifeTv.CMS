@@ -1,7 +1,12 @@
+using System.Globalization;
 using XerifeTv.CMS.Shared.Database.MongoDB;
 using XerifeTv.CMS.Shared.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var defaultCulture = new CultureInfo("en-US");
+CultureInfo.DefaultThreadCurrentCulture = defaultCulture;
+CultureInfo.DefaultThreadCurrentUICulture = defaultCulture;
 
 builder.Services.AddControllersWithViews();
 
