@@ -12,132 +12,132 @@ namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
 public class ChannelsController(
-  IChannelService _service, 
+  IChannelService _service,
   ILogger<ChannelsController> _logger,
   ISpreadsheetBatchImporter<IChannelService> _spreadsheetBatchImporter) : Controller
 {
-  private const int limitResultsPage = 20;
+    private const int limitResultsPage = 20;
 
-  public async Task<IActionResult> Index(int? currentPage, EChannelSearchFilter? filter, string? search)
-  {
-    Result<PagedList<GetChannelResponseDto>>? result;
-
-    _logger.LogInformation($"{User.Identity?.Name} accessed the channels page");
-
-    if (filter is EChannelSearchFilter && !string.IsNullOrEmpty(search))
+    public async Task<IActionResult> Index(int? currentPage, EChannelSearchFilter? filter, string? search)
     {
-      result = await _service.GetByFilter(
-        new GetChannelsByFilterRequestDto(
-          filter, 
-          search, 
-          limitResultsPage, 
-          currentPage,
-          isIncludeDisabled: true));
+        Result<PagedList<GetChannelResponseDto>>? result;
 
-      ViewBag.Search = search;
-      ViewBag.Filter = filter.ToString()?.ToLower();
-    }
-    else
-    {
-      result = await _service.Get(currentPage ?? 1, limitResultsPage);
-    }
+        _logger.LogInformation($"{User.Identity?.Name} accessed the channels page");
 
-    if (result.IsSuccess)
-    {
-      ViewBag.CurrentPage = result.Data?.CurrentPage;
-      ViewBag.TotalPages = result.Data?.TotalPageCount ?? 1;
-      ViewBag.HasNextPage = result.Data?.HasNext;
-      ViewBag.HasPrevPage = result.Data?.HasPrevious;
+        if (filter is EChannelSearchFilter && !string.IsNullOrEmpty(search))
+        {
+            result = await _service.GetByFilter(
+              new GetChannelsByFilterRequestDto(
+                filter,
+                search,
+                limitResultsPage,
+                currentPage,
+                isIncludeDisabled: true));
 
-      return View(result.Data?.Items);
-    }
+            ViewBag.Search = search;
+            ViewBag.Filter = filter.ToString()?.ToLower();
+        }
+        else
+        {
+            result = await _service.Get(currentPage ?? 1, limitResultsPage);
+        }
 
-    return View(Enumerable.Empty<GetChannelResponseDto>());
-  }
+        if (result.IsSuccess)
+        {
+            ViewBag.CurrentPage = result.Data?.CurrentPage;
+            ViewBag.TotalPages = result.Data?.TotalPageCount ?? 1;
+            ViewBag.HasNextPage = result.Data?.HasNext;
+            ViewBag.HasPrevPage = result.Data?.HasPrevious;
 
-  [Authorize(Roles = "admin, common")]
-  public async Task<IActionResult> Form(string? id)
-  {
-    if (id is not null)
-    {
-      var response = await _service.Get(id);
-      if (response.IsSuccess) return View(response.Data);
+            return View(result.Data?.Items);
+        }
+
+        return View(Enumerable.Empty<GetChannelResponseDto>());
     }
 
-    return View();
-  }
-
-  [Authorize(Roles = "admin, common")]
-  public async Task<IActionResult> Create(CreateChannelRequestDto dto)
-  {
-    var response = await _service.Create(dto);
-    
-    TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
-      : MessageViewHelper.SuccessJson($"Canal cadastrado com sucesso");
-
-    _logger.LogInformation($"{User.Identity?.Name} registered the channel {dto.Title}");
-
-    return RedirectToAction("Index");
-  }
-
-  [Authorize(Roles = "admin, common")]
-  public async Task<IActionResult> Update(UpdateChannelRequestDto dto)
-  {
-    var response = await _service.Update(dto);
-    
-    TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
-      : MessageViewHelper.SuccessJson($"Canal atualizado com sucesso");
-
-    _logger.LogInformation($"{User.Identity?.Name} updated the channel {dto.Title}");
-
-    return RedirectToAction("Index");
-  }
-
-  [Authorize(Roles = "admin, common")]
-  public async Task<IActionResult> Delete(string? id)
-  {
-    if (id is not null)
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Form(string? id)
     {
-      var response = await _service.Delete(id);
-      
-      TempData["Notification"] = response.IsFailure
-        ? MessageViewHelper.ErrorJson(response.Error.Description)
-        : MessageViewHelper.SuccessJson($"Canal deletado com sucesso");
-      
-      _logger.LogInformation($"{User.Identity?.Name} removed the channel with id = {id}");
+        if (id is not null)
+        {
+            var response = await _service.Get(id);
+            if (response.IsSuccess) return View(response.Data);
+        }
+
+        return View();
     }
-    
-    return RedirectToAction("Index");
-  }
-  
-  [HttpPost]
-  public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
-  {
-    if (file is null || file.Length == 0) return BadRequest();
 
-    var response = await _spreadsheetBatchImporter.ImportAsync(file);
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Create(CreateChannelRequestDto dto)
+    {
+        var response = await _service.Create(dto);
 
-    if (response.IsFailure) 
-      return BadRequest(response.Error.Description ?? string.Empty);
-    
-    return Ok(response.Data);
-  }
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Canal cadastrado com sucesso");
 
-  [HttpGet]
-  public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
-  {
-    var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+        _logger.LogInformation($"{User.Identity?.Name} registered the channel {dto.Title}");
 
-    if (response.IsSuccess && response.Data.ProgressCount == 100 && response.Data.SuccessCount > 1)
-      TempData["Notification"] = MessageViewHelper
-        .SuccessJson($"{response.Data.SuccessCount} canais cadastrados com sucesso");
-    
-    if (response.IsSuccess) 
-      return Ok(response.Data);
-    
-    return BadRequest(response.Error.Description ?? string.Empty);
-  }
+        return RedirectToAction("Index");
+    }
+
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Update(UpdateChannelRequestDto dto)
+    {
+        var response = await _service.Update(dto);
+
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Canal atualizado com sucesso");
+
+        _logger.LogInformation($"{User.Identity?.Name} updated the channel {dto.Title}");
+
+        return RedirectToAction("Index");
+    }
+
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Delete(string? id)
+    {
+        if (id is not null)
+        {
+            var response = await _service.Delete(id);
+
+            TempData["Notification"] = response.IsFailure
+              ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+              : MessageViewHelper.SuccessJson($"Canal deletado com sucesso");
+
+            _logger.LogInformation($"{User.Identity?.Name} removed the channel with id = {id}");
+        }
+
+        return RedirectToAction("Index");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
+    {
+        if (file is null || file.Length == 0) return BadRequest();
+
+        var response = await _spreadsheetBatchImporter.ImportAsync(file);
+
+        if (response.IsFailure)
+            return BadRequest(response.Error.Description ?? string.Empty);
+
+        return Ok(response.Data);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
+    {
+        var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+
+        if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
+            TempData["Notification"] = MessageViewHelper
+              .SuccessJson($"{response.Data.SuccessCount} canais cadastrados com sucesso");
+
+        if (response.IsSuccess)
+            return Ok(response.Data);
+
+        return BadRequest(response.Error.Description ?? string.Empty);
+    }
 }
 

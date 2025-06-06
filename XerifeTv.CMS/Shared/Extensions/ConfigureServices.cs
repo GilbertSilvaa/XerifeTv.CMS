@@ -14,6 +14,7 @@ using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Importers;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
 using XerifeTv.CMS.Modules.Series;
+using XerifeTv.CMS.Modules.Series.Importers;
 using XerifeTv.CMS.Modules.Series.Interfaces;
 using XerifeTv.CMS.Modules.User;
 using XerifeTv.CMS.Modules.User.Interfaces;
@@ -23,85 +24,86 @@ namespace XerifeTv.CMS.Shared.Extensions;
 
 public static class ConfigureServices
 {
-  public static IServiceCollection AddConfiguration(
-    this IServiceCollection services, IConfiguration _configuration)
-  {
-    services
-      .AddAuthAuthorization(_configuration)
-      .AddRepositories()
-      .AddServices()
-      .AddSwagger();
-
-    return services;
-  }
-
-  private static IServiceCollection AddRepositories(this IServiceCollection services)
-  {
-    services.AddScoped<IMovieRepository, MovieRepository>();
-    services.AddScoped<ISeriesRepository, SeriesRepository>();
-    services.AddScoped<IChannelRepository, ChannelRepository>();
-    services.AddScoped<IUserRepository, UserRepository>();
-    return services;
-  }
-
-  private static IServiceCollection AddServices(this IServiceCollection services)
-  {
-    services.AddScoped<IMovieService, MovieSevice>();
-    services.AddScoped<ISeriesService, SeriesService>();
-    services.AddScoped<IChannelService, ChannelService>();
-    services.AddScoped<IDashboardService, DashboardService>();
-    services.AddScoped<IContentService, ContentService>();
-    services.AddScoped<IUserService, UserService>();
-    services.AddScoped<ITokenService, TokenService>();
-    services.AddScoped<ICacheService, CacheService>();
-    services.AddScoped<IStorageFilesService, StorageFilesService>();
-    services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
-    services.AddScoped<IHashPassword, HashPassword>();
-    services.AddScoped<IEmailService, EmailService>();
-    services.AddScoped<ISpreadsheetBatchImporter<IMovieService>, MoviesSpreadsheetImporter>();
-    services.AddScoped<ISpreadsheetBatchImporter<IChannelService>, ChannelsSpreadsheetImporter>();
-    services.AddScoped<IImdbService, ImdbService>();
-    return services;
-  }
-
-  private static IServiceCollection AddAuthAuthorization(
-    this IServiceCollection services, IConfiguration _configuration)
-  {
-    services.AddAuthentication(options =>
+    public static IServiceCollection AddConfiguration(
+      this IServiceCollection services, IConfiguration _configuration)
     {
-      options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-      options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
-    .AddJwtBearer(options =>
-    {
-      options.TokenValidationParameters = TokenService.GetTokenValidationParameters(_configuration);
+        services
+          .AddAuthAuthorization(_configuration)
+          .AddRepositories()
+          .AddServices()
+          .AddSwagger();
 
-      options.Events = new JwtBearerEvents
-      {
-        OnMessageReceived = context =>
+        return services;
+    }
+
+    private static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IMovieRepository, MovieRepository>();
+        services.AddScoped<ISeriesRepository, SeriesRepository>();
+        services.AddScoped<IChannelRepository, ChannelRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        return services;
+    }
+
+    private static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IMovieService, MovieSevice>();
+        services.AddScoped<ISeriesService, SeriesService>();
+        services.AddScoped<IChannelService, ChannelService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IContentService, ContentService>();
+        services.AddScoped<IUserService, UserService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<ICacheService, CacheService>();
+        services.AddScoped<IStorageFilesService, StorageFilesService>();
+        services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
+        services.AddScoped<IHashPassword, HashPassword>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ISpreadsheetBatchImporter<IMovieService>, MoviesSpreadsheetImporter>();
+        services.AddScoped<ISpreadsheetBatchImporter<IChannelService>, ChannelsSpreadsheetImporter>();
+        services.AddScoped<IEpisodesImporter, EpisodesImdbImporter>();
+        services.AddScoped<IImdbService, ImdbService>();
+        return services;
+    }
+
+    private static IServiceCollection AddAuthAuthorization(
+      this IServiceCollection services, IConfiguration _configuration)
+    {
+        services.AddAuthentication(options =>
         {
-          context.Token = context.Request.Cookies["Token"];
-          return Task.CompletedTask;
-        }
-      };
-    });
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = TokenService.GetTokenValidationParameters(_configuration);
 
-    services.AddAuthorization();
-    return services;
-  }
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+            {
+                context.Token = context.Request.Cookies["Token"];
+                return Task.CompletedTask;
+            }
+            };
+        });
 
-  public static IServiceCollection AddSwagger(this IServiceCollection services)
-  {
-    services.AddSwaggerGen(options =>
+        services.AddAuthorization();
+        return services;
+    }
+
+    public static IServiceCollection AddSwagger(this IServiceCollection services)
     {
-      options.SwaggerDoc("v1", new OpenApiInfo
-      {
-        Version = "v1",
-        Title = "Content API",
-        Description = "content API documentation"
-      });
-    });
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Version = "v1",
+                Title = "Content API",
+                Description = "content API documentation"
+            });
+        });
 
-    return services;
-  }
+        return services;
+    }
 }

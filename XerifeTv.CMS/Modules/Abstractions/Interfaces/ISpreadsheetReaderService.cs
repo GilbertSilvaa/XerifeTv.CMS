@@ -2,5 +2,5 @@
 
 public interface ISpreadsheetReaderService
 {
-  string[][] Read(string[] colluns, MemoryStream fileStream);
+    string[][] Read(string[] colluns, MemoryStream fileStream);
 }

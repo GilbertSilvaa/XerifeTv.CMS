@@ -2,9 +2,9 @@
 
 public enum EMessageViewType
 {
-  SUCCESS,
-  ALERT,
-  ERROR
+    SUCCESS,
+    ALERT,
+    ERROR
 }
 
 public record MessageView(EMessageViewType Type, string Message);

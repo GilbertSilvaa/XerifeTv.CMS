@@ -5,16 +5,16 @@ namespace XerifeTv.CMS.Modules.User.Specifications;
 
 public sealed class UniqueEmailSpecification(IUserRepository _repository) : ISpecification<UserEntity>
 {
-  public async Task<bool> IsSatisfiedByAsync(UserEntity user)
-  {
-    try
+    public async Task<bool> IsSatisfiedByAsync(UserEntity user)
     {
-      var userByEmail  = await _repository.GetByEmailAsync(user.Email);
-      return userByEmail == null || userByEmail.Id == user.Id;
+        try
+        {
+            var userByEmail = await _repository.GetByEmailAsync(user.Email);
+            return userByEmail == null || userByEmail.Id == user.Id;
+        }
+        catch
+        {
+            return false;
+        }
     }
-    catch
-    {
-      return false;
-    }
-  }
 }

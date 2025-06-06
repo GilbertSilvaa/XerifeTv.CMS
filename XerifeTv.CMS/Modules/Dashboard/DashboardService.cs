@@ -12,15 +12,15 @@ public sealed class DashboardService(
   ISeriesRepository _seriesRepository,
   IChannelRepository _channelRepository) : IDashboardService
 {
-  public async Task<Result<GetDashboardDataRequestDto>> Get()
-  {
-    var response = await Task.WhenAll([
-      _movieRepository.CountAsync(),
-      _seriesRepository.CountAsync(),
-      _channelRepository.CountAsync()
-    ]);
+    public async Task<Result<GetDashboardDataRequestDto>> Get()
+    {
+        var response = await Task.WhenAll([
+          _movieRepository.CountAsync(),
+          _seriesRepository.CountAsync(),
+          _channelRepository.CountAsync()
+        ]);
 
-    return Result<GetDashboardDataRequestDto>.Success(
-      new GetDashboardDataRequestDto(response[0], response[1], response[2]));
-  }
+        return Result<GetDashboardDataRequestDto>.Success(
+          new GetDashboardDataRequestDto(response[0], response[1], response[2]));
+    }
 }

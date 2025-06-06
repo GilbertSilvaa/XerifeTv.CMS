@@ -2,6 +2,6 @@
 
 public enum EChannelSearchFilter
 {
-  TITLE,
-  CATEGORY
+    TITLE,
+    CATEGORY
 }

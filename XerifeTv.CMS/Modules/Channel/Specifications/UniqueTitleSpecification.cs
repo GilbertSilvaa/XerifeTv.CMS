@@ -8,30 +8,30 @@ namespace XerifeTv.CMS.Modules.Channel.Specifications;
 
 public class UniqueTitleSpecification(IChannelRepository _repository) : ISpecification<ChannelEntity>
 {
-	public async Task<bool> IsSatisfiedByAsync(ChannelEntity channel)
-	{
-		try
-		{
-			var filterDto = new GetChannelsByFilterRequestDto(
-				EChannelSearchFilter.TITLE, channel.Title, 50, 1, true);
+    public async Task<bool> IsSatisfiedByAsync(ChannelEntity channel)
+    {
+        try
+        {
+            var filterDto = new GetChannelsByFilterRequestDto(
+                EChannelSearchFilter.TITLE, channel.Title, 50, 1, true);
 
-			var channelsByTitle = await _repository.GetByFilterAsync(filterDto);
+            var channelsByTitle = await _repository.GetByFilterAsync(filterDto);
 
-			var matchingChannels = channelsByTitle.Items
-				.Where(c => c.Title.Equals(channel.Title, StringComparison.OrdinalIgnoreCase))
-				.ToList();
+            var matchingChannels = channelsByTitle.Items
+                .Where(c => c.Title.Equals(channel.Title, StringComparison.OrdinalIgnoreCase))
+                .ToList();
 
-			if (matchingChannels.Count == 0)
-				return true;
+            if (matchingChannels.Count == 0)
+                return true;
 
-			if (matchingChannels.Count == 1 && matchingChannels[0].Id == channel.Id)
-				return true;
+            if (matchingChannels.Count == 1 && matchingChannels[0].Id == channel.Id)
+                return true;
 
-			return false;
-		}
-		catch
-		{
-			return false;
-		}
-	}
+            return false;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 }
