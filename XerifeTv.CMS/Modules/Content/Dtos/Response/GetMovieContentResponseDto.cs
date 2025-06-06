@@ -6,32 +6,32 @@ namespace XerifeTv.CMS.Modules.Content.Dtos.Response;
 
 public class GetMovieContentResponseDto
 {
-  public string Id { get; private set; } = string.Empty;
-  public string Title { get; private set; } = string.Empty;
-  public string Synopsis { get; private set; } = string.Empty;
-  public ICollection<string> Categories { get; private set; } = [];
-  public string PosterUrl { get; private set; } = string.Empty;
-  public string BannerUrl { get; private set; } = string.Empty;
-  public int ReleaseYear { get; private set; }
-  public int ParentalRating { get; private set; }
-  public float Review { get; private set; }
-  public Video? Video { get; private set; }
-  public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
+    public string Id { get; private set; } = string.Empty;
+    public string Title { get; private set; } = string.Empty;
+    public string Synopsis { get; private set; } = string.Empty;
+    public ICollection<string> Categories { get; private set; } = [];
+    public string PosterUrl { get; private set; } = string.Empty;
+    public string BannerUrl { get; private set; } = string.Empty;
+    public int ReleaseYear { get; private set; }
+    public int ParentalRating { get; private set; }
+    public float Review { get; private set; }
+    public Video? Video { get; private set; }
+    public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
 
-  public static GetMovieContentResponseDto FromEntity(MovieEntity entity)
-  {
-    return new GetMovieContentResponseDto
+    public static GetMovieContentResponseDto FromEntity(MovieEntity entity)
     {
-      Id = entity.Id,
-      Title = entity.Title,
-      Synopsis = entity.Synopsis,
-      Categories = entity.Categories,
-      PosterUrl = entity.PosterUrl,
-      BannerUrl = entity.BannerUrl,
-      ReleaseYear = entity.ReleaseYear,
-      ParentalRating = entity.ParentalRating,
-      Review = entity.Review,
-      Video = entity.Video
-    };
-  }
+        return new GetMovieContentResponseDto
+        {
+            Id = entity.Id,
+            Title = entity.Title,
+            Synopsis = entity.Synopsis,
+            Categories = entity.Categories,
+            PosterUrl = entity.PosterUrl,
+            BannerUrl = entity.BannerUrl,
+            ReleaseYear = entity.ReleaseYear,
+            ParentalRating = entity.ParentalRating,
+            Review = entity.Review,
+            Video = entity.Video
+        };
+    }
 }

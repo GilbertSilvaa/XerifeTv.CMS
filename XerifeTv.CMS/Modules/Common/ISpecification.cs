@@ -2,5 +2,5 @@
 
 public interface ISpecification<T> where T : class
 {
-  Task<bool> IsSatisfiedByAsync(T entity);
+    Task<bool> IsSatisfiedByAsync(T entity);
 }

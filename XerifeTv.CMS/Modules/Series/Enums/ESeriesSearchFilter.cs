@@ -2,6 +2,6 @@
 
 public enum ESeriesSearchFilter
 {
-  TITLE,
-  CATEGORY
+    TITLE,
+    CATEGORY
 }
