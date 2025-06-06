@@ -16,130 +16,130 @@ public sealed class MovieSevice(
   ISpreadsheetReaderService _spreadsheetReaderService,
   IConfiguration _configuration) : IMovieService
 {
-  public async Task<Result<PagedList<GetMovieResponseDto>>> Get(int currentPage, int limit)
-  {
-    try
+    public async Task<Result<PagedList<GetMovieResponseDto>>> Get(int currentPage, int limit)
     {
-      var response = await _repository.GetAsync(currentPage, limit);
+        try
+        {
+            var response = await _repository.GetAsync(currentPage, limit);
 
-      var result = new PagedList<GetMovieResponseDto>(
-        response.CurrentPage, 
-        response.TotalPageCount, 
-        response.Items.Select(GetMovieResponseDto.FromEntity));
+            var result = new PagedList<GetMovieResponseDto>(
+              response.CurrentPage,
+              response.TotalPageCount,
+              response.Items.Select(GetMovieResponseDto.FromEntity));
 
-      return Result<PagedList<GetMovieResponseDto>>.Success(result);
+            return Result<PagedList<GetMovieResponseDto>>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<PagedList<GetMovieResponseDto>>.Failure(error);
+        }
     }
-    catch (Exception ex) 
+
+    public async Task<Result<GetMovieResponseDto?>> Get(string id)
     {
-      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<PagedList<GetMovieResponseDto>>.Failure(error);
-    }
-  }
+        try
+        {
+            var response = await _repository.GetAsync(id);
 
-  public async Task<Result<GetMovieResponseDto?>> Get(string id)
-  {
-    try
+            if (response is null)
+                return Result<GetMovieResponseDto?>
+                  .Failure(new Error("404", "Conteudo nao encontrado"));
+
+            return Result<GetMovieResponseDto?>
+              .Success(GetMovieResponseDto.FromEntity(response));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<GetMovieResponseDto?>.Failure(error);
+        }
+    }
+
+    public async Task<Result<string>> Create(CreateMovieRequestDto dto)
     {
-      var response = await _repository.GetAsync(id);
+        try
+        {
+            var entity = dto.ToEntity();
+            var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
 
-      if (response is null) 
-        return Result<GetMovieResponseDto?>
-          .Failure(new Error("404", "Conteudo nao encontrado"));
+            if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
+                return Result<string>.Failure(
+                  new Error("409", $"Filme nao cadastrado. Imdb ID {entity.ImdbId} duplicado"));
 
-      return Result<GetMovieResponseDto?>
-        .Success(GetMovieResponseDto.FromEntity(response));
+            var response = await _repository.CreateAsync(entity);
+            return Result<string>.Success(response);
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<string>.Failure(error);
+        }
     }
-    catch (Exception ex)
+
+    public async Task<Result<string>> Update(UpdateMovieRequestDto dto)
     {
-      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<GetMovieResponseDto?>.Failure(error);
-    }
-  }
+        try
+        {
+            var entity = dto.ToEntity();
+            var response = await _repository.GetAsync(entity.Id);
 
-  public async Task<Result<string>> Create(CreateMovieRequestDto dto)
-  {
-    try
+            if (response is null)
+                return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
+
+            var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
+
+            if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
+                return Result<string>.Failure(
+                  new Error("409", $"Filme nao atualizado. Imdb ID {entity.ImdbId} duplicado"));
+
+            entity.CreateAt = response.CreateAt;
+            await _repository.UpdateAsync(entity);
+            return Result<string>.Success(entity.Id);
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<string>.Failure(error);
+        }
+    }
+
+    public async Task<Result<bool>> Delete(string id)
     {
-      var entity = dto.ToEntity();
-      var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
-      
-      if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
-        return Result<string>.Failure(
-          new Error("409", $"Filme nao cadastrado. Imdb ID {entity.ImdbId} duplicado"));
+        try
+        {
+            var response = await _repository.GetAsync(id);
 
-      var response = await _repository.CreateAsync(entity);
-      return Result<string>.Success(response);
+            if (response is null)
+                return Result<bool>.Failure(new Error("404", "Conteudo nao encontrado"));
+
+            await _repository.DeleteAsync(id);
+            return Result<bool>.Success(true);
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<bool>.Failure(error);
+        }
     }
-    catch (Exception ex)
+
+    public async Task<Result<PagedList<GetMovieResponseDto>>> GetByFilter(GetMoviesByFilterRequestDto dto)
     {
-      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<string>.Failure(error);
+        try
+        {
+            var response = await _repository.GetByFilterAsync(dto);
+
+            var result = new PagedList<GetMovieResponseDto>(
+              response.CurrentPage,
+              response.TotalPageCount,
+              response.Items.Select(GetMovieResponseDto.FromEntity));
+
+            return Result<PagedList<GetMovieResponseDto>>.Success(result);
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<PagedList<GetMovieResponseDto>>.Failure(error);
+        }
     }
-  }
-
-  public async Task<Result<string>> Update(UpdateMovieRequestDto dto)
-  {
-    try
-    {
-      var entity = dto.ToEntity();
-      var response = await _repository.GetAsync(entity.Id);
-
-      if (response is null)
-        return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
-      
-      var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
-
-      if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
-          return Result<string>.Failure(
-            new Error("409", $"Filme nao atualizado. Imdb ID {entity.ImdbId} duplicado"));
-
-      entity.CreateAt = response.CreateAt;
-      await _repository.UpdateAsync(entity);
-      return Result<string>.Success(entity.Id);
-    }
-    catch (Exception ex)
-    {
-      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<string>.Failure(error);
-    }
-  }
-
-  public async Task<Result<bool>> Delete(string id)
-  {
-    try
-    {
-      var response = await _repository.GetAsync(id);
-
-      if (response is null)
-        return Result<bool>.Failure(new Error("404", "Conteudo nao encontrado"));
-
-      await _repository.DeleteAsync(id);
-      return Result<bool>.Success(true);
-    }
-    catch (Exception ex)
-    {
-      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<bool>.Failure(error);
-    }
-  }
-
-  public async Task<Result<PagedList<GetMovieResponseDto>>> GetByFilter(GetMoviesByFilterRequestDto dto)
-  {
-    try
-    {
-      var response = await _repository.GetByFilterAsync(dto);
-
-      var result = new PagedList<GetMovieResponseDto>(
-        response.CurrentPage,
-        response.TotalPageCount,
-        response.Items.Select(GetMovieResponseDto.FromEntity));
-
-      return Result<PagedList<GetMovieResponseDto>>.Success(result);
-    }
-    catch (Exception ex)
-    {
-      var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-      return Result<PagedList<GetMovieResponseDto>>.Failure(error);
-    }
-  }
 }

@@ -5,16 +5,16 @@ namespace XerifeTv.CMS.Modules.User.Specifications;
 
 public sealed class UniqueUsernameSpecification(IUserRepository _repository) : ISpecification<UserEntity>
 {
-  public async Task<bool> IsSatisfiedByAsync(UserEntity user)
-  {
-    try
+    public async Task<bool> IsSatisfiedByAsync(UserEntity user)
     {
-      var userByName  = await _repository.GetByUsernameAsync(user.UserName);
-      return userByName == null || userByName.Id == user.Id;
+        try
+        {
+            var userByName = await _repository.GetByUsernameAsync(user.UserName);
+            return userByName == null || userByName.Id == user.Id;
+        }
+        catch
+        {
+            return false;
+        }
     }
-    catch
-    {
-      return false;
-    }
-  }
 }

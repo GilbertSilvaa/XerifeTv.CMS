@@ -2,7 +2,7 @@
 
 public enum EUserRole
 {
-  ADMIN,
-  COMMON,
-  VISITOR
+    ADMIN,
+    COMMON,
+    VISITOR
 }

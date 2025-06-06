@@ -2,7 +2,7 @@
 
 public enum EMovieSearchFilter
 {
-  TITLE,
-  CATEGORY,
-  RELEASE_YEAR
+    TITLE,
+    CATEGORY,
+    RELEASE_YEAR
 }

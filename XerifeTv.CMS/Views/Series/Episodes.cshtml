@@ -36,9 +36,15 @@
 
       @if (!User.IsInRole("visitor"))
       {
-        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episodeEmpty.Id">
-          <i class="fa-solid fa-plus"></i> Cadastrar
-        </button>
+        <div class="d-flex justify-content-center align-items-center gap-3">
+          <button class="btn btn-success d-none d-md-block shadow-none">
+            <i class="fa-solid fa-diagram-project me-1"></i> Importar episódios via IMDB
+          </button>
+
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episodeEmpty.Id">
+            <i class="fa-solid fa-plus"></i> Cadastrar
+          </button>
+        </div>
       }
     </div>
     <hr />
