@@ -7,7 +7,6 @@ using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
-using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;

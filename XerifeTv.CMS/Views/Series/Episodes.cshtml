@@ -37,8 +37,8 @@
       @if (!User.IsInRole("visitor"))
       {
         <div class="d-flex justify-content-center align-items-center gap-3">
-          <button class="btn btn-success d-none d-md-block shadow-none">
-            <i class="fa-solid fa-diagram-project me-1"></i> Importar episódios via IMDB
+          <button id="btn-import-episodes" class="btn btn-success d-none d-md-block shadow-none">
+            <i class="fa-solid fa-diagram-project me-1"></i> <span>Importar episódios via IMDB</span>
           </button>
 
           <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episodeEmpty.Id">
@@ -181,5 +181,28 @@
         })
         .finally(() => $('.btn-subtitle-file').removeAttr('disabled'))
     }
+
+    $('#btn-import-episodes').click(function() {
+        const btn = $(this);
+
+        if(!confirm('Confirmar ação?')) return;
+
+        const formData = new FormData();
+        formData.append('seriesId', '@Model.SerieId');
+
+        $(btn).prop('disabled', true);
+        $(btn).find('span').text('Processando importação...');
+
+        fetch('/Series/ImportEpisodesByImdbId', {
+            method: 'POST',
+            body: formData
+        })
+          .finally(() => {
+            $(btn).prop('disabled', false);
+            $(btn).find('span').text('Importar episódios via IMDB');
+
+            location.reload();
+          })
+    });
   </script>
 }

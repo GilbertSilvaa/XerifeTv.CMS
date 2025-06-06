@@ -14,7 +14,8 @@ namespace XerifeTv.CMS.Controllers;
 public class SeriesController(
   ISeriesService _service,
   IImdbService _imdbService,
-  ILogger<SeriesController> _logger) : Controller
+  ILogger<SeriesController> _logger,
+  IEpisodesImporter _episodesImporter) : Controller
 {
     private const int limitResultsPage = 20;
 
@@ -190,5 +191,27 @@ public class SeriesController(
         if (result == null) return NotFound();
 
         return Ok(result);
+    }
+
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
+    public async Task<IActionResult> ImportEpisodesByImdbId(ImportEpisodesRequestDto dto)
+    {
+        if (string.IsNullOrEmpty(dto.SeriesId))
+        {
+            TempData["Notification"] = MessageViewHelper.ErrorJson("Ops! Houve um problema [serie invalida]");
+            return BadRequest();
+        }
+
+        var response = await _episodesImporter.ImportEpisodesAsync(dto.SeriesId);
+
+        if (response.IsFailure)
+        {
+            TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty);
+            return BadRequest();
+        }
+
+        TempData["Notification"] = MessageViewHelper.SuccessJson($"Episodios importados com sucesso");
+        return Ok();
     }
 }
