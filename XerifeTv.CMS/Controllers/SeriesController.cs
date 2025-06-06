@@ -73,7 +73,7 @@ public class SeriesController(
      var response = await _service.Create(dto);
      
      TempData["Notification"] = response.IsFailure
-       ? MessageViewHelper.ErrorJson(response.Error.Description)
+       ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
        : MessageViewHelper.SuccessJson($"Serie {dto.ImdbId} cadastrada com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered the serie {dto.Title}");
@@ -87,7 +87,7 @@ public class SeriesController(
     var response = await _service.Update(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson($"Serie {dto.ImdbId} atualizada com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated the serie {dto.Title}");
@@ -103,7 +103,7 @@ public class SeriesController(
       var response = await _service.Delete(id);
       
       TempData["Notification"] = response.IsFailure
-        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
         : MessageViewHelper.SuccessJson($"Serie deletada com sucesso");
       
       _logger.LogInformation($"{User.Identity?.Name} removed the serie with id = {id}");
@@ -138,7 +138,7 @@ public class SeriesController(
     var response = await _service.CreateEpisode(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson($"Episodio cadastrado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
@@ -152,7 +152,7 @@ public class SeriesController(
     var response = await _service.UpdateEpisode(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson($"Episodio atualizado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
@@ -168,7 +168,7 @@ public class SeriesController(
       var response = await _service.DeleteEpisode(serieId, id);
       
       TempData["Notification"] = response.IsFailure
-        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
         : MessageViewHelper.SuccessJson($"Episodio deletado com sucesso");
       
       _logger.LogInformation($"{User.Identity?.Name} deleted episode with id = {id} of the serie with id = {serieId}");
@@ -183,12 +183,12 @@ public class SeriesController(
     if (string.IsNullOrEmpty(imdbId)) return BadRequest();
     
     var response = await _imdbService.GetAllResultsByImdbIdAsync(imdbId);
-    var result = response.Data.TvResults.FirstOrDefault();
+    var result = response.Data?.TvResults.FirstOrDefault();
 
     if (response.IsFailure) return BadRequest();
     
     if (result == null) return NotFound();
-    
+  
     return Ok(result);
   }
 }

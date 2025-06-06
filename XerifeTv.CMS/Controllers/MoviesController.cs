@@ -77,7 +77,7 @@ public class MoviesController(
     var response = await _service.Create(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} cadastrado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
@@ -91,7 +91,7 @@ public class MoviesController(
     var response = await _service.Update(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} atualizado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
@@ -107,7 +107,7 @@ public class MoviesController(
       var response = await _service.Delete(id);
       
       TempData["Notification"] = response.IsFailure
-        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
         : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
       
       _logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
@@ -144,7 +144,7 @@ public class MoviesController(
   {
     var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
 
-    if (response.IsSuccess && response.Data.ProgressCount == 100 && response.Data.SuccessCount > 1)
+    if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
       TempData["Notification"] = MessageViewHelper
         .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
     

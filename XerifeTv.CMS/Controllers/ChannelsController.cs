@@ -73,7 +73,7 @@ public class ChannelsController(
     var response = await _service.Create(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson($"Canal cadastrado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} registered the channel {dto.Title}");
@@ -87,7 +87,7 @@ public class ChannelsController(
     var response = await _service.Update(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson($"Canal atualizado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} updated the channel {dto.Title}");
@@ -103,7 +103,7 @@ public class ChannelsController(
       var response = await _service.Delete(id);
       
       TempData["Notification"] = response.IsFailure
-        ? MessageViewHelper.ErrorJson(response.Error.Description)
+        ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
         : MessageViewHelper.SuccessJson($"Canal deletado com sucesso");
       
       _logger.LogInformation($"{User.Identity?.Name} removed the channel with id = {id}");
@@ -130,7 +130,7 @@ public class ChannelsController(
   {
     var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
 
-    if (response.IsSuccess && response.Data.ProgressCount == 100 && response.Data.SuccessCount > 1)
+    if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
       TempData["Notification"] = MessageViewHelper
         .SuccessJson($"{response.Data.SuccessCount} canais cadastrados com sucesso");
     

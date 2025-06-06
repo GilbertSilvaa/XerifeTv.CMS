@@ -34,7 +34,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [AllowAnonymous]
   public IActionResult SignIn()
   {
-    if (User.Identity.IsAuthenticated) 
+    if (User.Identity != null && User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
     
     return View();
@@ -48,7 +48,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
     if (response.IsFailure)
     {
-      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
+      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty);
       _logger.LogInformation("There was an unsuccessful login attempt");
       return View();
     }
@@ -64,7 +64,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [AllowAnonymous]
   public IActionResult EmailResetPasswordForm()
   {
-    if (User.Identity.IsAuthenticated) 
+    if (User.Identity != null && User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
     
     return View();
@@ -74,7 +74,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [AllowAnonymous]
   public async Task<IActionResult> EmailResetPasswordForm(string email)
   {
-    if (User.Identity.IsAuthenticated) 
+    if (User.Identity != null && User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
 
     var response = await _service.SendEmailResetPassword(email);
@@ -95,7 +95,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [AllowAnonymous]
   public async Task<IActionResult> ResetPassword(string code)
   {
-    if (User.Identity.IsAuthenticated) 
+    if (User.Identity != null && User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
     
     var response = await _service.ValidateResetPasswordGuid(new Guid(code));
@@ -113,7 +113,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [AllowAnonymous]
   public async Task<IActionResult> ResetPassword(ResetPasswordRequestDto dto)
   {
-    if (User.Identity.IsAuthenticated) 
+    if (User.Identity != null && User.Identity.IsAuthenticated) 
       return RedirectToAction("Index", "Home");
     
     if (dto.Password != dto.ConfirmPassword)
@@ -126,7 +126,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
     if (response.IsFailure)
     {
-      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
+      TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty);
       return RedirectToAction("ResetPassword", new { code = dto.CodeGuid });
     }
     
@@ -152,7 +152,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     var response = await _service.Register(dto);
 
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson("Usuario cadastrado com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} registered a new user");
@@ -167,7 +167,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     var response = await _service.Update(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson("Perfil atualizado com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} updated your own profile");
@@ -188,7 +188,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     var response = await _service.UpdatePassword(dto);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson("Senha atualizada com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} updated your password");
@@ -203,7 +203,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     var response = await _service.Update(dto);
 
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson("Usuario atualizado com sucesso");
     
     _logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
@@ -216,7 +216,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     var response = await _service.Delete(id);
     
     TempData["Notification"] = response.IsFailure
-      ? MessageViewHelper.ErrorJson(response.Error.Description)
+      ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
       : MessageViewHelper.SuccessJson("Usuario deletado com sucesso");
 
     _logger.LogInformation($"{User.Identity?.Name} removed user with id = {id}");
@@ -264,7 +264,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
   [Authorize]
   public async Task<IActionResult> Settings()
   {
-    var response = await _service.GetByUsername(User.Identity.Name);
+    var response = await _service.GetByUsername(User.Identity?.Name ?? string.Empty);
 
     if (response.IsFailure) return Logout();
     
