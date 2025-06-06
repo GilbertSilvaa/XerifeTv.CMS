@@ -41,7 +41,7 @@
             <i class="fa-solid fa-diagram-project me-1"></i> <span>Importar episódios via IMDB</span>
           </button>
 
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episodeEmpty.Id">
+          <button id="btn-register" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episodeEmpty.Id">
             <i class="fa-solid fa-plus"></i> Cadastrar
           </button>
         </div>
@@ -190,6 +190,8 @@
         const formData = new FormData();
         formData.append('seriesId', '@Model.SerieId');
 
+        $('#btn-register').prop('disabled', true);
+        $('#seasonFilter').prop('disabled', true);
         $(btn).prop('disabled', true);
         $(btn).find('span').text('Processando importação...');
 
@@ -198,6 +200,8 @@
             body: formData
         })
           .finally(() => {
+            $('#btn-register').prop('disabled', false);
+            $('#seasonFilter').prop('disabled', false);
             $(btn).prop('disabled', false);
             $(btn).find('span').text('Importar episódios via IMDB');
 
