@@ -6,7 +6,7 @@ public class GetMovieByImdbResponseDto
 {
     public string Title { get; set; } = string.Empty;
     public string Overview { get; set; } = string.Empty;
-    public List<GenreDto> Genres { get; set; }
+    public List<GenreDto> Genres { get; set; } = [];
 
     [JsonProperty("vote_average")]
     public float VoteAverage { get; set; }
@@ -33,8 +33,13 @@ public class GetMovieByImdbResponseDto
     public string? ReleaseYear
     {
         get => _releaseYear.Split("-").FirstOrDefault();
-        set => _releaseYear = value;
+        set => _releaseYear = value ?? string.Empty;
     }
+
+    [JsonProperty("runtime")]
+    public int DurationInMinutes { get; set; }
+
+    public long DurationInSeconds => DurationInMinutes * 60L;
 
     public record GenreDto(int Id, string Name);
 }
