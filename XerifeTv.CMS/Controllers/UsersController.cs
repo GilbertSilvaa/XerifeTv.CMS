@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
 using XerifeTv.CMS.Modules.User.Interfaces;
