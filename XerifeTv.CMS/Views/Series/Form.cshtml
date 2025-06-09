@@ -225,7 +225,7 @@
 
         @if (Model is GetSeriesResponseDto)
         {
-          <button type="button" class="btn btn-danger" onclick="deleteMovie()">
+          <button type="button" class="btn btn-danger" onclick="deleteSeries()">
             <i class="fa fa-trash" aria-hidden="true"></i> Remover
           </button>
         }
@@ -236,7 +236,7 @@
 
 @section scripts {
   <script>
-    async function getMovieByTmdb(imdbId) {
+    async function getSeriesByTmdb(imdbId) {
       const response = await fetch(`/Series/GetSeriesByImdbId?imdbId=${imdbId}`);
       return await response.json();
     }
@@ -244,23 +244,32 @@
     $('#btn-get-imdb').click(async (e) => {
       e.preventDefault();
 
-      const imdbId = $('#imdbId').val();
-      if (!imdbId) return;
+      try {
+        $('.loading-global .label').text('Importando os dados, por favor aguarde...');
+        $('.loading-global').show();
 
-      const response = await getMovieByTmdb(imdbId);
-      if (!response) return;
+        const imdbId = $('#imdbId').val();
+        if (!imdbId) return;
 
-      $('#title').val(response.title);
-      $('#synopsis').val(response.overview);
-      $('#releaseYear').val(response.releaseYear);
-      $('#review').val(String(response.voteAverage).replace(',', '.'));
-      $('#posterUrl').val(response.posterUrl);
-      $('#bannerUrl').val(response.bannerUrl);
+        const response = await getSeriesByTmdb(imdbId);
+        if (!response) return;
+
+        $('#title').val(response.title);
+        $('#synopsis').val(response.overview);
+        $('#releaseYear').val(response.releaseYear);
+        $('#review').val(String(response.voteAverage).replace(',', '.'));
+        $('#posterUrl').val(response.posterUrl);
+        $('#bannerUrl').val(response.bannerUrl);
+      }
+      finally {
+        $('.loading-global').hide();
+      }
+      
     });
 
     $('#disabled').change(e => e.target.value = e.target.checked);
     
-    function deleteMovie() {
+    function deleteSeries() {
       if (!confirm('Deseja realmente remover a série?')) return;
 
       location.href = '/Series/Delete/@Model?.Id'
