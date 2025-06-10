@@ -55,9 +55,17 @@
       
       #message-box {
         width: 85%;
+        display: none;
+        position: absolute;
+        bottom: auto;
+        top: 0.5rem;
+        right: 0.5rem;
+        z-index: 999;
         
         @@media (min-width: 720px) {
           width: 25%;
+          top: auto;
+          bottom: 0.5rem;
         }
       }
     </style>
@@ -82,8 +90,7 @@
   <div
     class="alert alert-dismissible fade show"
     role="alert"
-    id="message-box"
-    style="display: none; position: absolute; bottom: 0.5rem; right: 0.5rem; z-index: 999;">
+    id="message-box">
     <span></span>
     <button type="button" class="btn-close shadow-sm" data-bs-dismiss="alert" aria-label="Close"></button>
   </div>
