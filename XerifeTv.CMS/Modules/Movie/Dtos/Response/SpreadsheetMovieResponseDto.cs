@@ -16,13 +16,11 @@ public sealed class SpreadsheetMovieResponseDto
         string? parentalRating = cols[1];
         string? videoUrl = cols[2];
         string? videoStreamFormat = cols[3];
-        string? videoDuration = cols[4];
-        string? videoSubtitleUrl = cols[5];
+        string? videoSubtitleUrl = cols[4];
 
         List<string?> requiredValues = [
             imdbId,
             videoUrl,
-            videoDuration,
             parentalRating,
             videoStreamFormat
         ];
@@ -32,9 +30,6 @@ public sealed class SpreadsheetMovieResponseDto
 
         if (!int.TryParse(parentalRating, out var parentalRatingResult))
             throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa em formato invalido");
-
-        if (!long.TryParse(videoDuration, out var videoDurationResult))
-            throw new SpreadsheetInvalidException($"[{imdbId}] duracao em formato invalido");
 
         if (!ParentalRatingHelper.ParentalRatingList.Contains(parentalRatingResult))
             throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa invalida");
@@ -47,7 +42,7 @@ public sealed class SpreadsheetMovieResponseDto
         {
             ImdbId = imdbId,
             ParentalRating = parentalRatingResult,
-            Video = new Video(videoUrl, videoDurationResult, videoStreamFormat, videoSubtitleUrl)
+            Video = new Video(videoUrl, 0, videoStreamFormat, videoSubtitleUrl)
         };
     }
 }

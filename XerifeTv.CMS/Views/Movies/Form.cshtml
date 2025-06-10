@@ -328,6 +328,7 @@
         $('#review').val(String(response.voteAverage).replace(',', '.'));
         $('#posterUrl').val(response.posterUrl);
         $('#bannerUrl').val(response.bannerUrl);
+        $('#videoDuration').val(response.durationInSeconds);
       }
       finally {
         $('.loading-global').hide();

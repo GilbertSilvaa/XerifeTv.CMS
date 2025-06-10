@@ -46,7 +46,6 @@ public class MoviesSpreadsheetImporter(
                 "PARENTAL RATING (REQUIRED)",
                 "URL VIDEO (REQUIRED)",
                 "STREAM FORMAT (REQUIRED)",
-                "DURATION (REQUIRED)",
                 "URL SUBTITLES"
             ];
 
@@ -84,12 +83,12 @@ public class MoviesSpreadsheetImporter(
 
             foreach (var movieItem in movieList)
             {
-                var movieByImdbresponse = await _imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
+                var movieByImdbResponse = await _imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
 
-                if (movieByImdbresponse.IsFailure)
+                if (movieByImdbResponse.IsFailure)
                 {
                     failCount++;
-                    errorList.Add(movieByImdbresponse.Error.Description ?? string.Empty);
+                    errorList.Add(movieByImdbResponse.Error.Description ?? string.Empty);
                     UpdateProgress();
                     continue;
                 }
@@ -97,16 +96,16 @@ public class MoviesSpreadsheetImporter(
                 var createMovieDto = new CreateMovieRequestDto
                 {
                     ImdbId = movieItem.ImdbId,
-                    Title = movieByImdbresponse.Data?.Title ?? string.Empty,
-                    Synopsis = movieByImdbresponse.Data?.Overview ?? string.Empty,
-                    Categories = String.Join(", ", movieByImdbresponse.Data?.Genres.Select(g => g.Name.ToLower())),
-                    PosterUrl = movieByImdbresponse.Data?.PosterUrl ?? string.Empty,
-                    BannerUrl = movieByImdbresponse.Data?.BannerUrl ?? string.Empty,
-                    ReleaseYear = int.Parse(movieByImdbresponse.Data?.ReleaseYear ?? "0"),
-                    Review = movieByImdbresponse.Data?.VoteAverage ?? 0,
+                    Title = movieByImdbResponse.Data?.Title ?? string.Empty,
+                    Synopsis = movieByImdbResponse.Data?.Overview ?? string.Empty,
+                    Categories = String.Join(", ", movieByImdbResponse.Data?.Genres.Select(g => g.Name.ToLower())),
+                    PosterUrl = movieByImdbResponse.Data?.PosterUrl ?? string.Empty,
+                    BannerUrl = movieByImdbResponse.Data?.BannerUrl ?? string.Empty,
+                    ReleaseYear = int.Parse(movieByImdbResponse.Data?.ReleaseYear ?? "0"),
+                    Review = movieByImdbResponse.Data?.VoteAverage ?? 0,
                     ParentalRating = movieItem.ParentalRating,
                     VideoUrl = movieItem.Video?.Url ?? string.Empty,
-                    VideoDuration = movieItem.Video?.Duration ?? 0,
+                    VideoDuration = movieByImdbResponse.Data?.DurationInSeconds ?? 0,
                     VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
                     VideoSubtitle = movieItem.Video?.Subtitle
                 };

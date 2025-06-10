@@ -2,9 +2,13 @@
 
 namespace XerifeTv.CMS.Modules.Integrations.Imdb.Dtos;
 
-public class GetMovieByImdbResponseDto
+public class GetSeriesByImdbResponseDto
 {
+    public int Id { get; set; }
+
+    [JsonProperty("name")]
     public string Title { get; set; } = string.Empty;
+
     public string Overview { get; set; } = string.Empty;
     public List<GenreDto> Genres { get; set; } = [];
 
@@ -29,17 +33,25 @@ public class GetMovieByImdbResponseDto
     }
 
     private string _releaseYear = string.Empty;
-    [JsonProperty("release_date")]
+    [JsonProperty("first_air_date")]
     public string? ReleaseYear
     {
         get => _releaseYear.Split("-").FirstOrDefault();
         set => _releaseYear = value ?? string.Empty;
     }
 
-    [JsonProperty("runtime")]
-    public int DurationInMinutes { get; set; }
+    public List<SeasonDto> Seasons { get; set; } = [];
 
-    public long DurationInSeconds => DurationInMinutes * 60L;
+    public int NumberSeasons => Seasons.Where(s => s.SeasonNumber > 0).Count();
 
     public record GenreDto(int Id, string Name);
+
+    public record SeasonDto(
+        [property: JsonProperty("id")] int Id,
+        [property: JsonProperty("episode_count")] int EpisodeCount,
+        [property: JsonProperty("name")] string Name,
+        [property: JsonProperty("overview")] string Overview,
+        [property: JsonProperty("poster_path")] string PosterPath,
+        [property: JsonProperty("season_number")] int SeasonNumber
+    );
 }

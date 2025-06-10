@@ -183,14 +183,11 @@ public class SeriesController(
     {
         if (string.IsNullOrEmpty(imdbId)) return BadRequest();
 
-        var response = await _imdbService.GetAllResultsByImdbIdAsync(imdbId);
-        var result = response.Data?.TvResults.FirstOrDefault();
+        var response = await _imdbService.GetSeriesByImdbIdAsync(imdbId);
 
-        if (response.IsFailure) return BadRequest();
+        if (response.IsFailure) return BadRequest(response.Error.Description);
 
-        if (result == null) return NotFound();
-
-        return Ok(result);
+        return Ok(response.Data);
     }
 
     [Authorize(Roles = "admin, common")]
