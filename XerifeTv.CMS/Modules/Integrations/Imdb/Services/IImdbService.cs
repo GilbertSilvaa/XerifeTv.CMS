@@ -7,5 +7,6 @@ public interface IImdbService
 {
     Task<Result<GetAllResultsByImdbIdResponseDto?>> GetAllResultsByImdbIdAsync(string imdbId);
     Task<Result<GetMovieByImdbResponseDto?>> GetMovieByImdbIdAsync(string imdbId);
+    Task<Result<GetSeriesByImdbResponseDto?>> GetSeriesByImdbIdAsync(string imdbId);
     Task<Result<GetSeriesEpisodesBySeasonResponseDto?>> GetSeriesEpisodesBySeasonAsync(string imdbId, int season);
 }
