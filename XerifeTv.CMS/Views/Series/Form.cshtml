@@ -66,6 +66,7 @@
           <div class="input-group-tags">
             <input
               type="text"
+              id="categories"
               class="form-control input-tags"
               placeholder="ação, aventura, comédia..."
               value="@Model?.Categories">
@@ -255,11 +256,15 @@
         if (!response) return;
 
         $('#title').val(response.title);
+        $('#categories').val(response.genres.map(g => g.name.toLowerCase()).join(', '));
+        $('#categories').blur();
+
         $('#synopsis').val(response.overview);
         $('#releaseYear').val(response.releaseYear);
         $('#review').val(String(response.voteAverage).replace(',', '.'));
         $('#posterUrl').val(response.posterUrl);
         $('#bannerUrl').val(response.bannerUrl);
+        $('#numberSeasons').val(response.numberSeasons);
       }
       finally {
         $('.loading-global').hide();
