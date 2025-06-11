@@ -143,6 +143,8 @@
       <p>Nenhum registro encontrado.</p>
     }
   </div>
+
+  @await Html.PartialAsync("_ImportEpisodesProgressModal")
 </div>
 
 @section scripts {
@@ -190,28 +192,73 @@
         })
     }
 
-    $('#btn-import-episodes').click(function() {
-        const btn = $(this);
-
+    $('#btn-import-episodes').click(async () => {
         if(!confirm('Confirmar ação?')) return;
 
-        const formData = new FormData();
-        formData.append('seriesId', '@Model.SerieId');
+        $('#importEpisodesProgressModal').modal('show');
 
-        $('.loading-global .label').text('Processando importação, por favor aguarde...');
-        $('.loading-global').show();
-        $(btn).prop('disabled', true);
+        var monitorProgressInterval = 0;
 
-        fetch('/Series/ImportEpisodesByImdbId', {
-            method: 'POST',
-            body: formData
-        })
-          .finally(() => {
-            $('.loading-global').hide();
-            $(btn).prop('disabled', false);
+        try {
+            const formData = new FormData();
+            formData.append('seriesId', '@Model.SerieId');
 
-            location.reload();
-          })
+            var response = await fetch('/Series/ImportEpisodesByImdbId', {
+                method: 'POST',
+                body: formData
+            });
+
+            var importId = await response.text();
+        
+            // monitor progress records
+            monitorProgressInterval = setInterval(async () => {   
+                var monitorResponse = await fetch(`/Series/MonitorImdbEpisodesImport?importId=${importId}`);
+                const { importedCount, progressCount } = await monitorResponse.json();
+
+                if (progressCount == 0) return;
+      
+                $('.process .progress-bar').css('width', `${progressCount}%`);
+                $('.process span.status-percent').text(`${progressCount}%`);
+      
+                if (progressCount == 100) {
+                    clearInterval(monitorProgressInterval);
+
+                    $('.finish-process-container .success-count').text(importedCount);
+
+                    $('.process .progress-bar').css('width', '100%');
+                    $('.process span.status-percent').text('100%');
+                    $('.process span.status-text').text('Processo de importação finalizado.');
+
+                    setTimeout(() => {
+                        $('.process-container').hide();
+                        $('.finish-process-container').show();
+
+                        $('.close-modal').text('Fechar');
+                        $('.close-modal').prop('disabled', false);
+                        $('.close-modal').off().click(() => location.reload());
+                    }, 1250);
+                }
+      
+            }, 2500);
+        }
+        catch(error) {
+            console.error(error);
+
+            clearInterval(monitorProgressInterval);
+            $('.process .progress-bar').css('width', '100%');
+            $('.process span.status-percent').text('100%');
+            $('.process span.status-text').text('Processo de importação finalizado.');
+
+            setTimeout(() => {
+                $('.process-container').hide();
+                $('.finish-process-container').show();
+
+                $('.close-modal').text('Fechar');
+                $('.close-modal').prop('disabled', false);
+                $('.close-modal').off().click(() => location.reload());
+            }, 1250);
+        }
+        
     });
   </script>
 }

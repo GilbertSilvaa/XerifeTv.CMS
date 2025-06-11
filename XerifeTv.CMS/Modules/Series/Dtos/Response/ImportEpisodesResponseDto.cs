@@ -1,3 +1,5 @@
 ﻿namespace XerifeTv.CMS.Modules.Series.Dtos.Response;
 
-public record ImportEpisodesResponseDto(int ImportedCount);
+public record ImportEpisodesResponseDto(
+	int ImportedCount,
+	int ProgressCount);
