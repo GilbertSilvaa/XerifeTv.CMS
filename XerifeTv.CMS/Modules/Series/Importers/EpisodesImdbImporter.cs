@@ -15,7 +15,7 @@ public class EpisodesImdbImporter(
         try
         {
             var seriesResult = await _service.Get(seriesId);
-            if (seriesResult.IsFailure) Result<bool>.Failure(seriesResult.Error);
+            if (seriesResult.IsFailure) Result<ImportEpisodesResponseDto>.Failure(seriesResult.Error);
 
             var newEpisodesCount = 0;
 
