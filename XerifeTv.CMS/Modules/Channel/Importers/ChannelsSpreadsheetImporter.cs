@@ -19,7 +19,9 @@ public class ChannelsSpreadsheetImporter(
         var emptyDto = new ImportSpreadsheetResponseDto(0, 0, [], 0);
         _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
 
-        HandleImportAsync(file, importId);
+        _ = HandleImportAsync(file, importId);
+
+        await Task.Delay(500);
         return Result<string>.Success(importId);
     }
 
@@ -31,6 +33,7 @@ public class ChannelsSpreadsheetImporter(
             return Result<ImportSpreadsheetResponseDto>.Failure(
                 new Error("400", $"Import Id {importId} nao encontrado"));
 
+        await Task.Delay(500);
         return Result<ImportSpreadsheetResponseDto>.Success(response);
     }
 
@@ -57,12 +60,12 @@ public class ChannelsSpreadsheetImporter(
             var spreadsheetResponse = _spreadsheetReaderService.Read(expectedColluns, stream);
             ICollection<SpreadsheetChannelResponseDto> channelList = [];
 
-            Action UpdateProgress = () =>
+            void UpdateProgress()
             {
                 var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
                 var _dto = new ImportSpreadsheetResponseDto(successCount, failCount, errorList.ToArray(), progressCount);
                 _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
-            };
+            }
 
             foreach (var item in spreadsheetResponse)
             {
@@ -85,9 +88,9 @@ public class ChannelsSpreadsheetImporter(
                 {
                     Title = channelItem.Title,
                     Categories = channelItem.Categories,
-                    VideoStreamFormat = channelItem.Video.StreamFormat,
+                    VideoStreamFormat = channelItem.Video?.StreamFormat ?? string.Empty,
                     LogoUrl = channelItem.LogoUrl,
-                    VideoUrl = channelItem.Video.Url
+                    VideoUrl = channelItem.Video?.Url ?? string.Empty
                 };
 
                 var response = await _service.Create(createChannelDto);
@@ -113,12 +116,12 @@ public class ChannelsSpreadsheetImporter(
             if (monitorResponse.IsSuccess)
             {
                 var currentProgress = monitorResponse.Data;
-                var failCount = currentProgress.FailCount;
-                var errorList = currentProgress.ErrorList.ToList();
+                var failCount = currentProgress?.FailCount ?? 0;
+                var errorList = currentProgress?.ErrorList.ToList() ?? [];
                 errorList.Add(ex.InnerException?.Message ?? ex.Message);
 
                 var _newDto = new ImportSpreadsheetResponseDto(
-                  currentProgress.SuccessCount, failCount, errorList.ToArray(), 100);
+                  currentProgress?.SuccessCount, failCount, [.. errorList], 100);
                 _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
             }
         }

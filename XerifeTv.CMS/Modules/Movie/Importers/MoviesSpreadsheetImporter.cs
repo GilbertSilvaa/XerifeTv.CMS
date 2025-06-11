@@ -21,7 +21,9 @@ public class MoviesSpreadsheetImporter(
         var emptyDto = new ImportSpreadsheetResponseDto(0, 0, [], 0);
         _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
 
-        HandleImportAsync(file, importId);
+        _ = HandleImportAsync(file, importId);
+
+        await Task.Delay(300);
         return Result<string>.Success(importId);
     }
 
@@ -33,6 +35,8 @@ public class MoviesSpreadsheetImporter(
             return Result<ImportSpreadsheetResponseDto>.Failure(
               new Error("400", $"Import Id {importId} nao encontrado"));
 
+
+        await Task.Delay(500);
         return Result<ImportSpreadsheetResponseDto>.Success(response);
     }
 
@@ -59,12 +63,12 @@ public class MoviesSpreadsheetImporter(
             var spreadsheetResponse = _spreadsheetReaderService.Read(expectedColluns, stream);
             ICollection<SpreadsheetMovieResponseDto> movieList = [];
 
-            Action UpdateProgress = () =>
+            void UpdateProgress()
             {
                 var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
                 var _dto = new ImportSpreadsheetResponseDto(successCount, failCount, errorList.ToArray(), progressCount);
                 _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
-            };
+            }
 
             foreach (var item in spreadsheetResponse)
             {
@@ -98,14 +102,14 @@ public class MoviesSpreadsheetImporter(
                     ImdbId = movieItem.ImdbId,
                     Title = movieByImdbResponse.Data?.Title ?? string.Empty,
                     Synopsis = movieByImdbResponse.Data?.Overview ?? string.Empty,
-                    Categories = String.Join(", ", movieByImdbResponse.Data?.Genres.Select(g => g.Name.ToLower())),
-                    PosterUrl = movieByImdbResponse.Data?.PosterUrl ?? string.Empty,
-                    BannerUrl = movieByImdbResponse.Data?.BannerUrl ?? string.Empty,
-                    ReleaseYear = int.Parse(movieByImdbResponse.Data?.ReleaseYear ?? "0"),
-                    Review = movieByImdbResponse.Data?.VoteAverage ?? 0,
+                    Categories = String.Join(", ", movieByImdbResponse?.Data?.Genres.Select(g => g.Name.ToLower()) ?? []),
+                    PosterUrl = movieByImdbResponse?.Data?.PosterUrl ?? string.Empty,
+                    BannerUrl = movieByImdbResponse?.Data?.BannerUrl ?? string.Empty,
+                    ReleaseYear = int.Parse(movieByImdbResponse?.Data?.ReleaseYear ?? "0"),
+                    Review = movieByImdbResponse?.Data?.VoteAverage ?? 0,
                     ParentalRating = movieItem.ParentalRating,
                     VideoUrl = movieItem.Video?.Url ?? string.Empty,
-                    VideoDuration = movieByImdbResponse.Data?.DurationInSeconds ?? 0,
+                    VideoDuration = movieByImdbResponse?.Data?.DurationInSeconds ?? 0,
                     VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
                     VideoSubtitle = movieItem.Video?.Subtitle
                 };
@@ -133,12 +137,12 @@ public class MoviesSpreadsheetImporter(
             if (monitorResponse.IsSuccess)
             {
                 var currentProgress = monitorResponse.Data;
-                var failCount = currentProgress.FailCount;
-                var errorList = currentProgress.ErrorList.ToList();
+                var failCount = currentProgress?.FailCount ?? 0;
+                var errorList = currentProgress?.ErrorList.ToList() ?? [];
                 errorList.Add(ex.InnerException?.Message ?? ex.Message);
 
                 var _newDto = new ImportSpreadsheetResponseDto(
-                  currentProgress.SuccessCount, failCount, errorList.ToArray(), 100);
+                  currentProgress?.SuccessCount, failCount, [.. errorList], 100);
                 _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
             }
         }

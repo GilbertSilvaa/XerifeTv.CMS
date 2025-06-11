@@ -1,20 +1,12 @@
-﻿using Microsoft.VisualBasic;
-using OfficeOpenXml;
-using XerifeTv.CMS.Modules.Abstractions.Exceptions;
-using XerifeTv.CMS.Modules.Abstractions.Interfaces;
-using XerifeTv.CMS.Modules.Common;
+﻿using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Specifications;
-using JsonConvert = Newtonsoft.Json.JsonConvert;
 
 namespace XerifeTv.CMS.Modules.Movie;
 
-public sealed class MovieSevice(
-  IMovieRepository _repository,
-  ISpreadsheetReaderService _spreadsheetReaderService,
-  IConfiguration _configuration) : IMovieService
+public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
 {
     public async Task<Result<PagedList<GetMovieResponseDto>>> Get(int currentPage, int limit)
     {
