@@ -35,7 +35,6 @@ public class MoviesSpreadsheetImporter(
             return Result<ImportSpreadsheetResponseDto>.Failure(
               new Error("400", $"Import Id {importId} nao encontrado"));
 
-
         await Task.Delay(500);
         return Result<ImportSpreadsheetResponseDto>.Success(response);
     }
@@ -66,7 +65,7 @@ public class MoviesSpreadsheetImporter(
             void UpdateProgress()
             {
                 var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
-                var _dto = new ImportSpreadsheetResponseDto(successCount, failCount, errorList.ToArray(), progressCount);
+                var _dto = new ImportSpreadsheetResponseDto(successCount, failCount, [.. errorList], progressCount);
                 _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
             }
 

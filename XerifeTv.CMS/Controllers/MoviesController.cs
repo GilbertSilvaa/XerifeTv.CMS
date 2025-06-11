@@ -18,138 +18,138 @@ public class MoviesController(
   ILogger<MoviesController> _logger,
   ISpreadsheetBatchImporter<IMovieService> _spreadsheetBatchImporter) : Controller
 {
-    private const int limitResultsPage = 20;
+	private const int limitResultsPage = 20;
 
-    public async Task<IActionResult> Index(int? currentPage, EMovieSearchFilter? filter, string? search)
-    {
-        Result<PagedList<GetMovieResponseDto>>? result;
+	public async Task<IActionResult> Index(int? currentPage, EMovieSearchFilter? filter, string? search)
+	{
+		Result<PagedList<GetMovieResponseDto>>? result;
 
-        _logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
+		_logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
 
-        if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
-        {
-            result = await _service.GetByFilter(
-              new GetMoviesByFilterRequestDto(
-                filter,
-                EMovieOrderFilter.TITLE,
-                search,
-                limitResultsPage,
-                currentPage,
-                isIncludeDisabled: true));
+		if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
+		{
+			result = await _service.GetByFilter(
+			  new GetMoviesByFilterRequestDto(
+				filter,
+				EMovieOrderFilter.TITLE,
+				search,
+				limitResultsPage,
+				currentPage,
+				isIncludeDisabled: true));
 
-            ViewBag.Search = search;
-            ViewBag.Filter = filter.ToString()?.ToLower();
-        }
-        else
-        {
-            result = await _service.Get(currentPage ?? 1, limitResultsPage);
-        }
+			ViewBag.Search = search;
+			ViewBag.Filter = filter.ToString()?.ToLower();
+		}
+		else
+		{
+			result = await _service.Get(currentPage ?? 1, limitResultsPage);
+		}
 
-        if (result.IsSuccess)
-        {
-            ViewBag.CurrentPage = result.Data?.CurrentPage;
-            ViewBag.TotalPages = result.Data?.TotalPageCount ?? 1;
-            ViewBag.HasNextPage = result.Data?.HasNext;
-            ViewBag.HasPrevPage = result.Data?.HasPrevious;
+		if (result.IsSuccess)
+		{
+			ViewBag.CurrentPage = result.Data?.CurrentPage;
+			ViewBag.TotalPages = result.Data?.TotalPageCount ?? 1;
+			ViewBag.HasNextPage = result.Data?.HasNext;
+			ViewBag.HasPrevPage = result.Data?.HasPrevious;
 
-            return View(result.Data?.Items);
-        }
+			return View(result.Data?.Items);
+		}
 
-        return View(Enumerable.Empty<GetMovieResponseDto>());
-    }
+		return View(Enumerable.Empty<GetMovieResponseDto>());
+	}
 
-    [Authorize(Roles = "admin, common")]
-    public async Task<IActionResult> Form(string? id)
-    {
-        if (id is not null)
-        {
-            var response = await _service.Get(id);
-            if (response.IsSuccess) return View(response.Data);
-        }
+	[Authorize(Roles = "admin, common")]
+	public async Task<IActionResult> Form(string? id)
+	{
+		if (id is not null)
+		{
+			var response = await _service.Get(id);
+			if (response.IsSuccess) return View(response.Data);
+		}
 
-        return View();
-    }
+		return View();
+	}
 
-    [Authorize(Roles = "admin, common")]
-    public async Task<IActionResult> Create(CreateMovieRequestDto dto)
-    {
-        var response = await _service.Create(dto);
+	[Authorize(Roles = "admin, common")]
+	public async Task<IActionResult> Create(CreateMovieRequestDto dto)
+	{
+		var response = await _service.Create(dto);
 
-        TempData["Notification"] = response.IsFailure
-          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} cadastrado com sucesso");
+		TempData["Notification"] = response.IsFailure
+		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+		  : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} cadastrado com sucesso");
 
-        _logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
+		_logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
 
-        return RedirectToAction("Index");
-    }
+		return RedirectToAction("Index");
+	}
 
-    [Authorize(Roles = "admin, common")]
-    public async Task<IActionResult> Update(UpdateMovieRequestDto dto)
-    {
-        var response = await _service.Update(dto);
+	[Authorize(Roles = "admin, common")]
+	public async Task<IActionResult> Update(UpdateMovieRequestDto dto)
+	{
+		var response = await _service.Update(dto);
 
-        TempData["Notification"] = response.IsFailure
-          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} atualizado com sucesso");
+		TempData["Notification"] = response.IsFailure
+		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+		  : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} atualizado com sucesso");
 
-        _logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
+		_logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
 
-        return RedirectToAction("Index");
-    }
+		return RedirectToAction("Index");
+	}
 
-    [Authorize(Roles = "admin, common")]
-    public async Task<IActionResult> Delete(string? id)
-    {
-        if (id is not null)
-        {
-            var response = await _service.Delete(id);
+	[Authorize(Roles = "admin, common")]
+	public async Task<IActionResult> Delete(string? id)
+	{
+		if (id is not null)
+		{
+			var response = await _service.Delete(id);
 
-            TempData["Notification"] = response.IsFailure
-              ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-              : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
+			TempData["Notification"] = response.IsFailure
+			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+			  : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
 
-            _logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
-        }
+			_logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
+		}
 
-        return RedirectToAction("Index");
-    }
+		return RedirectToAction("Index");
+	}
 
-    [HttpGet]
-    public async Task<IActionResult> GetByImdbId(string imdbId)
-    {
-        if (string.IsNullOrEmpty(imdbId)) return BadRequest();
+	[HttpGet]
+	public async Task<IActionResult> GetByImdbId(string imdbId)
+	{
+		if (string.IsNullOrEmpty(imdbId)) return BadRequest();
 
-        var response = await _imdbService.GetMovieByImdbIdAsync(imdbId);
+		var response = await _imdbService.GetMovieByImdbIdAsync(imdbId);
 
-        return response.IsFailure ? BadRequest() : Ok(response.Data);
-    }
+		return response.IsFailure ? BadRequest() : Ok(response.Data);
+	}
 
-    [HttpPost]
-    public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
-    {
-        if (file is null || file.Length == 0) return BadRequest();
+	[HttpPost]
+	public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
+	{
+		if (file is null || file.Length == 0) return BadRequest();
 
-        var response = await _spreadsheetBatchImporter.ImportAsync(file);
+		var response = await _spreadsheetBatchImporter.ImportAsync(file);
 
-        if (response.IsFailure)
-            return BadRequest(response.Error.Description ?? string.Empty);
+		if (response.IsFailure)
+			return BadRequest(response.Error.Description ?? string.Empty);
 
-        return Ok(response.Data);
-    }
+		return Ok(response.Data);
+	}
 
-    [HttpGet]
-    public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
-    {
-        var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+	[HttpGet]
+	public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
+	{
+		var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
 
-        if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
-            TempData["Notification"] = MessageViewHelper
-              .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
+		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
+			TempData["Notification"] = MessageViewHelper
+			  .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
 
-        if (response.IsSuccess)
-            return Ok(response.Data);
+		if (response.IsSuccess)
+			return Ok(response.Data);
 
-        return BadRequest(response.Error.Description ?? string.Empty);
-    }
+		return BadRequest(response.Error.Description ?? string.Empty);
+	}
 }

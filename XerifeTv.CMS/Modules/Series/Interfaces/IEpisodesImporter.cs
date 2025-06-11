@@ -5,5 +5,6 @@ namespace XerifeTv.CMS.Modules.Series.Interfaces;
 
 public interface IEpisodesImporter
 {
-    Task<Result<ImportEpisodesResponseDto>> ImportEpisodesAsync(string seriesId);
+    Task<Result<string>> ImportAsync(string seriesId);
+	Task<Result<ImportEpisodesResponseDto>> MonitorImportAsync(string importId);
 }
