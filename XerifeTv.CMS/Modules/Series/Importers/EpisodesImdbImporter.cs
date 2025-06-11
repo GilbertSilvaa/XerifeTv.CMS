@@ -21,18 +21,11 @@ public class EpisodesImdbImporter(
 
             for (int i = 1; i <= seriesResult.Data?.NumberSeasons; i++)
             {
-                var episodesBySeasonResult = await _service.GetEpisodesBySeason(seriesId, i, includeDisabled: true);
-                if (episodesBySeasonResult.IsFailure) continue;
-                if (episodesBySeasonResult.Data?.Episodes.Count() > 0) continue;
-
                 var result = await _imdbService.GetSeriesEpisodesBySeasonAsync(seriesResult.Data.ImdbId, i);
                 if (result.IsFailure || result.Data == null) continue;
 
                 foreach (var episode in result.Data.Episodes)
                 {
-                    var durationInMinutes = episode.Runtime ?? 0;
-                    long durationInSeconds = durationInMinutes * 60L;
-
                     var newEpisodeResult = await _service.CreateEpisode(new CreateEpisodeRequestDto
                     {
                         SerieId = seriesResult.Data.Id,
@@ -40,7 +33,7 @@ public class EpisodesImdbImporter(
                         BannerUrl = episode.BannerUrl,
                         Number = episode.EpisodeNumber,
                         Season = episode.SeasonNumber,
-                        VideoDuration = durationInSeconds,
+                        VideoDuration = episode.DurationInSeconds,
                         IsDisabled = true
                     });
 
