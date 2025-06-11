@@ -38,4 +38,6 @@ public class EpisodeDto
 
     [JsonProperty("runtime")]
     public int? Runtime { get; set; }
+
+    public long DurationInSeconds => (Runtime ?? 0) * 60L;
 }

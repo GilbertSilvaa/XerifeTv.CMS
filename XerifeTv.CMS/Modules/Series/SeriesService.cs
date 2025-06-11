@@ -162,12 +162,23 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
     {
         try
         {
-            var response = await _repository.GetAsync(dto.SerieId);
+            var seriesResponse = await _repository.GetAsync(dto.SerieId);
 
-            if (response is null)
+            if (seriesResponse is null)
                 return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
 
-            await _repository.CreateEpisodeAsync(response.Id, dto.ToEntity());
+            var episodesResult = await GetEpisodesBySeason(dto.SerieId, dto.Season, includeDisabled: true);
+            if (episodesResult.IsFailure) 
+                return Result<string>.Failure(episodesResult.Error);
+
+            var existingEpisode = episodesResult.Data?.Episodes?
+                .Any(e => e.Season == dto.Season && e.Number == dto.Number) ?? false;
+
+            if (existingEpisode)         
+                return Result<string>.Failure(
+                    new Error("409", $"Episodio nao cadastrado. T{dto.Season}:EP{dto.Number} duplicado"));
+            
+            await _repository.CreateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
 
             return Result<string>.Success(dto.ToEntity().Id);
         }
@@ -182,14 +193,25 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
     {
         try
         {
-            var response = await _repository.GetAsync(dto.SerieId);
+            var seriesResponse = await _repository.GetAsync(dto.SerieId);
 
-            if (response is null)
+            if (seriesResponse is null)
                 return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
 
-            await _repository.UpdateEpisodeAsync(response.Id, dto.ToEntity());
+            var episodesResult = await GetEpisodesBySeason(dto.SerieId, dto.Season, includeDisabled: true);
+            if (episodesResult.IsFailure)
+                return Result<string>.Failure(episodesResult.Error);
 
-            return Result<string>.Success(response.Id);
+            var existingEpisode = episodesResult.Data?.Episodes?
+                .Any(e => e.Season == dto.Season && e.Number == dto.Number && e.Id != dto.Id) ?? false;
+
+            if (existingEpisode)
+                return Result<string>.Failure(
+                    new Error("409", $"Episodio nao cadastrado. T{dto.Season}:EP{dto.Number} duplicado"));
+
+            await _repository.UpdateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
+
+            return Result<string>.Success(seriesResponse.Id);
         }
         catch (Exception ex)
         {

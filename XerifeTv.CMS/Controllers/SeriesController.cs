@@ -140,7 +140,7 @@ public class SeriesController(
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson($"Episodio cadastrado com sucesso");
+          : MessageViewHelper.SuccessJson($"Episodio T{dto.Season}:EP{dto.Number} cadastrado com sucesso");
 
         _logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
@@ -154,7 +154,7 @@ public class SeriesController(
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson($"Episodio atualizado com sucesso");
+          : MessageViewHelper.SuccessJson($"Episodio T{dto.Season}:EP{dto.Number} atualizado com sucesso");
 
         _logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
