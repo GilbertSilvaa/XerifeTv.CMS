@@ -7,15 +7,13 @@ namespace XerifeTv.CMS.Modules.Abstractions.Services;
 
 public class SpreadsheetReaderService : ISpreadsheetReaderService
 {
-    public string[][] Read(string[] colluns, MemoryStream fileStream)
+    public string[][] Read(string[] colluns, MemoryStream fileStream, int worksheetIndex = 0)
     {
         try
         {
             using var package = new ExcelPackage(fileStream);
-            var worksheet = package.Workbook.Worksheets.FirstOrDefault();
-
-            if (worksheet is null)
-                throw new SpreadsheetInvalidException("Planilha vazia ou nao encontrada");
+            var worksheet = package.Workbook.Worksheets[worksheetIndex] 
+                ?? throw new SpreadsheetInvalidException("Planilha vazia ou nao encontrada");
 
             var spreadsheetColumns = new List<string>();
             for (int col = 1; col <= worksheet.Dimension.End.Column; col++)
@@ -34,11 +32,11 @@ public class SpreadsheetReaderService : ISpreadsheetReaderService
                 for (int col = 1; col <= colluns.Length; col++)
                     rowItemValues.Add(worksheet.Cells[row, col].Text);
 
-                result.Add(rowItemValues.ToArray());
+                result.Add([.. rowItemValues]);
                 rowItemValues.Clear();
             }
 
-            return result.ToArray();
+			return [.. result];
         }
         catch (Exception)
         {
