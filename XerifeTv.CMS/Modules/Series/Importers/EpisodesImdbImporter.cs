@@ -79,7 +79,6 @@ public class EpisodesImdbImporter(
 
 					episodeCreationAttemptsCount++;
 					UpdateProgress();
-					await Task.Delay(1000);
 				}
 			}		
 		}

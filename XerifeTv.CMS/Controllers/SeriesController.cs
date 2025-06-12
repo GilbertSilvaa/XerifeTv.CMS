@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
@@ -15,7 +16,8 @@ public class SeriesController(
   ISeriesService _service,
   IImdbService _imdbService,
   ILogger<SeriesController> _logger,
-  IEpisodesImporter _episodesImporter) : Controller
+  IEpisodesImporter _episodesImporter,
+  ISpreadsheetBatchImporter<ISeriesService> _spreadsheetBatchImporter) : Controller
 {
 	private const int limitResultsPage = 20;
 
@@ -188,6 +190,36 @@ public class SeriesController(
 		if (response.IsFailure) return BadRequest(response.Error.Description);
 
 		return Ok(response.Data);
+	}
+
+	[Authorize(Roles = "admin, common")]
+	[HttpPost]
+	public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
+	{
+		if (file is null || file.Length == 0) return BadRequest();
+
+		var response = await _spreadsheetBatchImporter.ImportAsync(file);
+
+		if (response.IsFailure)
+			return BadRequest(response.Error.Description ?? string.Empty);
+
+		return Ok(response.Data);
+	}
+
+	[Authorize(Roles = "admin, common")]
+	[HttpGet]
+	public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
+	{
+		var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+
+		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
+			TempData["Notification"] = MessageViewHelper
+			  .SuccessJson($"{response.Data.SuccessCount} series cadastradas com sucesso");
+
+		if (response.IsSuccess)
+			return Ok(response.Data);
+
+		return BadRequest(response.Error.Description ?? string.Empty);
 	}
 
 	[Authorize(Roles = "admin, common")]

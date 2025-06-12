@@ -112,7 +112,8 @@ public class ChannelsController(
         return RedirectToAction("Index");
     }
 
-    [HttpPost]
+	[Authorize(Roles = "admin, common")]
+	[HttpPost]
     public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
     {
         if (file is null || file.Length == 0) return BadRequest();
@@ -125,7 +126,8 @@ public class ChannelsController(
         return Ok(response.Data);
     }
 
-    [HttpGet]
+	[Authorize(Roles = "admin, common")]
+	[HttpGet]
     public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
     {
         var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);

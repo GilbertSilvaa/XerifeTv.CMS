@@ -61,7 +61,8 @@ public static class ConfigureServices
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ISpreadsheetBatchImporter<IMovieService>, MoviesSpreadsheetImporter>();
         services.AddScoped<ISpreadsheetBatchImporter<IChannelService>, ChannelsSpreadsheetImporter>();
-        services.AddScoped<IEpisodesImporter, EpisodesImdbImporter>();
+		services.AddScoped<ISpreadsheetBatchImporter<ISeriesService>, SeriesSpreadsheetImporter>();
+		services.AddScoped<IEpisodesImporter, EpisodesImdbImporter>();
         services.AddScoped<IImdbService, ImdbService>();
         return services;
     }
