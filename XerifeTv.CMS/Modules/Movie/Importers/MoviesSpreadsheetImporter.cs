@@ -59,17 +59,17 @@ public class MoviesSpreadsheetImporter(
             int failCount = 0;
             ICollection<string> errorList = [];
 
-            var spreadsheetResponse = _spreadsheetReaderService.Read(expectedColluns, stream);
+            var spreadsheetResult = _spreadsheetReaderService.Read(expectedColluns, stream);
             ICollection<SpreadsheetMovieResponseDto> movieList = [];
 
             void UpdateProgress()
             {
-                var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResponse.Length) * 100);
+                var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResult.Length) * 100);
                 var _dto = new ImportSpreadsheetResponseDto(successCount, failCount, [.. errorList], progressCount);
                 _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
             }
 
-            foreach (var item in spreadsheetResponse)
+            foreach (var item in spreadsheetResult)
             {
                 try
                 {

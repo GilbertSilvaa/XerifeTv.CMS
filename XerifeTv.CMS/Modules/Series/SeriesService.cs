@@ -49,7 +49,27 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<string>> Create(CreateSeriesRequestDto dto)
+	public async Task<Result<GetSeriesResponseDto?>> GetByImdbId(string imdbId)
+	{
+		try
+		{
+			var response = await _repository.GetByImdbIdAsync(imdbId);
+
+			if (response is null)
+				return Result<GetSeriesResponseDto?>
+				  .Failure(new Error("404", "Conteudo nao encontrado"));
+
+			return Result<GetSeriesResponseDto?>
+			  .Success(GetSeriesResponseDto.FromEntity(response));
+		}
+		catch (Exception ex)
+		{
+			var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+			return Result<GetSeriesResponseDto?>.Failure(error);
+		}
+	}
+
+	public async Task<Result<string>> Create(CreateSeriesRequestDto dto)
     {
         try
         {
@@ -176,7 +196,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
 
             if (existingEpisode)         
                 return Result<string>.Failure(
-                    new Error("409", $"Episodio nao cadastrado. T{dto.Season}:EP{dto.Number} duplicado"));
+                    new Error("409", $"Episodio nao cadastrado. [{seriesResponse.ImdbId}|T{dto.Season}:EP{dto.Number}] duplicado"));
             
             await _repository.CreateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
 
@@ -207,7 +227,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
 
             if (existingEpisode)
                 return Result<string>.Failure(
-                    new Error("409", $"Episodio nao cadastrado. T{dto.Season}:EP{dto.Number} duplicado"));
+                    new Error("409", $"Episodio nao atualizado. [{seriesResponse.ImdbId}|T{dto.Season}:EP{dto.Number}] duplicado"));
 
             await _repository.UpdateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
 

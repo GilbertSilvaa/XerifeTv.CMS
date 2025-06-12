@@ -125,6 +125,7 @@ public class MoviesController(
 		return response.IsFailure ? BadRequest() : Ok(response.Data);
 	}
 
+	[Authorize(Roles = "admin, common")]
 	[HttpPost]
 	public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
 	{
@@ -138,6 +139,7 @@ public class MoviesController(
 		return Ok(response.Data);
 	}
 
+	[Authorize(Roles = "admin, common")]
 	[HttpGet]
 	public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
 	{
