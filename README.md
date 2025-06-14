@@ -10,8 +10,8 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 ## ✔ Key Features:
 
 - [X]  **Content Management:** Easily register, edit, and organize movies, series, episodes, and TV channels.  
-- [X]  **Batch Upload:** Import multiple movies or channels at once using spreadsheets (.xlsx).  
-- [X]  **TMDB API Integration:** Fetch and autocomplete movie and series data using The Movie Database (TMDB) API.  
+- [X]  **Batch Upload:** Import multiple movies, channels, or full series with episodes at once using spreadsheets (.xlsx).  
+- [X]  **TMDB API Integration:** Fetch and autocomplete movie and series data — with automatic import of all episodes — using The Movie Database (TMDB) API.
 - [X]  **Supabase Storage Integration:** Store media files (.vtt, images, etc.) securely in a Supabase bucket.  
 - [X]  **User Roles & Permissions:** Granular access control for administrators, content managers, and viewers.  
 - [X]  **JWT Authentication:** Secure authentication using JSON Web Tokens (JWT).  
