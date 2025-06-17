@@ -52,7 +52,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if ($(this).prop('type') !== 'submit') {
       event.preventDefault();
       $(this).parent('form').find('input[disabled]').prop('disabled', false);
-      $(this).parent('form').find('input[type!=hidden]').first().focus();
+      $(this).parent('form').find('input[type!=hidden]').first().trigger('focus');
       $(this).text($(this).data('title'));
       $(this).prop('type', 'submit');
     }
@@ -63,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
     event.preventDefault();
     
     if (confirm($(this).data('confirm'))) {
-      $(this).off('submit').submit();
+      $(this).off('submit').trigger('submit');
       return;
     }
       
@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // inputs hidden when requireds
-  $('form').on('submit', function (event) { 
+  $('form:not([data-confirm])').on('submit', function (event) { 
     event.preventDefault();
     var isFormValid = true;
     
@@ -85,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function() {
     })
 
     if (isFormValid) {
-      $(this).off('submit').submit();
+      $(this).off('submit').trigger('submit');
       return;
     }
 
@@ -163,5 +163,5 @@ document.addEventListener('DOMContentLoaded', function() {
   })
 
   // populate tags input with existing values in edit mode
-  $('.input-tags').blur();
+  $('.input-tags').trigger('blur');
 });
