@@ -36,7 +36,7 @@ public sealed class SpreadsheetEpisodeResponseDto
 			videoDuration,
 		];
 
-		if (requiredValues.Any(v => string.IsNullOrEmpty(v)))
+		if (requiredValues.Any(string.IsNullOrEmpty))
 			throw new SpreadsheetInvalidException($"[{seriesImdbId}:EPs] algum campo obrigatorio esta vazio");
 
 		if (!int.TryParse(season, out var seasonResult))
