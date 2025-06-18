@@ -7,6 +7,10 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 ![screenshot](https://i.postimg.cc/xT6Xd7kG/Frame-1-1.png)
 
 ####
+## 🗺️ System Context Diagram:
+![screenshot](https://i.postimg.cc/BbVDG2fw/DIAGRAMAS-TEST-drawio.png)
+
+####
 ## ✔ Key Features:
 
 - [X]  **Content Management:** Easily register, edit, and organize movies, series, episodes, and TV channels.  
