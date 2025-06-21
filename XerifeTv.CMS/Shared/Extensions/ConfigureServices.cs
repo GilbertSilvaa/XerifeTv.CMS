@@ -2,6 +2,8 @@
 using Microsoft.OpenApi.Models;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Services;
+using XerifeTv.CMS.Modules.BackgroundJobQueue;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Channel;
 using XerifeTv.CMS.Modules.Channel.Importers;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
@@ -64,6 +66,8 @@ public static class ConfigureServices
 		services.AddScoped<ISpreadsheetBatchImporter<ISeriesService>, SeriesSpreadsheetImporter>();
 		services.AddScoped<IEpisodesImporter, EpisodesImdbImporter>();
         services.AddScoped<IImdbService, ImdbService>();
+        services.AddScoped<IBackgroundJobQueueRepository, BackgroundJobQueueRepository>();
+        services.AddScoped<IBackgroundJobQueueService, BackgroundJobQueueService>();
         return services;
     }
 

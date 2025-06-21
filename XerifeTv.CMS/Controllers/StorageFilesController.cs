@@ -17,7 +17,7 @@ public class StorageFilesController(
             return Json(Result<string>.Failure(new Error("400", "Arquivo ausente")));
 
         using var stream = file.OpenReadStream();
-        var response = await _service.UploadFileAsync(stream, file.FileName);
+        var response = await _service.UploadFileAsync(stream, file.FileName, "subtitles");
 
         _logger.LogInformation(
           response.IsSuccess ? $"Upload file {response.Data} success" : "Error uploading file");

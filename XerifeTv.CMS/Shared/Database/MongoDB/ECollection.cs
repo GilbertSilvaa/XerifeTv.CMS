@@ -5,5 +5,6 @@ public enum ECollection
     MOVIES,
     SERIES,
     CHANNELS,
-    USERS
+    USERS,
+    BACKGROUND_JOB_QUEUE
 }
