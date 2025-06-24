@@ -19,7 +19,7 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service) :
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson($"Cadastro na fila de processamento");
+          : MessageViewHelper.SuccessJson($"Processo adicionado a fila com sucesso");
 
         return Ok(response.Data);
     }
@@ -34,7 +34,7 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service) :
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson($"Importacao na fila de processamento");
+          : MessageViewHelper.SuccessJson($"Processo adicionado a fila com sucesso");
 
         return Ok(response.Data);
     }

@@ -6,7 +6,7 @@ namespace XerifeTv.CMS.Modules.Abstractions.Services;
 
 public class StorageFilesService : IStorageFilesService
 {
-    private readonly string[] _acceptedExtensions = [".vtt", ".xlsx"];
+    private readonly string[] _acceptedExtensions = [".vtt", ".xlsx", ".xls"];
     private readonly Client? _client = default;
 
     public StorageFilesService(IConfiguration _configuration)

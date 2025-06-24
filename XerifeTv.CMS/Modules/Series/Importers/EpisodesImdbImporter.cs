@@ -8,14 +8,14 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 namespace XerifeTv.CMS.Modules.Series.Importers;
 
 public class EpisodesImdbImporter(
-    ISeriesService _service,
-    IImdbService _imdbService,
+	ISeriesService _service,
+	IImdbService _imdbService,
 	ICacheService _cacheService) : IEpisodesImporter
 {
-    public async Task<Result<string>> ImportAsync(string seriesId)
-    {
+	public async Task<Result<string>> ImportAsync(string seriesId)
+	{
 		var importId = Guid.NewGuid().ToString();
-		var emptyDto = new ImportEpisodesResponseDto(0, 0);
+		var emptyDto = new ImportEpisodesResponseDto(0, 0, 0, 0);
 		_cacheService.SetValue<ImportEpisodesResponseDto>(importId, emptyDto);
 
 		_ = HandleImportAsync(seriesId, importId);
@@ -36,8 +36,8 @@ public class EpisodesImdbImporter(
 		return Result<ImportEpisodesResponseDto>.Success(response);
 	}
 
-    private async Task HandleImportAsync(string seriesId, string importId)
-    {
+	private async Task HandleImportAsync(string seriesId, string importId)
+	{
 		try
 		{
 			var seriesResult = await _service.Get(seriesId);
@@ -52,8 +52,13 @@ public class EpisodesImdbImporter(
 
 			void UpdateProgress()
 			{
-				var progressCount = (int)(((float) episodeCreationAttemptsCount / seriesEpisodesImdbCount) * 100);
-				var _dto = new ImportEpisodesResponseDto(createdEpisodesCount, progressCount);
+				var progressCount = (int)(((float)episodeCreationAttemptsCount / seriesEpisodesImdbCount) * 100);
+				var _dto = new ImportEpisodesResponseDto(
+					TotalItemsCount: seriesEpisodesImdbCount,
+					ImportedCount: createdEpisodesCount,
+					ProgressCount: progressCount,
+					ProcessedCount: episodeCreationAttemptsCount);
+
 				_cacheService.SetValue<ImportEpisodesResponseDto>(importId, _dto);
 			}
 
@@ -80,7 +85,7 @@ public class EpisodesImdbImporter(
 					episodeCreationAttemptsCount++;
 					UpdateProgress();
 				}
-			}		
+			}
 		}
 		catch (Exception)
 		{
@@ -89,7 +94,12 @@ public class EpisodesImdbImporter(
 			if (monitorResponse.IsSuccess)
 			{
 				var currentProgress = monitorResponse.Data;
-				var _newDto = new ImportEpisodesResponseDto(currentProgress?.ImportedCount ?? 0, 100);
+				var _newDto = new ImportEpisodesResponseDto(
+					TotalItemsCount: currentProgress?.TotalItemsCount ?? 0,
+					ImportedCount: currentProgress?.ImportedCount ?? 0,
+					ProcessedCount: currentProgress?.ProcessedCount ?? 0,
+					ProgressCount: 100);
+
 				_cacheService.SetValue<ImportEpisodesResponseDto>(importId, _newDto);
 			}
 		}

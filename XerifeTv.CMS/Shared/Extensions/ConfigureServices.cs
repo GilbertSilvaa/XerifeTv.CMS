@@ -68,6 +68,7 @@ public static class ConfigureServices
         services.AddScoped<IImdbService, ImdbService>();
         services.AddScoped<IBackgroundJobQueueRepository, BackgroundJobQueueRepository>();
         services.AddScoped<IBackgroundJobQueueService, BackgroundJobQueueService>();
+        services.AddHostedService<BackgroundJobQueueWorker>();
         return services;
     }
 

@@ -34,10 +34,23 @@ $('.btn-excel-file-submit').on('click', async function () {
   var monitorProgressInterval = 0;
 
   try {
+    $(btn).text('Processando...').prop('disabled', true);
+    $('.isBackgroundJob').prop('disabled', true);
+
     if ($('.isBackgroundJob').is(':checked')) {
       const formDataBackgroundJob = new FormData();
       formDataBackgroundJob.append('spreadsheetFile', file);
-      formDataBackgroundJob.append('type', 'REGISTER_SPREADSHEET_MOVIES');
+
+      const controllerType = controller.toUpperCase();
+      const backgroundJobTypes = {
+        SERIES: 'REGISTER_SPREADSHEET_SERIES',
+        CHANNELS: 'REGISTER_SPREADSHEET_CHANNELS',
+        MOVIES: 'REGISTER_SPREADSHEET_MOVIES',
+      };
+
+      const backgroundJobType = backgroundJobTypes[controllerType] || 'REGISTER_SPREADSHEET_MOVIES';
+
+      formDataBackgroundJob.append('type', backgroundJobType);
 
       await fetch(`/BackgroundJobQueue/AddJobInQueueSpreadsheetRegisters`, {
         method: 'POST',
@@ -49,7 +62,6 @@ $('.btn-excel-file-submit').on('click', async function () {
     }
 
     $('.isBackgroundJob').parent().hide();
-    $(btn).text('Processando...').prop('disabled', true);
     $('.select-file-container').hide();
     $('.importFromExcelModal .btn-close').hide();
     $('.process-file-container').show();

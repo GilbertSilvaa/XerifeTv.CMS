@@ -12,8 +12,9 @@ public class BackgroundJobEntity : BaseEntity
     public int TotalRecordsToProcess { get; set; }
     public int TotalFailedRecords { get; set; }
     public int TotalSuccessfulRecords { get; set; }
-    public DateTime? ProcessedAt { get; set; }
+	public int TotalProcessedRecords { get; set; }
+	public DateTime? ProcessedAt { get; set; }
     public ICollection<string> ErrorList { get; set; } = [];
-    public string? SpreadsheetFileUrl = null;
-    public string? SeriesIdImportEpisodes = null;
+    public string? SpreadsheetFileUrl { get; set; } = null;
+    public string? SeriesIdImportEpisodes { get; set; } = null;
 }
