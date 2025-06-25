@@ -10,7 +10,8 @@ namespace XerifeTv.CMS.Controllers;
 public class BackgroundJobQueueController(IBackgroundJobQueueService _service) : Controller
 {
     [HttpPost]
-    public async Task<IActionResult> AddJobInQueueSpreadsheetRegisters(AddSpreadsheetJobQueueRequestDto dto)
+	[Authorize(Roles = "admin, common")]
+	public async Task<IActionResult> AddJobInQueueSpreadsheetRegisters(AddSpreadsheetJobQueueRequestDto dto)
     {
         dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
         var response = await _service.AddJobInQueueAsync(dto);
@@ -25,7 +26,8 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service) :
     }
 
     [HttpPost]
-    public async Task<IActionResult> AddJobInQueueImportEpisodesSeries(AddImportEpisodesJobQueueRequestDto dto)
+	[Authorize(Roles = "admin, common")]
+	public async Task<IActionResult> AddJobInQueueImportEpisodesSeries(AddImportEpisodesJobQueueRequestDto dto)
     {
         dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
         var response = await _service.AddJobInQueueAsync(dto);

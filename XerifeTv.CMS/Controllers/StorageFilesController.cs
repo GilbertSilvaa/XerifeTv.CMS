@@ -11,7 +11,8 @@ public class StorageFilesController(
   ILogger<StorageFilesController> _logger) : Controller
 {
     [HttpPost]
-    public async Task<JsonResult> UploadFile(IFormFile file)
+	[Authorize(Roles = "admin, common")]
+	public async Task<JsonResult> UploadFile(IFormFile file)
     {
         if (file == null || file.Length == 0)
             return Json(Result<string>.Failure(new Error("400", "Arquivo ausente")));
