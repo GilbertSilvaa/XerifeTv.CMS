@@ -1,7 +1,6 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
-using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -40,21 +39,12 @@ public class BackgroundJobQueueService(
 			if (userResult.IsFailure)
 				return Result<AddJobQueueResponseDto>.Failure(userResult.Error);
 
-			var backgroundJob = new BackgroundJobEntity
-			{
-				Id = jobGuidId.ToString(),
-				Type = dto.Type,
-				JobName = dto.Type switch
-				{
-					EBackgroundJobType.REGISTER_SPREADSHEET_MOVIES => $"Cadastro de Filmes ({dto.SpreadsheetFile.FileName})",
-					EBackgroundJobType.REGISTER_SPREADSHEET_SERIES => $"Cadastro de Series ({dto.SpreadsheetFile.FileName})",
-					EBackgroundJobType.REGISTER_SPREADSHEET_CHANNELS => $"Cadastro de Canais ({dto.SpreadsheetFile.FileName})",
-					_ => string.Empty
-				},
-				Status = EBackgroundJobStatus.PENDING,
-				RequestedByUserId = userResult?.Data?.Id ?? string.Empty,
-				SpreadsheetFileUrl = uploadSpreadsheetResult.Data
-			};
+			var backgroundJob = BackgroundJobEntity.Create(
+				id: jobGuidId.ToString(),
+				type: dto.Type,
+				spreadsheetFileName: dto.SpreadsheetFile.FileName,
+				spreadsheetFileUrl: uploadSpreadsheetResult.Data ?? string.Empty,
+				userId: userResult?.Data?.Id ?? string.Empty);
 
 			var resultId = await _repository.CreateAsync(backgroundJob);
 
@@ -79,14 +69,10 @@ public class BackgroundJobQueueService(
 			if (userResult.IsFailure)
 				return Result<AddJobQueueResponseDto>.Failure(userResult.Error);
 
-			var backgroundJob = new BackgroundJobEntity
-			{
-				Type = EBackgroundJobType.IMPORT_EPISODES_FROM_SERIES_IMDB,
-				JobName = $"Importacao de Episodios via IMDB [{seriesResult?.Data?.ImdbId}]",
-				Status = EBackgroundJobStatus.PENDING,
-				RequestedByUserId = userResult?.Data?.Id ?? string.Empty,
-				SeriesIdImportEpisodes = dto.SeriesId
-			};
+			var backgroundJob = BackgroundJobEntity.Create(
+				seriesId: dto.SeriesId,
+				seriesImdbId: seriesResult?.Data?.ImdbId ?? string.Empty,
+				userId: userResult?.Data?.Id ?? string.Empty);
 
 			var resultId = await _repository.CreateAsync(backgroundJob);
 
@@ -123,31 +109,14 @@ public class BackgroundJobQueueService(
 	{
 		try
 		{
-			var entity = await _repository.GetAsync(dto.Id);
+			var response = await _repository.GetAsync(dto.Id);
 
-			if (entity == null)
+			if (response == null)
 				return Result<string>.Failure(new Error("404", "Background Job nao encontrado"));
+	
+			await _repository.UpdateAsync(response.Update(dto));
 
-			if (entity.Status == EBackgroundJobStatus.COMPLETED || entity.Status == EBackgroundJobStatus.FAILED)
-				return Result<string>.Failure(new Error("400", "Background Job ja concluido"));
-
-			if (entity.TotalProcessedRecords > dto.TotalProcessedRecords)
-				return Result<string>.Failure(new Error("409", "Nao foi possível reduzir o progresso. O valor atual ja esta maior ao informado"));
-
-			if (dto.Status == EBackgroundJobStatus.PROCESSING && entity.Status != EBackgroundJobStatus.PROCESSING)
-				entity.ProcessedAt = DateTime.UtcNow;
-
-			entity.Status = dto.Status;
-			entity.TotalRecordsToProcess = dto.TotalRecordsToProcess;
-			entity.TotalFailedRecords = dto.TotalFailedRecords;
-			entity.TotalSuccessfulRecords = dto.TotalSuccessfulRecords;
-			entity.TotalProcessedRecords = dto.TotalProcessedRecords;
-			entity.ErrorList = dto.ErrorList;
-			entity.UpdateAt = DateTime.UtcNow;
-
-			await _repository.UpdateAsync(entity);
-
-			return Result<string>.Success(entity.Id);
+			return Result<string>.Success(response.Id);
 		}
 		catch (Exception ex)
 		{
