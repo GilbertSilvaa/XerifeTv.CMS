@@ -18,7 +18,7 @@ public class ContentController(IContentService _service, ILogger<ContentControll
           currentPage ?? 1,
           limit ?? 5);
 
-        var response = await _service.GetMoviesGroupByCategory(_dto);
+        var response = await _service.GetMoviesGroupByCategoryAsync(_dto);
         _logger.LogInformation("Request Content API /Movies");
 
         return Ok(response.IsSuccess ? response.Data : []);
@@ -28,7 +28,7 @@ public class ContentController(IContentService _service, ILogger<ContentControll
     [Route("Movies/{category}")]
     public async Task<IActionResult> MoviesCategory(string category, int? currentPage, int? limit)
     {
-        var response = await _service.GetMoviesByCategory(category, currentPage, limit);
+        var response = await _service.GetMoviesByCategoryAsync(category, currentPage, limit);
         _logger.LogInformation($"Request Content API /Movies/{category}");
 
         return Ok(response.IsSuccess ? response.Data : new object());
@@ -43,7 +43,7 @@ public class ContentController(IContentService _service, ILogger<ContentControll
           currentPage ?? 1,
           limit ?? 5);
 
-        var response = await _service.GetSeriesGroupByCategory(_dto);
+        var response = await _service.GetSeriesGroupByCategoryAsync(_dto);
         _logger.LogInformation("Request Content API /Series");
 
         return Ok(response.IsSuccess ? response.Data : []);
@@ -53,7 +53,7 @@ public class ContentController(IContentService _service, ILogger<ContentControll
     [Route("Series/{category}")]
     public async Task<IActionResult> SeriesCategory(string category, int? limit)
     {
-        var response = await _service.GetSeriesByCategory(category, limit);
+        var response = await _service.GetSeriesByCategoryAsync(category, limit);
         _logger.LogInformation($"Request Content API /Series/{category}");
 
         return Ok(response.IsSuccess ? response.Data : []);
@@ -63,7 +63,7 @@ public class ContentController(IContentService _service, ILogger<ContentControll
     [Route("Series/Episodes/{serieId}/{season}")]
     public async Task<IActionResult> SeriesEpisodes(string serieId, int season)
     {
-        var response = await _service.GetEpisodesSeriesBySeason(serieId, season);
+        var response = await _service.GetEpisodesSeriesBySeasonAsync(serieId, season);
         _logger.LogInformation($"Request Content API /Series/Episodes/{serieId}/{season}");
 
         return Ok(response.IsSuccess ? response.Data : []);
@@ -78,7 +78,7 @@ public class ContentController(IContentService _service, ILogger<ContentControll
           currentPage ?? 1,
           limit ?? 5);
 
-        var response = await _service.GetChannelsGroupByCategory(_dto);
+        var response = await _service.GetChannelsGroupByCategoryAsync(_dto);
         _logger.LogInformation("Request Content API /Channels");
 
         return Ok(response.IsSuccess ? response.Data : []);
@@ -88,7 +88,7 @@ public class ContentController(IContentService _service, ILogger<ContentControll
     [Route("Search/{title}")]
     public async Task<IActionResult> ContentsByTitle(string title, int? limit)
     {
-        var response = await _service.GetContentsByTitle(title, limit);
+        var response = await _service.GetContentsByTitleAsync(title, limit);
         _logger.LogInformation($"Request Content API /Search/{title}");
 
         return Ok(response.IsSuccess ? response.Data : new object());

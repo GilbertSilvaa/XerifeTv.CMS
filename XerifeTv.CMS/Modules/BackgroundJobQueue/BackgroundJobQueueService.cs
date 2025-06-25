@@ -18,7 +18,7 @@ public class BackgroundJobQueueService(
 {
 	private readonly string[] _acceptedExtensions = [".xlsx", ".xls"];
 
-	public async Task<Result<AddJobQueueResponseDto>> AddJobInQueue(AddSpreadsheetJobQueueRequestDto dto)
+	public async Task<Result<AddJobQueueResponseDto>> AddJobInQueueAsync(AddSpreadsheetJobQueueRequestDto dto)
 	{
 		try
 		{
@@ -35,7 +35,7 @@ public class BackgroundJobQueueService(
 			if (uploadSpreadsheetResult.IsFailure)
 				return Result<AddJobQueueResponseDto>.Failure(uploadSpreadsheetResult.Error);
 
-			var userResult = await _userService.GetByUsername(dto.RequestedByUsername);
+			var userResult = await _userService.GetByUsernameAsync(dto.RequestedByUsername);
 
 			if (userResult.IsFailure)
 				return Result<AddJobQueueResponseDto>.Failure(userResult.Error);
@@ -67,14 +67,14 @@ public class BackgroundJobQueueService(
 		}
 	}
 
-	public async Task<Result<AddJobQueueResponseDto>> AddJobInQueue(AddImportEpisodesJobQueueRequestDto dto)
+	public async Task<Result<AddJobQueueResponseDto>> AddJobInQueueAsync(AddImportEpisodesJobQueueRequestDto dto)
 	{
 		try
 		{
-			var seriesResult = await _seriesService.Get(dto.SeriesId);
+			var seriesResult = await _seriesService.GetAsync(dto.SeriesId);
 			if (seriesResult.IsFailure) return Result<AddJobQueueResponseDto>.Failure(seriesResult.Error);
 
-			var userResult = await _userService.GetByUsername(dto.RequestedByUsername);
+			var userResult = await _userService.GetByUsernameAsync(dto.RequestedByUsername);
 
 			if (userResult.IsFailure)
 				return Result<AddJobQueueResponseDto>.Failure(userResult.Error);
@@ -99,7 +99,7 @@ public class BackgroundJobQueueService(
 		}
 	}
 
-	public async Task<Result<PagedList<GetBackgroundJobResponseDto>>> GetByFilter(GetBackgroundJobsByFilterRequestDto dto)
+	public async Task<Result<PagedList<GetBackgroundJobResponseDto>>> GetByFilterAsync(GetBackgroundJobsByFilterRequestDto dto)
 	{
 		try
 		{
@@ -119,7 +119,7 @@ public class BackgroundJobQueueService(
 		}
 	}
 
-	public async Task<Result<string>> Update(UpdateBackgroundJobRequestDto dto)
+	public async Task<Result<string>> UpdateAsync(UpdateBackgroundJobRequestDto dto)
 	{
 		try
 		{
@@ -156,7 +156,7 @@ public class BackgroundJobQueueService(
 		}
 	}
 
-	public async Task<Result<bool>> Delete(string id)
+	public async Task<Result<bool>> DeleteAsync(string id)
 	{
 		try
 		{

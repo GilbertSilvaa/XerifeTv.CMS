@@ -40,7 +40,7 @@ public class BackgroundJobQueueWorker(
 				limitResults: 1,
 				currentPage: 1);
 
-			var pendingJobsResult = await backgroundJobQueueService.GetByFilter(filterJobsPendingDto);
+			var pendingJobsResult = await backgroundJobQueueService.GetByFilterAsync(filterJobsPendingDto);
 
 			if (pendingJobsResult.IsFailure)
 				throw new Exception(pendingJobsResult.Error.Description);
@@ -120,12 +120,12 @@ public class BackgroundJobQueueWorker(
 						? EBackgroundJobStatus.FAILED
 						: EBackgroundJobStatus.COMPLETED;
 
-					await backgroundJobQueueService.Update(updateBackgroundJobDto);
+					await backgroundJobQueueService.UpdateAsync(updateBackgroundJobDto);
 
 					break; //finish
 				}
 
-				await backgroundJobQueueService.Update(updateBackgroundJobDto);
+				await backgroundJobQueueService.UpdateAsync(updateBackgroundJobDto);
 			}
 		}
 		catch (Exception ex)
@@ -175,12 +175,12 @@ public class BackgroundJobQueueWorker(
 						? EBackgroundJobStatus.FAILED
 						: EBackgroundJobStatus.COMPLETED;
 
-					await backgroundJobQueueService.Update(updateBackgroundJobDto);
+					await backgroundJobQueueService.UpdateAsync(updateBackgroundJobDto);
 
 					break; //finish
 				}
 
-				await backgroundJobQueueService.Update(updateBackgroundJobDto);
+				await backgroundJobQueueService.UpdateAsync(updateBackgroundJobDto);
 			}
 		}
 		catch (Exception ex)

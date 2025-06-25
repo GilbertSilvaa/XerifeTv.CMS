@@ -29,7 +29,7 @@ public class SeriesController(
 
 		if (filter is ESeriesSearchFilter && !string.IsNullOrEmpty(search))
 		{
-			result = await _service.GetByFilter(
+			result = await _service.GetByFilterAsync(
 			  new GetSeriesByFilterRequestDto(
 				filter,
 				search,
@@ -42,7 +42,7 @@ public class SeriesController(
 		}
 		else
 		{
-			result = await _service.Get(currentPage ?? 1, limitResultsPage);
+			result = await _service.GetAsync(currentPage ?? 1, limitResultsPage);
 		}
 
 		if (result.IsSuccess)
@@ -63,7 +63,7 @@ public class SeriesController(
 	{
 		if (id is not null)
 		{
-			var response = await _service.Get(id);
+			var response = await _service.GetAsync(id);
 			if (response.IsSuccess) return View(response.Data);
 		}
 
@@ -73,7 +73,7 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> Create(CreateSeriesRequestDto dto)
 	{
-		var response = await _service.Create(dto);
+		var response = await _service.CreateAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -87,7 +87,7 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> Update(UpdateSeriesRequestDto dto)
 	{
-		var response = await _service.Update(dto);
+		var response = await _service.UpdateAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -103,7 +103,7 @@ public class SeriesController(
 	{
 		if (id is not null)
 		{
-			var response = await _service.Delete(id);
+			var response = await _service.DeleteAsync(id);
 
 			TempData["Notification"] = response.IsFailure
 			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -122,7 +122,7 @@ public class SeriesController(
 		ViewBag.SerieId = id;
 		ViewBag.SeasonFilter = seasonFilter;
 
-		var response = await _service.GetEpisodesBySeason(id, seasonFilter ?? 1, includeDisabled: true);
+		var response = await _service.GetEpisodesBySeasonAsync(id, seasonFilter ?? 1, includeDisabled: true);
 
 		if (response.IsSuccess)
 		{
@@ -138,7 +138,7 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> CreateEpisode(CreateEpisodeRequestDto dto)
 	{
-		var response = await _service.CreateEpisode(dto);
+		var response = await _service.CreateEpisodeAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -152,7 +152,7 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> UpdateEpisode(UpdateEpisodeRequestDto dto)
 	{
-		var response = await _service.UpdateEpisode(dto);
+		var response = await _service.UpdateEpisodeAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -168,7 +168,7 @@ public class SeriesController(
 	{
 		if (serieId is not null && id is not null)
 		{
-			var response = await _service.DeleteEpisode(serieId, id);
+			var response = await _service.DeleteEpisodeAsync(serieId, id);
 
 			TempData["Notification"] = response.IsFailure
 			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)

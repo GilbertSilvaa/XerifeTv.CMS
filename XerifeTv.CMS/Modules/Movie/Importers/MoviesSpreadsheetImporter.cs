@@ -120,7 +120,7 @@ public class MoviesSpreadsheetImporter(
 					VideoSubtitle = movieItem.Video?.Subtitle
 				};
 
-				var response = await _service.Create(createMovieDto);
+				var response = await _service.CreateAsync(createMovieDto);
 
 				if (response.IsSuccess)
 				{

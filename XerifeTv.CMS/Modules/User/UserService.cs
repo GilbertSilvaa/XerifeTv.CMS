@@ -13,7 +13,7 @@ public sealed class UserService(
   ITokenService _tokenService,
   IEmailService _emailService) : IUserService
 {
-    public async Task<Result<PagedList<GetUserResponseDto>>> Get(int currentPage, int limit)
+    public async Task<Result<PagedList<GetUserResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
@@ -35,7 +35,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<GetUserResponseDto?>> GetByUsername(string username)
+    public async Task<Result<GetUserResponseDto?>> GetByUsernameAsync(string username)
     {
         try
         {
@@ -45,7 +45,7 @@ public sealed class UserService(
                 return Result<GetUserResponseDto?>.Failure(
                   new Error("404", "Usuario nao encontrado"));
 
-            return Result<GetUserResponseDto>.Success(GetUserResponseDto.FromEntity(response));
+			return Result<GetUserResponseDto?>.Success(GetUserResponseDto.FromEntity(response));
         }
         catch (Exception ex)
         {
@@ -54,7 +54,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<string>> Register(RegisterUserRequestDto dto)
+    public async Task<Result<string>> RegisterAsync(RegisterUserRequestDto dto)
     {
         try
         {
@@ -83,7 +83,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<LoginUserResponseDto>> Login(LoginUserRequestDto dto)
+    public async Task<Result<LoginUserResponseDto>> LoginAsync(LoginUserRequestDto dto)
     {
         try
         {
@@ -113,7 +113,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<string>> Update(UpdateUserRequestDto dto)
+    public async Task<Result<string>> UpdateAsync(UpdateUserRequestDto dto)
     {
         try
         {
@@ -150,7 +150,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<string>> UpdatePassword(UpdatePasswordUserRequestDto dto)
+    public async Task<Result<string>> UpdatePasswordAsync(UpdatePasswordUserRequestDto dto)
     {
         try
         {
@@ -176,7 +176,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<ValidateResetPasswordGuidResponseDto>> ResetPassword(ResetPasswordRequestDto dto)
+    public async Task<Result<ValidateResetPasswordGuidResponseDto>> ResetPasswordAsync(ResetPasswordRequestDto dto)
     {
         try
         {
@@ -200,7 +200,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<bool>> Delete(string id)
+    public async Task<Result<bool>> DeleteAsync(string id)
     {
         try
         {
@@ -222,7 +222,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<(string? newToken, string? newRefreshToken)>> TryRefreshSession(string refreshToken)
+    public async Task<Result<(string? newToken, string? newRefreshToken)>> TryRefreshSessionAsync(string refreshToken)
     {
         try
         {
@@ -244,20 +244,20 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<string>> SendEmailResetPassword(string email)
+    public async Task<Result<string>> SendEmailResetPasswordAsync(string email)
     {
         try
         {
             var user = await _repository.GetByEmailAsync(email);
 
             if (user is null)
-                return Result<string>.Failure(new Error("404", "Email nao registrado"));
+                return Result<string>.Failure(new Error("404", "Email nao encontrado"));
 
             user.ResetPasswordGuid = Guid.NewGuid();
             user.ResetPasswordGuidExpires = DateTimeOffset.UtcNow.AddMinutes(10);
 
             await _repository.UpdateAsync(user);
-            await _emailService.SendEmailResetPasswordAsync(email, user.ResetPasswordGuid.ToString());
+			await _emailService.SendEmailResetPasswordAsync(email, user.ResetPasswordGuid?.ToString() ?? string.Empty);
 
             return Result<string>.Success(email);
         }
@@ -268,7 +268,7 @@ public sealed class UserService(
         }
     }
 
-    public async Task<Result<ValidateResetPasswordGuidResponseDto>> ValidateResetPasswordGuid(Guid guid)
+    public async Task<Result<ValidateResetPasswordGuidResponseDto>> ValidateResetPasswordGuidAsync(Guid guid)
     {
         try
         {

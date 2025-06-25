@@ -100,7 +100,7 @@ public class ChannelsSpreadsheetImporter(
 					VideoUrl = channelItem.Video?.Url ?? string.Empty
 				};
 
-				var response = await _service.Create(createChannelDto);
+				var response = await _service.CreateAsync(createChannelDto);
 
 				if (response.IsSuccess)
 				{

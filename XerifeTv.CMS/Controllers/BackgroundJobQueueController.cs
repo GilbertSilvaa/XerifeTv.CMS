@@ -13,7 +13,7 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service) :
     public async Task<IActionResult> AddJobInQueueSpreadsheetRegisters(AddSpreadsheetJobQueueRequestDto dto)
     {
         dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
-        var response = await _service.AddJobInQueue(dto);
+        var response = await _service.AddJobInQueueAsync(dto);
 
         if (response.IsFailure) return BadRequest(response.Error.Description);
 
@@ -28,7 +28,7 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service) :
     public async Task<IActionResult> AddJobInQueueImportEpisodesSeries(AddImportEpisodesJobQueueRequestDto dto)
     {
         dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
-        var response = await _service.AddJobInQueue(dto);
+        var response = await _service.AddJobInQueueAsync(dto);
 
         if (response.IsFailure) return BadRequest(response.Error.Description);
 

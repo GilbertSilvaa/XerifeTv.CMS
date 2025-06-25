@@ -6,9 +6,9 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 
 public interface IBackgroundJobQueueService
 {
-    Task<Result<AddJobQueueResponseDto>> AddJobInQueue(AddSpreadsheetJobQueueRequestDto dto);
-    Task<Result<AddJobQueueResponseDto>> AddJobInQueue(AddImportEpisodesJobQueueRequestDto dto);
-    Task<Result<PagedList<GetBackgroundJobResponseDto>>> GetByFilter(GetBackgroundJobsByFilterRequestDto dto);
-    Task<Result<string>> Update(UpdateBackgroundJobRequestDto dto);
-	Task<Result<bool>> Delete(string id);
+    Task<Result<AddJobQueueResponseDto>> AddJobInQueueAsync(AddSpreadsheetJobQueueRequestDto dto);
+    Task<Result<AddJobQueueResponseDto>> AddJobInQueueAsync(AddImportEpisodesJobQueueRequestDto dto);
+    Task<Result<PagedList<GetBackgroundJobResponseDto>>> GetByFilterAsync(GetBackgroundJobsByFilterRequestDto dto);
+    Task<Result<string>> UpdateAsync(UpdateBackgroundJobRequestDto dto);
+	Task<Result<bool>> DeleteAsync(string id);
 }

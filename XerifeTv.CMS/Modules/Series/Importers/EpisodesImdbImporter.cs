@@ -40,7 +40,7 @@ public class EpisodesImdbImporter(
 	{
 		try
 		{
-			var seriesResult = await _service.Get(seriesId);
+			var seriesResult = await _service.GetAsync(seriesId);
 			if (seriesResult.IsFailure) throw new Exception(seriesResult.Error.Description);
 
 			var seriesImdbResult = await _imdbService.GetSeriesByImdbIdAsync(seriesResult.Data?.ImdbId ?? string.Empty);
@@ -69,7 +69,7 @@ public class EpisodesImdbImporter(
 
 				foreach (var episode in result.Data.Episodes)
 				{
-					var newEpisodeResult = await _service.CreateEpisode(new CreateEpisodeRequestDto
+					var newEpisodeResult = await _service.CreateEpisodeAsync(new CreateEpisodeRequestDto
 					{
 						SerieId = seriesResult.Data.Id,
 						Title = episode.Name,

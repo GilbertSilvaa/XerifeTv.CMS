@@ -152,7 +152,7 @@ public class SeriesSpreadsheetImporter(
 					NumberSeasons = seriesByImdbResponse?.Data?.NumberSeasons ?? 0
 				};
 
-				var response = await _service.Create(createSeriesDto);
+				var response = await _service.CreateAsync(createSeriesDto);
 
 				if (response.IsSuccess)
 				{
@@ -170,7 +170,7 @@ public class SeriesSpreadsheetImporter(
 
 			foreach (var item in episodeList)
 			{
-				var seriesResult = await _service.GetByImdbId(item.SeriesImdbId);
+				var seriesResult = await _service.GetByImdbIdAsync(item.SeriesImdbId);
 
 				if (seriesResult.IsFailure)
 				{
@@ -193,7 +193,7 @@ public class SeriesSpreadsheetImporter(
 					VideoSubtitle = item.Video?.Subtitle ?? string.Empty
 				};
 
-				var response = await _service.CreateEpisode(createEpisodeDto);
+				var response = await _service.CreateEpisodeAsync(createEpisodeDto);
 
 				if (response.IsSuccess)
 				{
