@@ -35,8 +35,8 @@ public class BackgroundJobQueueWorker(
 			var backgroundJobQueueService = scope.ServiceProvider.GetRequiredService<IBackgroundJobQueueService>();
 
 			var filterJobsPendingDto = new GetBackgroundJobsByFilterRequestDto(
-				filter: EBackgroundJobSearchFilter.STATUS,
-				search: $"{(int)EBackgroundJobStatus.PENDING}",
+				status: EBackgroundJobStatus.PENDING,
+				order: EBackgroundJobOrderFilter.REGISTRATION_DATE_ASC,
 				limitResults: 1,
 				currentPage: 1);
 

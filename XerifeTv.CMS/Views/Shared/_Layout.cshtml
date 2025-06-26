@@ -14,7 +14,11 @@
   pagesViewSideMenu.Add(["Series", "Index", "Séries", "fa-solid fa-video"]);
   pagesViewSideMenu.Add(["Channels", "Index", "Canais", "fa-solid fa-satellite-dish"]);
   
-  if (User.IsInRole("admin")) pagesViewSideMenu.Add(["Users", "Index", "Usuários", "fa-solid fa-users"]);
+  if (User.IsInRole("admin")) 
+    pagesViewSideMenu.Add(["Users", "Index", "Usuários", "fa-solid fa-users"]);
+
+  if (User.IsInRole("admin") || User.IsInRole("common"))
+    pagesViewSideMenu.Add(["BackgroundJobQueue", "Index", "Fila de Processamentos", "fa-solid fa-list-check"]);
   
   pagesViewSideMenu.Add(["Users", "Settings", "Configurações", "fa-solid fa-gear"]);
   

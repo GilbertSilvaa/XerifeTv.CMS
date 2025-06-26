@@ -1,6 +1,7 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -89,6 +90,16 @@ public class BackgroundJobQueueService(
 	{
 		try
 		{
+			if (dto.ResponsibleUsername is string username)
+			{
+				var userResult = await _userService.GetByUsernameAsync(username);
+
+				if (userResult.IsFailure)
+					return Result<PagedList<GetBackgroundJobResponseDto>>.Failure(userResult.Error);
+
+				dto.ResponsibleUserId = userResult?.Data?.Id ?? string.Empty;
+			}
+
 			var response = await _repository.GetByFilterAsync(dto);
 
 			var result = new PagedList<GetBackgroundJobResponseDto>(

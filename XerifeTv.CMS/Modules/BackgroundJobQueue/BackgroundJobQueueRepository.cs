@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using System.Linq.Expressions;
 using XerifeTv.CMS.Modules.Abstractions.Repositories;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
@@ -15,24 +14,20 @@ public class BackgroundJobQueueRepository(IOptions<DBSettings> options)
 {
 	public async Task<PagedList<BackgroundJobEntity>> GetByFilterAsync(GetBackgroundJobsByFilterRequestDto dto)
 	{
-		Expression<Func<BackgroundJobEntity, bool>> filterExpression = dto.Filter switch
-		{
-			EBackgroundJobSearchFilter.REQUESTING_USER => r => r.RequestedByUserId.Equals(dto.Search, StringComparison.OrdinalIgnoreCase),
-
-			EBackgroundJobSearchFilter.STATUS => r => (int)r.Status == int.Parse(dto.Search),
-
-			_ => r => r.RequestedByUserId.Equals(dto.Search, StringComparison.OrdinalIgnoreCase)
-		};
-
-		FilterDefinition<BackgroundJobEntity> filter = Builders<BackgroundJobEntity>.Filter.Where(filterExpression);
+		FilterDefinition<BackgroundJobEntity> filter = Builders<BackgroundJobEntity>.Filter
+			.Where(r => (r.Status == dto.Status || dto.Status == null) && (r.RequestedByUserId == dto.ResponsibleUserId || dto.ResponsibleUserId == null));
 
 		var count = await _collection.CountDocumentsAsync(filter);
-		var items = await _collection.Find(filter)
-		  .SortBy(r => r.CreateAt)
-		  .Skip(dto.LimitResults * (dto.CurrentPage - 1))
-		  .Limit(dto.LimitResults)
-		  .ToListAsync();
 
+		var query = _collection.Find(filter)
+		  .Skip(dto.LimitResults * (dto.CurrentPage - 1))
+		  .Limit(dto.LimitResults);
+
+		query = dto.Order == EBackgroundJobOrderFilter.REGISTRATION_DATE_DESC
+		  ? query.SortByDescending(r => r.CreateAt)
+		  : query.SortBy(r => r.CreateAt);
+
+		var items = await query.ToListAsync();
 		var totalPages = (int)Math.Ceiling(count / (decimal)dto.LimitResults);
 
 		return new PagedList<BackgroundJobEntity>(dto.CurrentPage, totalPages, items);
