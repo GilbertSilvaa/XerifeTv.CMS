@@ -87,6 +87,16 @@
       </div>
     </div>
 
+    <div class="col-12 d-none d-lg-flex justify-content-between mb-2">
+      <div class="col-1" style="max-width: 40px;"></div>
+      <div class="col-4"></div>
+      <div class="col-2 text-center"></div>
+      <div class="col-1 text-center fw-semibold" style="font-size: 17px;">registros</div>
+      <div class="col-1 text-center fw-semibold" style="font-size: 17px;">duração</div>
+      <div class="col-2 text-center fw-semibold" style="font-size: 17px;">cadastro</div>
+      <div class="col-1"></div>
+    </div>
+
     @foreach (var job in Model.Jobs)
     {
       if (job == null) continue;
@@ -138,23 +148,27 @@
 
             <div class="col-6 col-md-1">
               <div class="card-body h-100 d-flex justify-content-center align-items-center">
-                <p class="card-text">@job.TotalProcessedRecords/@job.TotalRecordsToProcess</p>
+                <p class="card-text">@job.TotalProcessedRecords/@job.TotalRecordsToProcess</p>         
               </div>
             </div>
 
             <div class="col-6 col-md-1">
               <div class="card-body h-100 d-flex justify-content-center align-items-center">
-                @if (job.ProcessedAt is DateTime && job.LastUpdatDate is DateTime)
+                @if (job.Status != EBackgroundJobStatus.PROCESSING && job.ProcessedAt is DateTime && job.LastUpdatDate is DateTime)
                 {
                   TimeSpan duration = (job.ProcessedAt.Value - job.LastUpdatDate.Value).Duration();
                   string formattedDuration = $"{(int)duration.TotalHours:00}:{duration.Minutes:00}:{duration.Seconds:00}";
                   <p class="card-text">@formattedDuration</p>
                 }
+                else
+                {
+                  <p class="card-text">-</p>
+                }
               </div>
             </div>
 
             <div class="col-6 col-md-2">
-              <div class="card-body h-100 d-flex justify-content-center justify-content-md-start align-items-center">
+              <div class="card-body h-100 d-flex justify-content-center align-items-center">
                 <p class="card-text">@job.CreateAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
               </div>
             </div>
