@@ -1,6 +1,7 @@
-﻿using XerifeTv.CMS.Modules.User.Dtos.Response;
+﻿using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
+using XerifeTv.CMS.Modules.User.Dtos.Response;
 
-namespace XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
+namespace XerifeTv.CMS.Views.BackgroundJobQueue.Models;
 
 public class BackgroundJobQueueModelView
 {

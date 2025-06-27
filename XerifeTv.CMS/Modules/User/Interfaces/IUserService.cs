@@ -8,7 +8,7 @@ public interface IUserService
 {
     Task<Result<string>> RegisterAsync(RegisterUserRequestDto dto);
     Task<Result<LoginUserResponseDto>> LoginAsync(LoginUserRequestDto dto);
-    Task<Result<PagedList<GetUserResponseDto>>> GetAsync(int currentPage, int limit);
+    Task<Result<PagedList<GetUserResponseDto>>> GetAsync(int currentPage, int limit, bool includeAdmin = false);
     Task<Result<GetUserResponseDto?>> GetByUsernameAsync(string userName);
     Task<Result<string>> UpdateAsync(UpdateUserRequestDto dto);
     Task<Result<string>> UpdatePasswordAsync(UpdatePasswordUserRequestDto dto);

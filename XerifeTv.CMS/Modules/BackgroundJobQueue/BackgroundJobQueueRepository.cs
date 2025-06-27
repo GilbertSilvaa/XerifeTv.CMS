@@ -15,7 +15,9 @@ public class BackgroundJobQueueRepository(IOptions<DBSettings> options)
 	public async Task<PagedList<BackgroundJobEntity>> GetByFilterAsync(GetBackgroundJobsByFilterRequestDto dto)
 	{
 		FilterDefinition<BackgroundJobEntity> filter = Builders<BackgroundJobEntity>.Filter
-			.Where(r => (r.Status == dto.Status || dto.Status == null) && (r.RequestedByUserId == dto.ResponsibleUserId || dto.ResponsibleUserId == null));
+			.Where(r => (r.Status == dto.Status || dto.Status == null) 
+				&& (r.RequestedByUserId == dto.ResponsibleUserId || dto.ResponsibleUserId == null)
+				&& r.CreateAt >= DateTime.UtcNow.AddDays(-30));
 
 		var count = await _collection.CountDocumentsAsync(filter);
 

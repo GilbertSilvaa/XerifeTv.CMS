@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
-using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.User.Interfaces;
 using XerifeTv.CMS.Shared.Helpers;
+using XerifeTv.CMS.Views.BackgroundJobQueue.Models;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -18,20 +18,20 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
 	public async Task<IActionResult> Index(int? currentPage, string? username, EBackgroundJobStatus? status)
 	{
 		var modelView = new BackgroundJobQueueModelView();
+		var usernameSearch = User.Identity?.Name;
 
 		if (User.IsInRole("admin"))
 		{
-			var usersResult = await _userService.GetAsync(currentPage: 1, limit: 1000);
+			usernameSearch = username ?? User.Identity?.Name;
+			var usersResult = await _userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
 			if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items ?? [];
 		}
-		else
-			username = User.Identity?.Name;
 
 		var jobsResult = await _service.GetByFilterAsync(new GetBackgroundJobsByFilterRequestDto(
 			order: EBackgroundJobOrderFilter.REGISTRATION_DATE_DESC,
 			limitResults: limitResultsPage,
 			currentPage: currentPage ?? 1,
-			responsibleUsername: username ?? User.Identity?.Name,
+			responsibleUsername: usernameSearch,
 			status));
 
 		if (jobsResult.IsSuccess)
@@ -41,7 +41,8 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
 			ViewBag.TotalPages = jobsResult.Data?.TotalPageCount ?? 1;
 			ViewBag.HasNextPage = jobsResult.Data?.HasNext;
 			ViewBag.HasPrevPage = jobsResult.Data?.HasPrevious;
-			ViewBag.Username = username ?? User.Identity?.Name;
+			ViewBag.Username = usernameSearch;
+			ViewBag.Status = status != null ? $"{(int)status}" : string.Empty;
 
 			return View(modelView);
 		}

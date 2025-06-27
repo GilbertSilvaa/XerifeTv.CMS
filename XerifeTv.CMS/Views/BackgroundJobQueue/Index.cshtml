@@ -1,15 +1,34 @@
 ﻿@using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
 @using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums
+@using XerifeTv.CMS.Views.BackgroundJobQueue.Models
 
 @model BackgroundJobQueueModelView;
 
 @{
   ViewData["Title"] = "Fila de Processamentos";
+
+  ICollection<string[]> statusList = [];
+  statusList.Add([$"{(int)EBackgroundJobStatus.PENDING}", "Pendente"]);
+  statusList.Add([$"{(int)EBackgroundJobStatus.PROCESSING}", "Processando"]);
+  statusList.Add([$"{(int)EBackgroundJobStatus.COMPLETED}", "Concluido"]);
+  statusList.Add([$"{(int)EBackgroundJobStatus.FAILED}", "Falhou"]);
 }
 
-<div class="container">
+<style>
+  .users-select-group {
+    width: 25%;
+  }
+
+  @@media (max-width: 800px) {
+    .users-select-group {
+      width: 100% !important;
+    }
+  }
+</style>
+
+<form id="page-form" asp-controller="BackgroundJobQueue" asp-action="Index" class="container">
   <header>
-    <div class="d-flex align-items-center justify-content-between gap-4">
+    <div class="d-flex align-items-center justify-content-between">
       <div class="d-flex align-items-center gap-4" style="max-width: 65%;">
         <span class="d-none d-md-inline-block text-truncate fs-3 fw-normal mw-100">
           Fila de Processamentos
@@ -18,17 +37,9 @@
 
       @if (User.IsInRole("admin"))
       {
-        <div class="d-flex justify-content-center align-items-center gap-3">
-          <select class="form-select shadow-none" name="username">
-            @if (!string.IsNullOrEmpty(ViewBag.Username) && ViewBag.Username == User.Identity?.Name)
-            {
-              <option value="@User.Identity?.Name" selected>@User.Identity?.Name</option>
-            }
-            else
-            {
-              <option value="@User.Identity?.Name">@User.Identity?.Name</option>
-            }
-
+        <div class="input-group d-flex justify-content-center align-items-center users-select-group">
+          <span class="input-group-text">Usuário</span>
+          <select class="form-select shadow-none" id="username" name="username">
             @foreach (var user in Model.Users)
             {
               if (user.UserName.Equals(ViewBag.Username))
@@ -48,6 +59,33 @@
   <hr />
 
   <div class="row mt-2">
+
+    <div class="row mb-4">
+      <div class="col-12 col-md-2">
+        <div class="w-100 d-flex justify-content-start align-items-center">
+          <select class="form-select shadow-none" id="status" name="status">
+            <option value="">Todos</option>
+            @foreach (var status in statusList)
+            {
+              if (status[0].Equals(ViewBag.Status))
+              {
+                <option value="@status[0]" selected>@status[1]</option>
+              }
+              else
+              {
+                <option value="@status[0]">@status[1]</option>
+              }
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="col-md-10 d-none d-md-flex justify-content-end align-items-center">
+        <a class="fs-5" role="button" onclick="location.reload()">
+          <i class="fa-solid fa-rotate"></i>
+        </a>
+      </div>
+    </div>
 
     @foreach (var job in Model.Jobs)
     {
@@ -124,7 +162,7 @@
             <div class="col-12 col-md-1 d-flex justify-content-end align-items-center">
               @if (job.ErrorList.Count > 0)
               {
-                <button class="btn px-4 border-0 bg-transparent text-danger shadow-none">
+                <button type="button" class="btn px-4 border-0 bg-transparent text-danger shadow-none">
                   <i class="fa-solid fa-circle-exclamation fa-lg"></i>
                 </button>
               }
@@ -134,7 +172,23 @@
       </div>
     }
 
+    @if (Model?.Jobs.Count() <= 0)
+    {
+      <p>Nenhum registro encontrado nos últimos 30 dias.</p>
+    }
+
   </div>
 
-  @await Html.PartialAsync("_Pagination")
-</div>
+  @await Html.PartialAsync("_Pagination", new Dictionary<string, string>
+  {
+    { "status", ViewBag.Status },
+    { "username", ViewBag.Username }
+  })
+
+</form>
+
+@section scripts {
+  <script>
+    $('#username, #status').change(() => $('#page-form').trigger('submit'));
+  </script>
+}
