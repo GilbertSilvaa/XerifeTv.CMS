@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
+using XerifeTv.CMS.Modules.User.Enums;
 using XerifeTv.CMS.Modules.User.Interfaces;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.BackgroundJobQueue.Models;
@@ -24,7 +25,7 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
 		{
 			usernameSearch = username ?? User.Identity?.Name;
 			var usersResult = await _userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
-			if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items ?? [];
+			if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => u.Role != EUserRole.VISITOR) ?? [];
 		}
 
 		var jobsResult = await _service.GetByFilterAsync(new GetBackgroundJobsByFilterRequestDto(
