@@ -8,7 +8,7 @@ namespace XerifeTv.CMS.Modules.Channel;
 
 public sealed class ChannelService(IChannelRepository _repository) : IChannelService
 {
-    public async Task<Result<PagedList<GetChannelResponseDto>>> Get(int currentPage, int limit)
+    public async Task<Result<PagedList<GetChannelResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
@@ -28,7 +28,7 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
         }
     }
 
-    public async Task<Result<GetChannelResponseDto?>> Get(string id)
+    public async Task<Result<GetChannelResponseDto?>> GetAsync(string id)
     {
         try
         {
@@ -48,7 +48,7 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
         }
     }
 
-    public async Task<Result<string>> Create(CreateChannelRequestDto dto)
+    public async Task<Result<string>> CreateAsync(CreateChannelRequestDto dto)
     {
         try
         {
@@ -71,7 +71,7 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
         }
     }
 
-    public async Task<Result<string>> Update(UpdateChannelRequestDto dto)
+    public async Task<Result<string>> UpdateAsync(UpdateChannelRequestDto dto)
     {
         try
         {
@@ -100,7 +100,7 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
         }
     }
 
-    public async Task<Result<bool>> Delete(string id)
+    public async Task<Result<bool>> DeleteAsync(string id)
     {
         try
         {
@@ -119,7 +119,7 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
         }
     }
 
-    public async Task<Result<PagedList<GetChannelResponseDto>>> GetByFilter(GetChannelsByFilterRequestDto dto)
+    public async Task<Result<PagedList<GetChannelResponseDto>>> GetByFilterAsync(GetChannelsByFilterRequestDto dto)
     {
         try
         {

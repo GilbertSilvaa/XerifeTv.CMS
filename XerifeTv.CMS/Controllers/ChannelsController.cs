@@ -26,7 +26,7 @@ public class ChannelsController(
 
         if (filter is EChannelSearchFilter && !string.IsNullOrEmpty(search))
         {
-            result = await _service.GetByFilter(
+            result = await _service.GetByFilterAsync(
               new GetChannelsByFilterRequestDto(
                 filter,
                 search,
@@ -39,7 +39,7 @@ public class ChannelsController(
         }
         else
         {
-            result = await _service.Get(currentPage ?? 1, limitResultsPage);
+            result = await _service.GetAsync(currentPage ?? 1, limitResultsPage);
         }
 
         if (result.IsSuccess)
@@ -60,7 +60,7 @@ public class ChannelsController(
     {
         if (id is not null)
         {
-            var response = await _service.Get(id);
+            var response = await _service.GetAsync(id);
             if (response.IsSuccess) return View(response.Data);
         }
 
@@ -70,7 +70,7 @@ public class ChannelsController(
     [Authorize(Roles = "admin, common")]
     public async Task<IActionResult> Create(CreateChannelRequestDto dto)
     {
-        var response = await _service.Create(dto);
+        var response = await _service.CreateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -84,7 +84,7 @@ public class ChannelsController(
     [Authorize(Roles = "admin, common")]
     public async Task<IActionResult> Update(UpdateChannelRequestDto dto)
     {
-        var response = await _service.Update(dto);
+        var response = await _service.UpdateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -100,7 +100,7 @@ public class ChannelsController(
     {
         if (id is not null)
         {
-            var response = await _service.Delete(id);
+            var response = await _service.DeleteAsync(id);
 
             TempData["Notification"] = response.IsFailure
               ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)

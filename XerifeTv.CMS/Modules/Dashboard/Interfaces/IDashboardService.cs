@@ -5,5 +5,5 @@ namespace XerifeTv.CMS.Modules.Dashboard.Interfaces;
 
 public interface IDashboardService
 {
-    Task<Result<GetDashboardDataRequestDto>> Get();
+    Task<Result<GetDashboardDataRequestDto>> GetAsync();
 }

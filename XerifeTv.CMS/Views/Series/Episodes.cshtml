@@ -195,6 +195,19 @@
     $('#btn-import-episodes').click(async () => {
         if(!confirm('Confirmar ação?')) return;
 
+        if (confirm('Deseja executar o processamento em segundo plano?')) {
+            const formDataBackgroundJob = new FormData();
+            formDataBackgroundJob.append('seriesId', '@Model.SerieId');
+
+            await fetch(`/BackgroundJobQueue/AddJobInQueueImportEpisodesSeries`, {
+                method: 'POST',
+                body: formDataBackgroundJob
+            });
+
+            location.reload();
+            return;
+        }
+
         $('#importEpisodesProgressModal').modal('show');
 
         var monitorProgressInterval = 0;
