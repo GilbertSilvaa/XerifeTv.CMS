@@ -91,7 +91,7 @@ $('.btn-excel-file-submit').on('click', async function () {
         $('.finish-process-container .success-count').text(successCount);
         $('.finish-process-container .fail-count').text(failCount);
 
-        $(errorList).each((index, message) => {
+        $(errorList).each((_, message) => {
           const errorItem = document.createElement('li');
           errorItem.textContent = message;
           errorItem.classList.add('list-group-item');

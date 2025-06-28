@@ -87,17 +87,20 @@
       </div>
     </div>
 
-    <div class="col-12 d-none d-lg-flex justify-content-between mb-2">
-      <div class="col-1" style="max-width: 40px;"></div>
-      <div class="col-4"></div>
-      <div class="col-2 text-center"></div>
-      <div class="col-1 text-center fw-semibold" style="font-size: 17px;">registros</div>
-      <div class="col-1 text-center fw-semibold" style="font-size: 17px;">duração</div>
-      <div class="col-2 text-center fw-semibold" style="font-size: 17px;">cadastro</div>
-      <div class="col-1"></div>
-    </div>
+    @if (Model?.Jobs.Count() > 0)
+    {
+      <div class="col-12 d-none d-lg-flex justify-content-between mb-2">
+        <div class="col-1" style="max-width: 40px;"></div>
+        <div class="col-4"></div>
+        <div class="col-2 text-center"></div>
+        <div class="col-1 text-center fw-semibold" style="font-size: 17px;">registros</div>
+        <div class="col-1 text-center fw-semibold" style="font-size: 17px;">duração</div>
+        <div class="col-2 text-center fw-semibold" style="font-size: 17px;">cadastro</div>
+        <div class="col-1"></div>
+      </div>   
+    }
 
-    @foreach (var job in Model.Jobs)
+    @foreach (var job in Model?.Jobs ?? [])
     {
       if (job == null) continue;
 
@@ -174,9 +177,9 @@
             </div>
 
             <div class="col-12 col-md-1 d-flex justify-content-end align-items-center">
-              @if (job.ErrorList.Count > 0)
+              @if (job.Status == EBackgroundJobStatus.FAILED && job.ErrorList.Count > 0)
               {
-                <button type="button" class="btn px-4 border-0 bg-transparent text-danger shadow-none">
+                <button type="button" class="btn px-4 border-0 bg-transparent text-danger shadow-none" data-bs-toggle="modal" data-bs-target="#errorListModal_@job.Id">
                   <i class="fa-solid fa-circle-exclamation fa-lg"></i>
                 </button>
               }
@@ -184,6 +187,28 @@
           </div>
         </div>
       </div>
+
+      @if (job.Status == EBackgroundJobStatus.FAILED && job.ErrorList.Count > 0)
+      {
+        <div class="modal fade" id="errorListModal_@job.Id" tabindex="-1" aria-labelledby="errorListModalLabel_@job.Id" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="errorListModalLabel">Lista de Erros [@job.JobName]</h1>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ol class="list-group list-group-numbered">
+                    @foreach (var errorItem in job.ErrorList)
+                    {
+                      <li class="list-group-item">@errorItem</li>                 
+                    }
+                </ol>
+            </div>
+            </div>
+          </div>
+        </div>    
+      }
     }
 
     @if (Model?.Jobs.Count() <= 0)
