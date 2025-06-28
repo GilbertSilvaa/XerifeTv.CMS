@@ -1,7 +1,9 @@
 ﻿namespace XerifeTv.CMS.Modules.Common.Dtos;
 
 public record ImportSpreadsheetResponseDto(
+    int? TotalItemsCount,
     int? SuccessCount,
     int? FailCount,
-    string[] ErrorList,
+	int? ProcessedCount,
+	string[] ErrorList,
     int ProgressCount);

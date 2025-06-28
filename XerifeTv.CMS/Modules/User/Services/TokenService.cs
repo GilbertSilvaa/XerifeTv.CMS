@@ -46,7 +46,7 @@ public sealed class TokenService(IConfiguration _configuration) : ITokenService
         var signInCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
         var tokenClaims = new[] { new Claim(ClaimTypes.Name, user.UserName) };
 
-        int.TryParse(_configuration["Jwt:RefreshExpirationTimeInMinutes"], out var expireTimeInMinutes);
+        _ = int.TryParse(_configuration["Jwt:RefreshExpirationTimeInMinutes"], out var expireTimeInMinutes);
 
         var tokenOptions = new JwtSecurityToken(
             issuer,

@@ -95,7 +95,7 @@
             </span>
           }
           
-          @if (@movie.Disabled)
+          @if (@movie?.Disabled ?? false)
           {
             <span 
               class="position-absolute text-danger"

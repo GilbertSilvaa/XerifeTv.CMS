@@ -10,7 +10,7 @@ public class HomeController(IDashboardService _service, ILogger<HomeController> 
 {
     public async Task<IActionResult> Index()
     {
-        var response = await _service.Get();
+        var response = await _service.GetAsync();
 
         _logger.LogInformation($"{User.Identity?.Name} accessed the dashboard page");
 

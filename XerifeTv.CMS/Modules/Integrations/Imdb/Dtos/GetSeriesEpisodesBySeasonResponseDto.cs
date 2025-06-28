@@ -10,7 +10,9 @@ public class GetSeriesEpisodesBySeasonResponseDto
 
 public class EpisodeDto
 {
-    [JsonProperty("air_date")]
+    const string BannerUrlDefault = "https://img.freepik.com/fotos-gratis/melhores-amigos-a-ver-o-servico-de-streaming-juntos-em-casa_23-2149007840.jpg";
+
+	[JsonProperty("air_date")]
     public DateTime? AirDate { get; set; }
 
     [JsonProperty("episode_number")]
@@ -33,8 +35,10 @@ public class EpisodeDto
     public string BannerUrl
     {
         get => _bannerUrl;
-        set => _bannerUrl = $"https://images.plex.tv/photo?size=medium-360&scale=1&url=https://image.tmdb.org/t/p/original{value}";
-    }
+        set => _bannerUrl = !string.IsNullOrEmpty(value)
+            ? $"https://images.plex.tv/photo?size=medium-360&scale=1&url=https://image.tmdb.org/t/p/original{value}"
+            : $"https://images.plex.tv/photo?size=medium-360&scale=1&url={BannerUrlDefault}";
+	}
 
     [JsonProperty("runtime")]
     public int? Runtime { get; set; }

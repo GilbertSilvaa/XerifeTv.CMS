@@ -8,7 +8,7 @@ namespace XerifeTv.CMS.Modules.Movie;
 
 public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
 {
-    public async Task<Result<PagedList<GetMovieResponseDto>>> Get(int currentPage, int limit)
+    public async Task<Result<PagedList<GetMovieResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
@@ -28,7 +28,7 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
         }
     }
 
-    public async Task<Result<GetMovieResponseDto?>> Get(string id)
+    public async Task<Result<GetMovieResponseDto?>> GetAsync(string id)
     {
         try
         {
@@ -48,7 +48,7 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
         }
     }
 
-    public async Task<Result<string>> Create(CreateMovieRequestDto dto)
+    public async Task<Result<string>> CreateAsync(CreateMovieRequestDto dto)
     {
         try
         {
@@ -69,7 +69,7 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
         }
     }
 
-    public async Task<Result<string>> Update(UpdateMovieRequestDto dto)
+    public async Task<Result<string>> UpdateAsync(UpdateMovieRequestDto dto)
     {
         try
         {
@@ -96,7 +96,7 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
         }
     }
 
-    public async Task<Result<bool>> Delete(string id)
+    public async Task<Result<bool>> DeleteAsync(string id)
     {
         try
         {
@@ -115,7 +115,7 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
         }
     }
 
-    public async Task<Result<PagedList<GetMovieResponseDto>>> GetByFilter(GetMoviesByFilterRequestDto dto)
+    public async Task<Result<PagedList<GetMovieResponseDto>>> GetByFilterAsync(GetMoviesByFilterRequestDto dto)
     {
         try
         {

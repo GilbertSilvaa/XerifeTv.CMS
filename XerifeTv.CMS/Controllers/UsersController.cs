@@ -20,7 +20,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> Index()
     {
-        var response = await _service.Get(1, 20);
+        var response = await _service.GetAsync(1, 20);
 
         _logger.LogInformation($"{User.Identity?.Name} accessed the users page");
 
@@ -43,7 +43,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     [AllowAnonymous]
     public async Task<IActionResult> SignIn(LoginUserRequestDto dto)
     {
-        var response = await _service.Login(dto);
+        var response = await _service.LoginAsync(dto);
 
         if (response.IsFailure)
         {
@@ -76,7 +76,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
         if (User.Identity != null && User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Home");
 
-        var response = await _service.SendEmailResetPassword(email);
+        var response = await _service.SendEmailResetPasswordAsync(email);
 
         if (response.IsFailure)
         {
@@ -97,7 +97,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
         if (User.Identity != null && User.Identity.IsAuthenticated)
             return RedirectToAction("Index", "Home");
 
-        var response = await _service.ValidateResetPasswordGuid(new Guid(code));
+        var response = await _service.ValidateResetPasswordGuidAsync(new Guid(code));
 
         if (response.IsFailure)
         {
@@ -121,7 +121,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
             return RedirectToAction("ResetPassword", new { code = dto.CodeGuid });
         }
 
-        var response = await _service.ResetPassword(dto);
+        var response = await _service.ResetPasswordAsync(dto);
 
         if (response.IsFailure)
         {
@@ -148,7 +148,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> Register(RegisterUserRequestDto dto)
     {
-        var response = await _service.Register(dto);
+        var response = await _service.RegisterAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -163,7 +163,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     [Authorize]
     public async Task<IActionResult> UpdateProfile(UpdateUserRequestDto dto)
     {
-        var response = await _service.Update(dto);
+        var response = await _service.UpdateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -184,7 +184,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
             return RedirectToAction("Settings");
         }
 
-        var response = await _service.UpdatePassword(dto);
+        var response = await _service.UpdatePasswordAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -199,7 +199,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> Update(UpdateUserRequestDto dto)
     {
-        var response = await _service.Update(dto);
+        var response = await _service.UpdateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -212,7 +212,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(string id)
     {
-        var response = await _service.Delete(id);
+        var response = await _service.DeleteAsync(id);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -239,7 +239,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
         if (string.IsNullOrEmpty(refreshToken))
             return RedirectToAction("SignIn");
 
-        var response = await _service.TryRefreshSession(refreshToken);
+        var response = await _service.TryRefreshSessionAsync(refreshToken);
 
         if (response.IsFailure)
             return RedirectToAction("SignIn");
@@ -263,7 +263,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     [Authorize]
     public async Task<IActionResult> Settings()
     {
-        var response = await _service.GetByUsername(User.Identity?.Name ?? string.Empty);
+        var response = await _service.GetByUsernameAsync(User.Identity?.Name ?? string.Empty);
 
         if (response.IsFailure) return Logout();
 

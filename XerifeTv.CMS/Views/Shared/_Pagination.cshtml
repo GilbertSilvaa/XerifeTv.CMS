@@ -1,12 +1,24 @@
-﻿@{
+﻿@using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums
+
+@{
     int currentPage = (int)ViewBag.CurrentPage;
     int totalPages = (int)ViewBag.TotalPages;
     int maxPagesToShow = 3;
     int half = maxPagesToShow / 2;
     string action = ViewBag.Action ?? "Index";
     string controller = ViewBag.Controller ?? ViewContext.RouteData.Values["controller"]?.ToString() ?? string.Empty;
-    string filter = ViewBag.Filter;
-    string search = ViewBag.Search;
+
+    var routeValues = new Dictionary<string, string>
+    {
+        { "filter", ViewBag.Filter },
+        { "search", ViewBag.Search }
+    };
+
+    var additionalRouteValues = ViewData.Model as Dictionary<string, string>;
+
+    if (additionalRouteValues != null)
+        foreach (var additionalRoute in additionalRouteValues)
+            routeValues[additionalRoute.Key] = additionalRoute.Value;
 }
 
 @if (totalPages > 1)
@@ -17,9 +29,8 @@
                 <a class="page-link"
                    asp-controller="@controller"
                    asp-action="@action"
-                   asp-route-currentPage="@(currentPage - 1)"
-                   asp-route-filter="@filter"
-                   asp-route-search="@search">
+                   asp-all-route-data="routeValues"
+                   asp-route-currentPage="@(currentPage - 1)">
                     &laquo;
                 </a>
             </li>
@@ -32,9 +43,8 @@
                         <a class="page-link"
                            asp-controller="@controller"
                            asp-action="@action"
-                           asp-route-currentPage="@i"
-                           asp-route-filter="@filter"
-                           asp-route-search="@search">
+                           asp-all-route-data="routeValues"
+                           asp-route-currentPage="@i">
                             @i
                         </a>
                     </li>
@@ -46,9 +56,8 @@
                     <a class="page-link"
                        asp-controller="@controller"
                        asp-action="@action"
-                       asp-route-currentPage="1"
-                       asp-route-filter="@filter"
-                       asp-route-search="@search">
+                       asp-all-route-data="routeValues"
+                       asp-route-currentPage="1">
                         1
                     </a>
                 </li>
@@ -76,9 +85,8 @@
                         <a class="page-link"
                            asp-controller="@controller"
                            asp-action="@action"
-                           asp-route-currentPage="@i"
-                           asp-route-filter="@filter"
-                           asp-route-search="@search">
+                           asp-all-route-data="routeValues"
+                           asp-route-currentPage="@i">
                             @i
                         </a>
                     </li>
@@ -93,9 +101,8 @@
                     <a class="page-link"
                        asp-controller="@controller"
                        asp-action="@action"
-                       asp-route-currentPage="@totalPages"
-                       asp-route-filter="@filter"
-                       asp-route-search="@search">
+                       asp-all-route-data="routeValues"
+                       asp-route-currentPage="@totalPages">
                         @totalPages
                     </a>
                 </li>
@@ -105,9 +112,8 @@
                 <a class="page-link"
                    asp-controller="@controller"
                    asp-action="@action"
-                   asp-route-currentPage="@(currentPage + 1)"
-                   asp-route-filter="@filter"
-                   asp-route-search="@search">
+                   asp-all-route-data="routeValues"
+                   asp-route-currentPage="@(currentPage + 1)">
                     &raquo;
                 </a>
             </li>

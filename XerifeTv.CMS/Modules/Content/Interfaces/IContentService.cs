@@ -1,21 +1,18 @@
 ﻿using XerifeTv.CMS.Modules.Common;
-using XerifeTv.CMS.Modules.Content.Dtos.Response;
-using XerifeTv.CMS.Modules.Movie.Dtos.Request;
-using XerifeTv.CMS.Modules.Series;
 using XerifeTv.CMS.Modules.Common.Dtos;
+using XerifeTv.CMS.Modules.Content.Dtos.Request;
+using XerifeTv.CMS.Modules.Content.Dtos.Response;
+using XerifeTv.CMS.Modules.Series;
 
 namespace XerifeTv.CMS.Modules.Content.Interfaces;
 
 public interface IContentService
 {
-  Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategory(
-    GetGroupByCategoryRequestDto dto);
-  Task<Result<PagedList<GetMovieContentResponseDto>>> GetMoviesByCategory(string category, int? currentPage, int? limit);
-  Task<Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> GetSeriesGroupByCategory(
-    GetGroupByCategoryRequestDto dto);
-  Task<Result<IEnumerable<GetSeriesContentResponseDto>>> GetSeriesByCategory(string category, int? limit);
-  Task<Result<IEnumerable<Episode>>> GetEpisodesSeriesBySeason(string serieId, int season);
-  Task<Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> GetChannelsGroupByCategory(
-    GetGroupByCategoryRequestDto dto);
-  Task<Result<GetContentsByNameResponseDto>> GetContentsByTitle(string title, int? limit);
+  Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto);
+  Task<Result<PagedList<GetMovieContentResponseDto>>> GetMoviesByCategoryAsync(GetContentsRequestDto dto);
+  Task<Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> GetSeriesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto);
+  Task<Result<IEnumerable<GetSeriesContentResponseDto>>> GetSeriesByCategoryAsync(GetContentsRequestDto dto);
+  Task<Result<IEnumerable<Episode>>> GetEpisodesSeriesBySeasonAsync(string serieId, int season);
+  Task<Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> GetChannelsGroupByCategoryAsync(GetGroupByCategoryRequestDto dto);
+  Task<Result<GetContentsByNameResponseDto>> GetContentsByTitleAsync(GetContentsRequestDto dto);
 }
