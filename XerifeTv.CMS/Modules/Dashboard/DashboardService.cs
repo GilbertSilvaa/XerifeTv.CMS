@@ -12,7 +12,7 @@ public sealed class DashboardService(
   ISeriesRepository _seriesRepository,
   IChannelRepository _channelRepository) : IDashboardService
 {
-    public async Task<Result<GetDashboardDataRequestDto>> Get()
+    public async Task<Result<GetDashboardDataRequestDto>> GetAsync()
     {
         var response = await Task.WhenAll([
           _movieRepository.CountAsync(),

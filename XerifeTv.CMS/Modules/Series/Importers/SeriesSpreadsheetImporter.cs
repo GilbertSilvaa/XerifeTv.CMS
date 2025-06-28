@@ -18,7 +18,7 @@ public class SeriesSpreadsheetImporter(
 	public async Task<Result<string>> ImportAsync(IFormFile file)
 	{
 		var importId = Guid.NewGuid().ToString();
-		var emptyDto = new ImportSpreadsheetResponseDto(0, 0, [], 0);
+		var emptyDto = new ImportSpreadsheetResponseDto(0, 0, 0, 0, [], 0);
 		_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
 
 		_ = HandleImportAsync(file, importId);
@@ -85,7 +85,14 @@ public class SeriesSpreadsheetImporter(
 				var totalCount = spreadsheetSeriesResult.Length + spreadsheetEpisodesResult.Length;
 
 				var progressCount = (int)(((float)(failCount + successCount) / totalCount) * 100);
-				var _dto = new ImportSpreadsheetResponseDto(seriesSuccessCount, failCount, [.. errorList], progressCount);
+				var _dto = new ImportSpreadsheetResponseDto(
+					TotalItemsCount: totalCount,
+					SuccessCount: seriesSuccessCount,
+					FailCount: failCount,
+					ProcessedCount: failCount + successCount,
+					ErrorList: [.. errorList],
+					ProgressCount: progressCount);
+
 				_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
 			}
 
@@ -142,10 +149,10 @@ public class SeriesSpreadsheetImporter(
 					ReleaseYear = int.Parse(seriesByImdbResponse?.Data?.ReleaseYear ?? "0"),
 					ParentalRating = seriesItem.ParentalRating,
 					Review = seriesByImdbResponse?.Data?.VoteAverage ?? 0,
-					NumberSeasons = seriesByImdbResponse?.Data?.NumberSeasons ?? 0					
+					NumberSeasons = seriesByImdbResponse?.Data?.NumberSeasons ?? 0
 				};
 
-				var response = await _service.Create(createSeriesDto);
+				var response = await _service.CreateAsync(createSeriesDto);
 
 				if (response.IsSuccess)
 				{
@@ -163,7 +170,7 @@ public class SeriesSpreadsheetImporter(
 
 			foreach (var item in episodeList)
 			{
-				var seriesResult = await _service.GetByImdbId(item.SeriesImdbId);
+				var seriesResult = await _service.GetByImdbIdAsync(item.SeriesImdbId);
 
 				if (seriesResult.IsFailure)
 				{
@@ -186,7 +193,7 @@ public class SeriesSpreadsheetImporter(
 					VideoSubtitle = item.Video?.Subtitle ?? string.Empty
 				};
 
-				var response = await _service.CreateEpisode(createEpisodeDto);
+				var response = await _service.CreateEpisodeAsync(createEpisodeDto);
 
 				if (response.IsSuccess)
 				{
@@ -214,7 +221,13 @@ public class SeriesSpreadsheetImporter(
 				errorList.Add(ex.InnerException?.Message ?? ex.Message);
 
 				var _newDto = new ImportSpreadsheetResponseDto(
-				  currentProgress?.SuccessCount, failCount, [.. errorList], 100);
+					TotalItemsCount: currentProgress?.TotalItemsCount,
+					SuccessCount: currentProgress?.SuccessCount,
+					FailCount: failCount,
+					ProcessedCount: currentProgress?.ProcessedCount,
+					ErrorList: [.. errorList],
+					ProgressCount: 100);
+
 				_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
 			}
 		}

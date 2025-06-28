@@ -6,10 +6,10 @@ namespace XerifeTv.CMS.Modules.Movie.Interfaces;
 
 public interface IMovieService
 {
-    Task<Result<PagedList<GetMovieResponseDto>>> Get(int currentPage, int limit);
-    Task<Result<GetMovieResponseDto?>> Get(string id);
-    Task<Result<string>> Create(CreateMovieRequestDto dto);
-    Task<Result<string>> Update(UpdateMovieRequestDto dto);
-    Task<Result<bool>> Delete(string id);
-    Task<Result<PagedList<GetMovieResponseDto>>> GetByFilter(GetMoviesByFilterRequestDto dto);
+    Task<Result<PagedList<GetMovieResponseDto>>> GetAsync(int currentPage, int limit);
+    Task<Result<GetMovieResponseDto?>> GetAsync(string id);
+    Task<Result<string>> CreateAsync(CreateMovieRequestDto dto);
+    Task<Result<string>> UpdateAsync(UpdateMovieRequestDto dto);
+    Task<Result<bool>> DeleteAsync(string id);
+    Task<Result<PagedList<GetMovieResponseDto>>> GetByFilterAsync(GetMoviesByFilterRequestDto dto);
 }

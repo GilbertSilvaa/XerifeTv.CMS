@@ -1,0 +1,9 @@
+﻿namespace XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
+
+public enum EBackgroundJobType
+{
+    REGISTER_SPREADSHEET_MOVIES,
+    REGISTER_SPREADSHEET_SERIES,
+    REGISTER_SPREADSHEET_CHANNELS,
+    IMPORT_EPISODES_FROM_SERIES_IMDB
+}

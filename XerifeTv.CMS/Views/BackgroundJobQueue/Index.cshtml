@@ -1,0 +1,233 @@
+﻿@using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
+@using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums
+@using XerifeTv.CMS.Views.BackgroundJobQueue.Models
+
+@model BackgroundJobQueueModelView;
+
+@{
+  ViewData["Title"] = "Fila de Processamentos";
+
+  ICollection<string[]> statusList = [];
+  statusList.Add([$"{(int)EBackgroundJobStatus.PENDING}", "Pendente"]);
+  statusList.Add([$"{(int)EBackgroundJobStatus.PROCESSING}", "Processando"]);
+  statusList.Add([$"{(int)EBackgroundJobStatus.COMPLETED}", "Concluido"]);
+  statusList.Add([$"{(int)EBackgroundJobStatus.FAILED}", "Falhou"]);
+}
+
+<style>
+  .users-select-group {
+    width: 25%;
+  }
+
+  @@media (max-width: 800px) {
+    .users-select-group {
+      width: 100% !important;
+    }
+  }
+</style>
+
+<form id="page-form" asp-controller="BackgroundJobQueue" asp-action="Index" class="container">
+  <header>
+    <div class="d-flex align-items-center justify-content-between">
+      <div class="d-flex align-items-center gap-4" style="max-width: 65%;">
+        <span class="d-none d-md-inline-block text-truncate fs-3 fw-normal mw-100">
+          Fila de Processamentos
+        </span>
+      </div>
+
+      @if (User.IsInRole("admin"))
+      {
+        <div class="input-group d-flex justify-content-center align-items-center users-select-group">
+          <span class="input-group-text">Usuário</span>
+          <select class="form-select shadow-none" id="username" name="username">
+            @foreach (var user in Model.Users)
+            {
+              if (user.UserName.Equals(ViewBag.Username))
+              {
+                <option value="@user.UserName" selected>@user.UserName</option>
+              }
+              else
+              {
+                <option value="@user.UserName">@user.UserName</option>
+              }
+            }
+          </select>
+        </div>
+      }
+    </div>
+  </header>
+  <hr />
+
+  <div class="row mt-2">
+
+    <div class="row mb-4">
+      <div class="col-12 col-md-2">
+        <div class="w-100 d-flex justify-content-start align-items-center">
+          <select class="form-select shadow-none" id="status" name="status">
+            <option value="">Todos</option>
+            @foreach (var status in statusList)
+            {
+              if (status[0].Equals(ViewBag.Status))
+              {
+                <option value="@status[0]" selected>@status[1]</option>
+              }
+              else
+              {
+                <option value="@status[0]">@status[1]</option>
+              }
+            }
+          </select>
+        </div>
+      </div>
+
+      <div class="col-md-10 d-none d-md-flex justify-content-end align-items-center">
+        <a class="fs-5" role="button" onclick="location.reload()">
+          <i class="fa-solid fa-rotate"></i>
+        </a>
+      </div>
+    </div>
+
+    @if (Model?.Jobs.Count() > 0)
+    {
+      <div class="col-12 d-none d-lg-flex justify-content-between mb-2">
+        <div class="col-1" style="max-width: 40px;"></div>
+        <div class="col-4"></div>
+        <div class="col-2 text-center"></div>
+        <div class="col-1 text-center fw-semibold" style="font-size: 17px;">registros</div>
+        <div class="col-1 text-center fw-semibold" style="font-size: 17px;">duração</div>
+        <div class="col-2 text-center fw-semibold" style="font-size: 17px;">cadastro</div>
+        <div class="col-1"></div>
+      </div>   
+    }
+
+    @foreach (var job in Model?.Jobs ?? [])
+    {
+      if (job == null) continue;
+
+      <div class="col-12">
+        <div class="card mb-3">
+          <div class="row d-flex justify-content-between">
+            <div class="col-1 d-flex justify-content-start align-items-center" style="max-width: 40px;">
+              @switch (job.Status)
+              {
+                case EBackgroundJobStatus.PENDING:
+                  <i class="fa-solid fa-hourglass-half fa-lg p-3 text-secondary opacity-75"></i>
+                  break;
+                case EBackgroundJobStatus.COMPLETED:
+                  <i class="fa-solid fa-circle-check fa-lg p-3 text-success opacity-75"></i>
+                  break;
+                case EBackgroundJobStatus.FAILED:
+                  <i class="fa-solid fa-circle-xmark fa-lg p-3 text-danger opacity-75"></i>
+                  break;
+                case EBackgroundJobStatus.PROCESSING:
+                  <i class="fa-solid fa-rotate fa-spin fa-lg p-3 text-primary opacity-75"></i>
+                  break;
+              }
+            </div>
+            <div class="col-11 col-md-4">
+              <div class="card-body w-100 h-100 d-flex justify-content-start align-items-center">
+                <p class="card-text text-truncate">@job.JobName</p>
+              </div>
+            </div>
+            <div class="col-6 col-md-2">
+              <div class="card-body h-100 d-flex justify-content-center align-items-center">
+                @switch (job.Status)
+                {
+                  case EBackgroundJobStatus.PENDING:
+                    <h5 class="m-0"><span class="badge text-bg-secondary">pendente</span></h5>
+                    break;
+                  case EBackgroundJobStatus.COMPLETED:
+                    <h5 class="m-0"><span class="badge text-bg-success">concluido</span></h5>
+                    break;
+                  case EBackgroundJobStatus.FAILED:
+                    <h5 class="m-0"><span class="badge text-bg-danger">falhou</span></h5>
+                    break;
+                  case EBackgroundJobStatus.PROCESSING:
+                    <h5 class="m-0"><span class="badge text-bg-primary">processando</span></h5>
+                    break;
+                }
+              </div>
+            </div>
+
+            <div class="col-6 col-md-1">
+              <div class="card-body h-100 d-flex justify-content-center align-items-center">
+                <p class="card-text">@job.TotalProcessedRecords/@job.TotalRecordsToProcess</p>         
+              </div>
+            </div>
+
+            <div class="col-6 col-md-1">
+              <div class="card-body h-100 d-flex justify-content-center align-items-center">
+                @if (job.Status != EBackgroundJobStatus.PROCESSING && job.ProcessedAt is DateTime && job.LastUpdatDate is DateTime)
+                {
+                  TimeSpan duration = (job.ProcessedAt.Value - job.LastUpdatDate.Value).Duration();
+                  string formattedDuration = $"{(int)duration.TotalHours:00}:{duration.Minutes:00}:{duration.Seconds:00}";
+                  <p class="card-text">@formattedDuration</p>
+                }
+                else
+                {
+                  <p class="card-text">-</p>
+                }
+              </div>
+            </div>
+
+            <div class="col-6 col-md-2">
+              <div class="card-body h-100 d-flex justify-content-center align-items-center">
+                <p class="card-text">@job.CreateAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+              </div>
+            </div>
+
+            <div class="col-12 col-md-1 d-flex justify-content-end align-items-center">
+              @if (job.Status == EBackgroundJobStatus.FAILED && job.ErrorList.Count > 0)
+              {
+                <button type="button" class="btn px-4 border-0 bg-transparent text-danger shadow-none" data-bs-toggle="modal" data-bs-target="#errorListModal_@job.Id">
+                  <i class="fa-solid fa-circle-exclamation fa-lg"></i>
+                </button>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      @if (job.Status == EBackgroundJobStatus.FAILED && job.ErrorList.Count > 0)
+      {
+        <div class="modal fade" id="errorListModal_@job.Id" tabindex="-1" aria-labelledby="errorListModalLabel_@job.Id" aria-hidden="true">
+          <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="errorListModalLabel">Lista de Erros [@job.JobName]</h1>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <ol class="list-group list-group-numbered">
+                    @foreach (var errorItem in job.ErrorList)
+                    {
+                      <li class="list-group-item">@errorItem</li>                 
+                    }
+                </ol>
+            </div>
+            </div>
+          </div>
+        </div>    
+      }
+    }
+
+    @if (Model?.Jobs.Count() <= 0)
+    {
+      <p>Nenhum registro encontrado nos últimos 30 dias.</p>
+    }
+
+  </div>
+
+  @await Html.PartialAsync("_Pagination", new Dictionary<string, string>
+  {
+    { "status", ViewBag.Status },
+    { "username", ViewBag.Username }
+  })
+
+</form>
+
+@section scripts {
+  <script>
+    $('#username, #status').change(() => $('#page-form').trigger('submit'));
+  </script>
+}

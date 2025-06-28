@@ -6,15 +6,15 @@ namespace XerifeTv.CMS.Modules.Series.Interfaces;
 
 public interface ISeriesService
 {
-    Task<Result<PagedList<GetSeriesResponseDto>>> Get(int currentPage, int limit);
-    Task<Result<GetSeriesResponseDto?>> Get(string id);
-	Task<Result<GetSeriesResponseDto?>> GetByImdbId(string imdbId);
-	Task<Result<string>> Create(CreateSeriesRequestDto dto);
-    Task<Result<string>> Update(UpdateSeriesRequestDto dto);
-    Task<Result<bool>> Delete(string id);
-    Task<Result<PagedList<GetSeriesResponseDto>>> GetByFilter(GetSeriesByFilterRequestDto dto);
-    Task<Result<GetEpisodesResponseDto>> GetEpisodesBySeason(string serieId, int season, bool includeDisabled);
-    Task<Result<string>> CreateEpisode(CreateEpisodeRequestDto dto);
-    Task<Result<string>> UpdateEpisode(UpdateEpisodeRequestDto dto);
-    Task<Result<bool>> DeleteEpisode(string serieId, string id);
+    Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit);
+    Task<Result<GetSeriesResponseDto?>> GetAsync(string id);
+	Task<Result<GetSeriesResponseDto?>> GetByImdbIdAsync(string imdbId);
+	Task<Result<string>> CreateAsync(CreateSeriesRequestDto dto);
+    Task<Result<string>> UpdateAsync(UpdateSeriesRequestDto dto);
+    Task<Result<bool>> DeleteAsync(string id);
+    Task<Result<PagedList<GetSeriesResponseDto>>> GetByFilterAsync(GetSeriesByFilterRequestDto dto);
+    Task<Result<GetEpisodesResponseDto>> GetEpisodesBySeasonAsync(string serieId, int season, bool includeDisabled);
+    Task<Result<string>> CreateEpisodeAsync(CreateEpisodeRequestDto dto);
+    Task<Result<string>> UpdateEpisodeAsync(UpdateEpisodeRequestDto dto);
+    Task<Result<bool>> DeleteEpisodeAsync(string serieId, string id);
 }

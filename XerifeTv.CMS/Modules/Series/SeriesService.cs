@@ -9,7 +9,7 @@ namespace XerifeTv.CMS.Modules.Series;
 
 public class SeriesService(ISeriesRepository _repository) : ISeriesService
 {
-    public async Task<Result<PagedList<GetSeriesResponseDto>>> Get(int currentPage, int limit)
+    public async Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
@@ -29,7 +29,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<GetSeriesResponseDto?>> Get(string id)
+    public async Task<Result<GetSeriesResponseDto?>> GetAsync(string id)
     {
         try
         {
@@ -49,7 +49,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-	public async Task<Result<GetSeriesResponseDto?>> GetByImdbId(string imdbId)
+	public async Task<Result<GetSeriesResponseDto?>> GetByImdbIdAsync(string imdbId)
 	{
 		try
 		{
@@ -69,7 +69,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
 		}
 	}
 
-	public async Task<Result<string>> Create(CreateSeriesRequestDto dto)
+	public async Task<Result<string>> CreateAsync(CreateSeriesRequestDto dto)
     {
         try
         {
@@ -90,7 +90,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<string>> Update(UpdateSeriesRequestDto dto)
+    public async Task<Result<string>> UpdateAsync(UpdateSeriesRequestDto dto)
     {
         try
         {
@@ -117,7 +117,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<bool>> Delete(string id)
+    public async Task<Result<bool>> DeleteAsync(string id)
     {
         try
         {
@@ -136,7 +136,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<PagedList<GetSeriesResponseDto>>> GetByFilter(GetSeriesByFilterRequestDto dto)
+    public async Task<Result<PagedList<GetSeriesResponseDto>>> GetByFilterAsync(GetSeriesByFilterRequestDto dto)
     {
         try
         {
@@ -156,7 +156,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<GetEpisodesResponseDto>> GetEpisodesBySeason(
+    public async Task<Result<GetEpisodesResponseDto>> GetEpisodesBySeasonAsync(
       string serieId, int season, bool includeDisabled)
     {
         try
@@ -178,7 +178,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<string>> CreateEpisode(CreateEpisodeRequestDto dto)
+    public async Task<Result<string>> CreateEpisodeAsync(CreateEpisodeRequestDto dto)
     {
         try
         {
@@ -187,7 +187,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
             if (seriesResponse is null)
                 return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
 
-            var episodesResult = await GetEpisodesBySeason(dto.SerieId, dto.Season, includeDisabled: true);
+            var episodesResult = await GetEpisodesBySeasonAsync(dto.SerieId, dto.Season, includeDisabled: true);
             if (episodesResult.IsFailure) 
                 return Result<string>.Failure(episodesResult.Error);
 
@@ -209,7 +209,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<string>> UpdateEpisode(UpdateEpisodeRequestDto dto)
+    public async Task<Result<string>> UpdateEpisodeAsync(UpdateEpisodeRequestDto dto)
     {
         try
         {
@@ -218,7 +218,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
             if (seriesResponse is null)
                 return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
 
-            var episodesResult = await GetEpisodesBySeason(dto.SerieId, dto.Season, includeDisabled: true);
+            var episodesResult = await GetEpisodesBySeasonAsync(dto.SerieId, dto.Season, includeDisabled: true);
             if (episodesResult.IsFailure)
                 return Result<string>.Failure(episodesResult.Error);
 
@@ -240,7 +240,7 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
         }
     }
 
-    public async Task<Result<bool>> DeleteEpisode(string serieId, string id)
+    public async Task<Result<bool>> DeleteEpisodeAsync(string serieId, string id)
     {
         try
         {
