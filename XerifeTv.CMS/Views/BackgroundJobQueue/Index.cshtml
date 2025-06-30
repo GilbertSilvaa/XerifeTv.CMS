@@ -228,6 +228,11 @@
 
 @section scripts {
   <script>
-    $('#username, #status').change(() => $('#page-form').trigger('submit'));
+    $('#username, #status').change(() => {
+        $('.loading-global .label').text('Carregando, por favor aguarde...');
+        $('.loading-global').show();
+
+        $('#page-form').trigger('submit');
+    });
   </script>
 }
