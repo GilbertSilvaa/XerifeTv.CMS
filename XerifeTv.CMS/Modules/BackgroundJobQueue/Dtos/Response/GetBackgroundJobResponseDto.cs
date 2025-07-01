@@ -34,7 +34,7 @@ public class GetBackgroundJobResponseDto
 			ProcessedAt = entity.ProcessedAt,
 			ErrorList = entity.ErrorList,
 			CreateAt = entity.CreateAt,
-			LastUpdatDate = entity.UpdateAt,
+			LastUpdatDate = entity.FinishedAt ?? entity.UpdateAt,
 			SeriesIdImportEpisodes = entity.SeriesIdImportEpisodes,
 			SpreadsheetFileUrl = entity.SpreadsheetFileUrl,
 		};

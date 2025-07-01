@@ -15,7 +15,7 @@ public class BackgroundJobQueueRepository(IOptions<DBSettings> options)
 	public async Task<PagedList<BackgroundJobEntity>> GetByFilterAsync(GetBackgroundJobsByFilterRequestDto dto)
 	{
 		FilterDefinition<BackgroundJobEntity> filter = Builders<BackgroundJobEntity>.Filter
-			.Where(r => (r.Status == dto.Status || dto.Status == null) 
+			.Where(r => (r.Status == dto.Status || dto.Status == null)
 				&& (r.RequestedByUserId == dto.ResponsibleUserId || dto.ResponsibleUserId == null)
 				&& r.CreateAt >= DateTime.UtcNow.AddDays(-30));
 
@@ -33,5 +33,15 @@ public class BackgroundJobQueueRepository(IOptions<DBSettings> options)
 		var totalPages = (int)Math.Ceiling(count / (decimal)dto.LimitResults);
 
 		return new PagedList<BackgroundJobEntity>(dto.CurrentPage, totalPages, items);
+	}
+
+	public async Task<IEnumerable<BackgroundJobEntity>> GetCompletedOrFailedJobsNotNotifiedAsync(string userId)
+	{
+		var result = await _collection
+			.Find(r => (r.Status == EBackgroundJobStatus.COMPLETED || r.Status == EBackgroundJobStatus.FAILED) &&
+				!r.UserWasNotified && r.RequestedByUserId == userId)
+			.ToListAsync();
+
+		return result;
 	}
 }

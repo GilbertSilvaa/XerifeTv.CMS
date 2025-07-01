@@ -5,5 +5,6 @@ public enum EBackgroundJobStatus
     PENDING,
     PROCESSING,
     COMPLETED,
-    FAILED
+    FAILED,
+    CANCELED
 }

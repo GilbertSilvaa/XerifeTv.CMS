@@ -84,4 +84,15 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
 
 		return Ok(response.Data);
 	}
+
+	[HttpGet]
+	[Authorize(Roles = "admin, common")]
+	public async Task<IActionResult> GetJobsNotification()
+	{
+		var response = await _service.GetJobsToNotifyAsync(username: User?.Identity?.Name ?? string.Empty);
+
+		if (response.IsFailure) return BadRequest(response.Error.Description);
+
+		return Ok(response.Data);
+	}
 }
