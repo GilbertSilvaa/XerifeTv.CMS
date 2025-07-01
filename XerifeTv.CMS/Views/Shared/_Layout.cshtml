@@ -1,4 +1,5 @@
-﻿@using XerifeTv.CMS.Modules.Common
+﻿@using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums
+@using XerifeTv.CMS.Modules.Common
 @using XerifeTv.CMS.Shared.Helpers
 
 @{
@@ -7,75 +8,73 @@
 
   if (!string.IsNullOrEmpty(messageJson))
     messageView = MessageViewHelper.JsonStrToMessageView(messageJson);
-  
+
   ICollection<string[]> pagesViewSideMenu = [];
   pagesViewSideMenu.Add(["Home", "Index", "Dashboard", "fa-solid fa-chart-simple"]);
   pagesViewSideMenu.Add(["Movies", "Index", "Filmes", "fa-solid fa-film"]);
   pagesViewSideMenu.Add(["Series", "Index", "Séries", "fa-solid fa-video"]);
   pagesViewSideMenu.Add(["Channels", "Index", "Canais", "fa-solid fa-satellite-dish"]);
-  
-  if (User.IsInRole("admin")) 
+
+  if (User.IsInRole("admin"))
     pagesViewSideMenu.Add(["Users", "Index", "Usuários", "fa-solid fa-users"]);
 
-  if (User.IsInRole("admin") || User.IsInRole("common"))
+  if (!User.IsInRole("visitor"))
     pagesViewSideMenu.Add(["BackgroundJobQueue", "Index", "Fila de Processamentos", "fa-solid fa-list-check"]);
-  
+
   pagesViewSideMenu.Add(["Users", "Settings", "Configurações", "fa-solid fa-gear"]);
-  
+
   /* pagesView[x][0] => Controller view
    * pagesView[x][1] => Controller action view
    * pagesView[x][2] => Page name in side menu
    * pagesView[x][3] => Page icon in side menu
   */
 
-  IEnumerable<string> pagesViewWithoutTemplate = [ "SignIn", "Esqueci senha", "Redefinir senha" ];
+  IEnumerable<string> pagesViewWithoutTemplate = ["SignIn", "Esqueci senha", "Redefinir senha"];
 }
 
 <!DOCTYPE html>
 <html lang="pt-BR" data-bs-theme="light">
 <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - XerifeTv.CMS</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-    <link href="https://vjs.zencdn.net/8.16.1/video-js.css" rel="stylesheet" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/XerifeTv.CMS.styles.css" asp-append-version="true" />
-    <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
-    <script src="https://vjs.zencdn.net/8.20.0/video.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/videojs-hls-quality-selector/dist/videojs-hls-quality-selector.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-      .side-menu .nav-link:not(.active):hover 
-      {
-        background: #1e344f;
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>@ViewData["Title"] - XerifeTv.CMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <link href="https://vjs.zencdn.net/8.16.1/video-js.css" rel="stylesheet" />
+  <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+  <link rel="stylesheet" href="~/XerifeTv.CMS.styles.css" asp-append-version="true" />
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+  <script src="https://vjs.zencdn.net/8.20.0/video.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/videojs-hls-quality-selector/dist/videojs-hls-quality-selector.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .side-menu .nav-link:not(.active):hover {
+      background: #1e344f;
+    }
+
+    .bg-dark .side-menu .nav-link:not(.active):hover {
+      background: #252525;
+    }
+
+    #message-box {
+      width: 85%;
+      display: none;
+      position: absolute;
+      bottom: auto;
+      top: 0.5rem;
+      right: 0.5rem;
+      z-index: 999;
+
+      @@media (min-width: 720px) {
+        width: 25%;
+        top: auto;
+        bottom: 0.5rem;
       }
-      
-      .bg-dark .side-menu .nav-link:not(.active):hover
-      {
-        background: #252525;
-      }
-      
-      #message-box {
-        width: 85%;
-        display: none;
-        position: absolute;
-        bottom: auto;
-        top: 0.5rem;
-        right: 0.5rem;
-        z-index: 999;
-        
-        @@media (min-width: 720px) {
-          width: 25%;
-          top: auto;
-          bottom: 0.5rem;
-        }
-      }
-    </style>
+    }
+  </style>
 </head>
 <body>
-<script>
+  <script>
     (function() {
       const theme = localStorage.getItem('theme') || 'light';
       document.documentElement.setAttribute('data-bs-theme', theme);
@@ -90,128 +89,125 @@
     </div>
   </div>
 
-<div class="container-fluid">
-  <div
-    class="alert alert-dismissible fade show"
-    role="alert"
-    id="message-box">
-    <span></span>
-    <button type="button" class="btn-close shadow-sm" data-bs-dismiss="alert" aria-label="Close"></button>
-  </div>
+  <div class="container-fluid">
+    <div class="alert alert-dismissible fade show"
+         role="alert"
+         id="message-box">
+      <span></span>
+      <button type="button" class="btn-close shadow-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
 
-  <div class="row flex-nowrap">
+    <div class="row flex-nowrap">
 
-    @if (!pagesViewWithoutTemplate.Contains(ViewData["title"]?.ToString()))
-    {
-      <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 side-menu">
-        <div class="d-flex flex-column align-items-center align-items-sm-start gap-2 px-2 pt-2 text-white min-vh-100">
-          
-          <a href="/" class="d-flex align-items-center py-3 mt-2 mb-md-0 me-md-auto text-white text-decoration-none">
-            <img class="w-75 d-none d-md-block" src="~/assets/logo.png" alt="Xerife.TV CMS"/>
-          </a>
+      @if (!pagesViewWithoutTemplate.Contains(ViewData["title"]?.ToString()))
+      {
+        <div class="col-auto col-md-3 col-xl-2 px-sm-2 px-0 side-menu">
+          <div class="d-flex flex-column align-items-center align-items-sm-start gap-2 px-2 pt-2 text-white min-vh-100">
 
-          <ul class="w-100 nav nav-pills flex-column mb-sm-auto mb-0 mt-3 align-items-center align-items-sm-start" id="menu">
-            @foreach (var pageView in pagesViewSideMenu)
-            {
-              <li class="w-100 nav-item py-2">
-                <a
-                  class="nav-link px-2 align-middle fs-6 text-light @(ViewData["Title"]?.ToString() == pageView[2] ? "active" : "")"
-                  style="font-weight: 500;"
-                  asp-controller="@pageView[0]"
-                  asp-action="@pageView[1]">
-                  <i class="@pageView[3]"></i> <span class="ms-1 d-none d-sm-inline">@pageView[2]</span>
+            <a href="/" class="d-flex align-items-center py-3 mt-2 mb-md-0 me-md-auto text-white text-decoration-none">
+              <img class="w-75 d-none d-md-block" src="~/assets/logo.png" alt="Xerife.TV CMS" />
+            </a>
+
+            <ul class="w-100 nav nav-pills flex-column mb-sm-auto mb-0 mt-3 align-items-center align-items-sm-start" id="menu">
+              @foreach (var pageView in pagesViewSideMenu)
+              {
+                <li class="w-100 nav-item py-2">
+                  <a class="nav-link px-2 align-middle fs-6 text-light @(ViewData["Title"]?.ToString() == pageView[2] ? "active" : "")"
+                     style="font-weight: 500;"
+                     asp-controller="@pageView[0]"
+                     asp-action="@pageView[1]">
+                    <i class="@pageView[3]"></i> <span class="ms-1 d-none d-sm-inline">@pageView[2]</span>
+                  </a>
+                </li>
+              }
+
+              @if (!User.IsInRole("visitor"))
+              {
+                <li class="w-100 nav-item py-2">
+                  <a href="#submenu"
+                     data-bs-toggle="collapse"
+                     class="nav-link px-2 align-middle fs-6 text-light"
+                     style="font-weight: 500;">
+
+                    <i class="fa-solid fa-folder-open"></i> <span class="ms-1 d-none d-sm-inline">Documentação</span>
+                  </a>
+                  <ul class="collapse nav flex-column ms-2" id="submenu" data-bs-parent="#menu">
+                    <li class="w-100 py-1">
+                      <a class="nav-link px-2 align-middle text-light fs-6"
+                         role="button"
+                         href="/Api"
+                         target="_blank">
+                        <i class="fa-solid fa-link"></i> <span class="ms-1 d-none d-sm-inline">API de conteúdo</span>
+                      </a>
+                    </li>
+                  </ul>
+                </li>
+              }
+            </ul>
+
+            <ul class="w-100 nav nav-pills mb-0 flex-column">
+              <li class="w-100 nav-item py-2 d-block d-md-none">
+                <a class="nav-link px-2 align-middle fs-6 text-light"
+                   style="font-weight: 500;"
+                   role="button"
+                   onclick="logout()">
+                  <i class="fa-solid fa-right-from-bracket"></i>
+                  <span class="ms-1 d-none d-sm-inline">Sair</span>
                 </a>
               </li>
-            }
 
-            @if (!User.IsInRole("visitor"))
-            {
-              <li class="w-100 nav-item py-2">
-                <a
-                  href="#submenu"
-                  data-bs-toggle="collapse"
-                  class="nav-link px-2 align-middle fs-6 text-light"
-                  style="font-weight: 500;">
+              <div class="d-flex justify-content-between align-items-center gap-2 w-100">
+                <div class="w-100 d-none d-md-flex align-items-center gap-2 mt-1 py-2 px-2 position-relative rounded-2"
+                     style="background: #2e2e2e;">
+                  <img src="~/assets/profile.png" alt="profile" style="width: 1.7rem; height: 1.7rem;" />
+                  <span class="d-none d-md-block overflow-hidden">@User.Identity?.Name</span>
 
-                 <i class="fa-solid fa-folder-open"></i> <span class="ms-1 d-none d-sm-inline">Documentação</span></a>
-                <ul class="collapse nav flex-column ms-2" id="submenu" data-bs-parent="#menu">
-                  <li class="w-100 py-1">
-                    <a
-                      class="nav-link px-2 align-middle text-light fs-6"
-                      role="button"
-                      href="/Api"
-                      target="_blank">
-                      <i class="fa-solid fa-link"></i> <span class="ms-1 d-none d-sm-inline">API de conteúdo</span>
-                    </a>
-                  </li>
-                </ul>
+                  <div class="btn-group dropend position-absolute" style="right: 0">
+                    <button type="button"
+                            class="btn text-light shadow-none"
+                            onclick="logout()">
+                      <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <li class="w-100 nav-item">
+                <hr />
+                <div class="w-100 h-100 d-flex flex-column flex-md-row justify-content-center align-items-center gap-1">
+                  <i class="fa-solid fa-sun text-warning"></i>
+
+                  <div class="form-check form-switch ms-2">
+                    <input class="form-check-input shadow-sm" type="checkbox" id="darkTheme" role="button">
+                  </div>
+
+                  <i class="fa-solid fa-moon"></i>
+                </div>
               </li>
-            }
-          </ul>
-
-          <ul class="w-100 nav nav-pills mb-0 flex-column">
-            <li class="w-100 nav-item py-2 d-block d-md-none">
-              <a
-                class="nav-link px-2 align-middle fs-6 text-light"
-                style="font-weight: 500;"
-                role="button"
-                onclick="logout()">
-                <i class="fa-solid fa-right-from-bracket"></i> 
-                <span class="ms-1 d-none d-sm-inline">Sair</span>
-              </a>
-            </li>
-
-            <div class="d-flex justify-content-between align-items-center gap-2 w-100">
-              <div
-                class="w-100 d-none d-md-flex align-items-center gap-2 mt-1 py-2 px-2 position-relative rounded-2"
-                style="background: #2e2e2e;">
-                <img src="~/assets/profile.png" alt="profile" style="width: 1.7rem; height: 1.7rem;"/>
-                <span class="d-none d-md-block overflow-hidden">@User.Identity?.Name</span>
-
-                <div class="btn-group dropend position-absolute" style="right: 0">
-                  <button
-                    type="button"
-                    class="btn text-light shadow-none"
-                    onclick="logout()">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <li class="w-100 nav-item">
-              <hr/>
-              <div class="w-100 h-100 d-flex flex-column flex-md-row justify-content-center align-items-center gap-1">
-                <i class="fa-solid fa-sun text-warning"></i>
-
-                <div class="form-check form-switch ms-2">
-                  <input class="form-check-input shadow-sm" type="checkbox" id="darkTheme" role="button">
-                </div>
-
-                <i class="fa-solid fa-moon"></i>
-              </div>
-            </li>
-          </ul>
-          <hr>
+            </ul>
+            <hr>
+          </div>
         </div>
-      </div>
-    }
+      }
 
-    <div class="col py-3 px-3" style="max-height:95vh; overflow:auto;">
-      @RenderBody()
+      <div class="col py-3 px-3" style="max-height:95vh; overflow:auto;">
+        @RenderBody()
+      </div>
     </div>
   </div>
-</div>
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script src="~/js/utils.js" asp-append-version="true"></script>
-<script src="~/js/site.js" asp-append-version="true"></script>
-<script src="~/js/importFromSpreadsheetModal.js" asp-append-version="true"></script>
-@await RenderSectionAsync("Scripts", required: false)
 
-<script>
+  <div class="toast-container position-fixed bottom-0 end-0 p-3 pe-4"></div>
+
+  <script src="~/lib/jquery/dist/jquery.min.js"></script>
+  <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="~/js/utils.js" asp-append-version="true"></script>
+  <script src="~/js/site.js" asp-append-version="true"></script>
+  <script src="~/js/importFromSpreadsheetModal.js" asp-append-version="true"></script>
+  @await RenderSectionAsync("Scripts", required: false)
+
+  <script>
     const messageBox = document.getElementById('message-box');
-    
+
     switch ('@messageView?.Type') {
       case '@EMessageViewType.SUCCESS':
         messageBox.classList.add('alert-success');
@@ -233,7 +229,44 @@
     function logout() {
       if (confirm('Deseja realmente sair?'))
         location.replace('/Users/Logout');
-    } 
+    }
+
   </script>
+
+  @if (!User.IsInRole("visitor") && !pagesViewWithoutTemplate.Contains(ViewData["title"]?.ToString()))
+  {
+    <script>
+
+      setInterval(async () => {
+        var response = await fetch('/BackgroundJobQueue/GetJobsNotification');
+        var data = await response.json();
+
+        for (const jobNotification of data) {
+            var statusText = 'Concluido';
+            if (jobNotification.jobStatus == '@((int)EBackgroundJobStatus.FAILED)') statusText = 'Falha no processamento';
+            if (jobNotification.jobStatus == '@((int)EBackgroundJobStatus.CANCELED)') statusText = 'Cancelado';
+
+            $('.toast-container').append(`
+              <div id="jobNotification${jobNotification.jobId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                  <div class="toast-header">
+                      <i class="fa-solid fa-bell"></i>
+                      <strong class="me-auto ms-2">${statusText}</strong>
+                      <small>${jobNotification.jobTimeAgo}</small>
+                      <button type="button" class="btn-close shadow-none" data-bs-dismiss="toast" aria-label="Close"></button>
+                  </div>
+                  <div class="toast-body text-truncate" style="max-width: 100%;">
+                    ${jobNotification.jobName}
+                  </div>
+              </div>
+            `);
+
+            const toastNotification = document.getElementById(`jobNotification${jobNotification.jobId}`);
+            const toastBootstrap = new bootstrap.Toast(toastNotification, { autohide: false });
+            toastBootstrap.show();
+        }
+      }, 8000);
+
+    </script>
+  }
 </body>
 </html>

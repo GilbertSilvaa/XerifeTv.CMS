@@ -12,6 +12,7 @@
   statusList.Add([$"{(int)EBackgroundJobStatus.PROCESSING}", "Processando"]);
   statusList.Add([$"{(int)EBackgroundJobStatus.COMPLETED}", "Concluido"]);
   statusList.Add([$"{(int)EBackgroundJobStatus.FAILED}", "Falhou"]);
+  statusList.Add([$"{(int)EBackgroundJobStatus.CANCELED}", "Cancelado"]);
 }
 
 <style>
@@ -119,7 +120,8 @@
                 case EBackgroundJobStatus.FAILED:
                   <i class="fa-solid fa-circle-xmark fa-lg p-3 text-danger opacity-75"></i>
                   break;
-                case EBackgroundJobStatus.PROCESSING:
+                case EBackgroundJobStatus.PROCESSING: 
+                case EBackgroundJobStatus.CANCELED:
                   <i class="fa-solid fa-rotate fa-spin fa-lg p-3 text-primary opacity-75"></i>
                   break;
               }
@@ -144,6 +146,9 @@
                     break;
                   case EBackgroundJobStatus.PROCESSING:
                     <h5 class="m-0"><span class="badge text-bg-primary">processando</span></h5>
+                    break;
+                   case EBackgroundJobStatus.CANCELED:
+                    <h5 class="m-0"><span class="badge text-bg-danger">cancelado</span></h5>
                     break;
                 }
               </div>

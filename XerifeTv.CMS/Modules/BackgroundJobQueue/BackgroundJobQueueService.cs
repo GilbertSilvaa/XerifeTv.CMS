@@ -124,7 +124,7 @@ public class BackgroundJobQueueService(
 
 			if (response == null)
 				return Result<string>.Failure(new Error("404", "Background Job nao encontrado"));
-	
+
 			await _repository.UpdateAsync(response.Update(dto));
 
 			return Result<string>.Success(response.Id);
@@ -153,6 +153,33 @@ public class BackgroundJobQueueService(
 		{
 			var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
 			return Result<bool>.Failure(error);
+		}
+	}
+
+	public async Task<Result<IEnumerable<GetJobsToNotifyResponseDto>>> GetJobsToNotifyAsync(string username)
+	{
+		try
+		{
+			var userResult = await _userService.GetByUsernameAsync(username);
+
+			if (userResult.IsFailure)
+				return Result<IEnumerable<GetJobsToNotifyResponseDto>>.Failure(userResult.Error);
+
+			var response = await _repository.GetCompletedOrFailedJobsNotNotifiedAsync(userResult.Data?.Id ?? string.Empty);
+
+			foreach (var jobEntity in response)
+			{
+				jobEntity.UserNotify();
+				await _repository.UpdateAsync(jobEntity);
+			}
+
+			return Result<IEnumerable<GetJobsToNotifyResponseDto>>
+				.Success(response.Select(GetJobsToNotifyResponseDto.FromEntity));
+		}
+		catch (Exception ex)
+		{
+			var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+			return Result<IEnumerable<GetJobsToNotifyResponseDto>>.Failure(error);
 		}
 	}
 }

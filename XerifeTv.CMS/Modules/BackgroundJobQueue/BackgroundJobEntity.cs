@@ -15,9 +15,11 @@ public class BackgroundJobEntity : BaseEntity
 	public int TotalSuccessfulRecords { get; private set; }
 	public int TotalProcessedRecords { get; private set; }
 	public DateTime? ProcessedAt { get; private set; }
+	public DateTime? FinishedAt { get; private set; }
 	public ICollection<string> ErrorList { get; private set; } = [];
 	public string? SpreadsheetFileUrl { get; private set; } = null;
 	public string? SeriesIdImportEpisodes { get; private set; } = null;
+	public bool UserWasNotified { get; private set; } = false;
 
 	public static BackgroundJobEntity Create(
 		string id,
@@ -66,6 +68,9 @@ public class BackgroundJobEntity : BaseEntity
 		if (dto.Status == EBackgroundJobStatus.PROCESSING && Status != EBackgroundJobStatus.PROCESSING)
 			ProcessedAt = DateTime.UtcNow;
 
+		if (dto.Status is EBackgroundJobStatus.COMPLETED or EBackgroundJobStatus.FAILED or EBackgroundJobStatus.CANCELED)
+			FinishedAt = DateTime.UtcNow;
+
 		Status = dto.Status;
 		TotalRecordsToProcess = dto.TotalRecordsToProcess;
 		TotalFailedRecords = dto.TotalFailedRecords;
@@ -76,4 +81,6 @@ public class BackgroundJobEntity : BaseEntity
 
 		return this;
 	}
+
+	public void UserNotify() => UserWasNotified = true;
 }
