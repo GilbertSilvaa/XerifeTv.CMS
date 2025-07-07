@@ -8,6 +8,7 @@ public class UpdateUserRequestDto
     public string UserName { get; init; } = string.Empty;
     public string Email { get; init; } = string.Empty;
     public EUserRole? Role { get; init; }
+    public bool? Blocked { get; set; } = false;
 
     public UserEntity ToEntity()
     {
@@ -16,7 +17,8 @@ public class UpdateUserRequestDto
             Id = Id,
             UserName = UserName,
             Email = Email,
-            Role = Role ?? EUserRole.VISITOR
+            Role = Role ?? EUserRole.VISITOR,
+            Blocked = Blocked ?? false
         };
     }
 }

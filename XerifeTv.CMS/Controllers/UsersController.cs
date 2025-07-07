@@ -80,7 +80,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
         if (response.IsFailure)
         {
-            TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
+            TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty);
             _logger.LogInformation($"{email} tried to send password reset email and failed");
             return View();
         }
@@ -101,7 +101,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
         if (response.IsFailure)
         {
-            TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description);
+            TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty);
             return View();
         }
 
@@ -163,6 +163,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
     [Authorize]
     public async Task<IActionResult> UpdateProfile(UpdateUserRequestDto dto)
     {
+        dto.Blocked = null;
         var response = await _service.UpdateAsync(dto);
 
         TempData["Notification"] = response.IsFailure

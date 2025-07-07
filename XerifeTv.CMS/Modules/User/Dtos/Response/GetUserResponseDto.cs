@@ -9,6 +9,7 @@ public class GetUserResponseDto
     public string Email { get; private set; } = string.Empty;
     public EUserRole Role { get; private set; } = EUserRole.COMMON;
     public string RoleName => GetRoleName(Role);
+    public bool Blocked { get; private set; } = false;
 
     public static GetUserResponseDto FromEntity(UserEntity entity)
     {
@@ -17,8 +18,9 @@ public class GetUserResponseDto
             Id = entity.Id,
             UserName = entity.UserName,
             Email = entity.Email,
-            Role = entity.Role
-        };
+            Role = entity.Role,
+			Blocked = entity.Blocked
+		};
     }
 
     private static string GetRoleName(EUserRole role)
