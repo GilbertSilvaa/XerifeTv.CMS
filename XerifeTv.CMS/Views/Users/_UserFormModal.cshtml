@@ -77,7 +77,7 @@ aria-hidden="true">
 
         @if (User.IsInRole("admin"))
         {
-          <div class="row mb-3">
+          <div class="row mb-4">
             <div class="col-12">
               <label for="role" class="form-label">Cargo</label>
               <select 
@@ -100,6 +100,27 @@ aria-hidden="true">
               </select>
             </div>
           </div>
+
+          @if (!string.IsNullOrEmpty(Model?.Id))
+          {
+              <div class="row mb-1">
+                <div class="col-6">
+                    <div class="form-check">
+                      <input
+                        id="blocked-@Model?.Id"
+                        name="blocked"
+                        class="form-check-input" 
+                        type="checkbox"
+                        value="@((Model?.Blocked ?? false) ? "true" : "false")"
+                         @((Model?.Blocked ?? false) ? "checked" : "")>
+
+                      <label class="form-check-label" for="disabled-@Model?.Id">
+                        Bloquear
+                      </label>
+                    </div>
+                  </div>
+              </div>         
+          }
         }
         
       </div>
@@ -118,3 +139,12 @@ aria-hidden="true">
     </form>
   </div>
 </div>
+
+@if (!string.IsNullOrEmpty(Model?.Id))
+{
+    <script>
+        document.querySelector(`#blocked-@Model?.Id`).addEventListener('change', function (e) {
+            e.target.value = e.target.checked;
+        });
+    </script>
+}

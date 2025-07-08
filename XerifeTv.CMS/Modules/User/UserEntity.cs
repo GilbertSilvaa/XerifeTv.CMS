@@ -25,4 +25,5 @@ public class UserEntity : BaseEntity
     public EUserRole Role { get; set; } = EUserRole.COMMON;
     public Guid? ResetPasswordGuid { get; set; }
     public DateTimeOffset? ResetPasswordGuidExpires { get; set; }
+    public bool Blocked { get; set; } = false;
 }

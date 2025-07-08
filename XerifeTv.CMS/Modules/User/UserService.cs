@@ -70,6 +70,7 @@ public sealed class UserService(
 
 			entity.Password = _hashPassword.Encrypt(dto.Password);
 			var response = await _repository.CreateAsync(entity);
+
 			return Result<string>.Success(response);
 		}
 		catch (ArgumentException ex)
@@ -101,6 +102,10 @@ public sealed class UserService(
 				return Result<LoginUserResponseDto>.Failure(
 				  new Error("401", "Credenciais invalidas"));
 
+			if (response.Blocked)
+				return Result<LoginUserResponseDto>.Failure(
+				  new Error("403", "Usuario bloqueado"));
+
 			return Result<LoginUserResponseDto>.Success(
 				new LoginUserResponseDto(
 					_tokenService.GenerateToken(response),
@@ -119,7 +124,7 @@ public sealed class UserService(
 		{
 			var user = await _repository.GetAsync(dto.Id);
 
-			if (user is null)
+			if (user == null)
 				return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
 
 			var emailSpec = new UniqueEmailSpecification(_repository);
@@ -134,6 +139,7 @@ public sealed class UserService(
 			user.Email = dto.Email ?? user.Email;
 			user.UserName = dto.UserName ?? user.UserName;
 			user.Role = dto.Role ?? user.Role;
+			user.Blocked = dto.Blocked ?? user.Blocked;
 
 			await _repository.UpdateAsync(user);
 
@@ -232,6 +238,12 @@ public sealed class UserService(
 				return Result<(string?, string?)>.Failure(new Error("401", "Token invalido"));
 
 			var user = await _repository.GetByUsernameAsync(userName!);
+
+			if (user == null)
+				return Result<(string?, string?)>.Failure(new Error("404", "Usuario nao encontrado"));
+
+			if (user.Blocked)
+				return Result<(string?, string?)>.Failure(new Error("403", "Usuario bloqueado"));
 
 			return Result<(string?, string?)>.Success((
 				_tokenService.GenerateToken(user!),
