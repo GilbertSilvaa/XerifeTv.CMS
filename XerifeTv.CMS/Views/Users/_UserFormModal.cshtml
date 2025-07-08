@@ -111,10 +111,10 @@ aria-hidden="true">
                         name="blocked"
                         class="form-check-input" 
                         type="checkbox"
-                        value="@(Model.Blocked ? "true" : "false")"
-                        @(Model.Blocked ? "checked" : "")>
+                        value="@((Model?.Blocked ?? false) ? "true" : "false")"
+                         @((Model?.Blocked ?? false) ? "checked" : "")>
 
-                      <label class="form-check-label" for="disabled">
+                      <label class="form-check-label" for="disabled-@Model?.Id">
                         Bloquear
                       </label>
                     </div>
