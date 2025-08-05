@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using XerifeTv.CMS.Modules.Authentication.Dtos.Request;
+using XerifeTv.CMS.Modules.Authentication.Interfaces;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
 using XerifeTv.CMS.Modules.User.Interfaces;
@@ -7,7 +9,10 @@ using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
 
-public class UsersController(IUserService _service, ILogger<UsersController> _logger) : Controller
+public class UsersController(
+	IUserService _userService, 
+	IAuthService _authService,
+	ILogger<UsersController> _logger) : Controller
 {
 	private readonly CookieOptions _cookieOptions = new()
 	{
@@ -20,7 +25,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 	[Authorize(Roles = "admin")]
 	public async Task<IActionResult> Index()
 	{
-		var response = await _service.GetAsync(1, 20);
+		var response = await _userService.GetAsync(1, 20);
 
 		_logger.LogInformation($"{User.Identity?.Name} accessed the users page");
 
@@ -41,9 +46,9 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 
 	[HttpPost]
 	[AllowAnonymous]
-	public async Task<IActionResult> SignIn(LoginUserRequestDto dto)
+	public async Task<IActionResult> SignIn(LoginRequestDto dto)
 	{
-		var response = await _service.LoginAsync(dto);
+		var response = await _authService.LoginAsync(dto);
 
 		if (response.IsFailure)
 		{
@@ -76,7 +81,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 		if (User.Identity != null && User.Identity.IsAuthenticated)
 			return RedirectToAction("Index", "Home");
 
-		var response = await _service.SendEmailResetPasswordAsync(email);
+		var response = await _userService.SendEmailResetPasswordAsync(email);
 
 		if (response.IsFailure)
 		{
@@ -97,7 +102,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 		if (User.Identity != null && User.Identity.IsAuthenticated)
 			return RedirectToAction("Index", "Home");
 
-		var response = await _service.ValidateResetPasswordGuidAsync(new Guid(code));
+		var response = await _userService.ValidateResetPasswordGuidAsync(new Guid(code));
 
 		if (response.IsFailure)
 		{
@@ -121,7 +126,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 			return RedirectToAction("ResetPassword", new { code = dto.CodeGuid });
 		}
 
-		var response = await _service.ResetPasswordAsync(dto);
+		var response = await _userService.ResetPasswordAsync(dto);
 
 		if (response.IsFailure)
 		{
@@ -148,7 +153,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 	[Authorize(Roles = "admin")]
 	public async Task<IActionResult> Register(RegisterUserRequestDto dto)
 	{
-		var response = await _service.RegisterAsync(dto);
+		var response = await _userService.RegisterAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -172,7 +177,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 			Blocked = null
 		};
 
-		var response = await _service.UpdateAsync(updateUserRequestDto);
+		var response = await _userService.UpdateAsync(updateUserRequestDto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -193,7 +198,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 			return RedirectToAction("Settings");
 		}
 
-		var response = await _service.UpdatePasswordAsync(dto);
+		var response = await _userService.UpdatePasswordAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -208,7 +213,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 	[Authorize(Roles = "admin")]
 	public async Task<IActionResult> Update(UpdateUserRequestDto dto)
 	{
-		var response = await _service.UpdateAsync(dto);
+		var response = await _userService.UpdateAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -221,7 +226,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 	[Authorize(Roles = "admin")]
 	public async Task<IActionResult> Delete(string id)
 	{
-		var response = await _service.DeleteAsync(id);
+		var response = await _userService.DeleteAsync(id);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -248,7 +253,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 		if (string.IsNullOrEmpty(refreshToken))
 			return RedirectToAction("SignIn");
 
-		var response = await _service.TryRefreshSessionAsync(refreshToken);
+		var response = await _authService.TryRefreshSessionAsync(refreshToken);
 
 		if (response.IsFailure)
 			return RedirectToAction("SignIn");
@@ -272,7 +277,7 @@ public class UsersController(IUserService _service, ILogger<UsersController> _lo
 	[Authorize]
 	public async Task<IActionResult> Settings()
 	{
-		var response = await _service.GetByUsernameAsync(User.Identity?.Name ?? string.Empty);
+		var response = await _userService.GetByUsernameAsync(User.Identity?.Name ?? string.Empty);
 
 		if (response.IsFailure) return Logout();
 

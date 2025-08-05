@@ -1,5 +1,4 @@
-﻿using XerifeTv.CMS.Modules.User;
-using XerifeTv.CMS.Modules.User.Enums;
+﻿using XerifeTv.CMS.Modules.User.Enums;
 
 namespace XerifeTv.CMS.Modules.User.Dtos.Request;
 
