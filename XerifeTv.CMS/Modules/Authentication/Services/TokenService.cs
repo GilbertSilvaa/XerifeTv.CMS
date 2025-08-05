@@ -1,15 +1,15 @@
+﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Microsoft.IdentityModel.Tokens;
-using XerifeTv.CMS.Modules.User;
-using XerifeTv.CMS.Modules.User.Interfaces;
+using XerifeTv.CMS.Modules.Authentication.Interfaces;
+using XerifeTv.CMS.Modules.User.Enums;
 
-namespace XerifeTv.CMS.Modules.User.Services;
+namespace XerifeTv.CMS.Modules.Authentication.Services;
 
-public sealed class TokenService(IConfiguration _configuration) : ITokenService
+public class TokenService(IConfiguration _configuration) : ITokenService
 {
-    public string GenerateToken(UserEntity user)
+    public string GenerateToken(string username, EUserRole userRole)
     {
         var key = _configuration["Jwt:Key"] ?? string.Empty;
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -20,8 +20,8 @@ public sealed class TokenService(IConfiguration _configuration) : ITokenService
 
         var tokenClaims = new[]
         {
-            new Claim(ClaimTypes.Name, user.UserName),
-            new Claim(ClaimTypes.Role, user.Role.ToString().ToLower()),
+            new Claim(ClaimTypes.Name, username),
+            new Claim(ClaimTypes.Role, userRole.ToString().ToLower()),
         };
 
         _ = int.TryParse(_configuration["Jwt:ExpirationTimeInMinutes"], out int expireTimeInMinutes);
@@ -36,7 +36,7 @@ public sealed class TokenService(IConfiguration _configuration) : ITokenService
         return new JwtSecurityTokenHandler().WriteToken(tokenOptions);
     }
 
-    public string GenerateRefreshToken(UserEntity user)
+    public string GenerateRefreshToken(string username)
     {
         var key = _configuration["Jwt:Key"] ?? string.Empty;
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
@@ -44,7 +44,7 @@ public sealed class TokenService(IConfiguration _configuration) : ITokenService
         var audience = _configuration["Jwt:Audience"];
 
         var signInCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
-        var tokenClaims = new[] { new Claim(ClaimTypes.Name, user.UserName) };
+        var tokenClaims = new[] { new Claim(ClaimTypes.Name, username) };
 
         _ = int.TryParse(_configuration["Jwt:RefreshExpirationTimeInMinutes"], out var expireTimeInMinutes);
 

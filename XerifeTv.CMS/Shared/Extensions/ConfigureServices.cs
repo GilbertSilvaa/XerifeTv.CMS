@@ -2,6 +2,8 @@
 using Microsoft.OpenApi.Models;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Services;
+using XerifeTv.CMS.Modules.Authentication.Interfaces;
+using XerifeTv.CMS.Modules.Authentication.Services;
 using XerifeTv.CMS.Modules.BackgroundJobQueue;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Channel;
@@ -56,6 +58,7 @@ public static class ConfigureServices
         services.AddScoped<IContentService, ContentService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICacheService, CacheService>();
         services.AddScoped<IStorageFilesService, StorageFilesService>();
         services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
