@@ -1,4 +1,6 @@
-﻿@{
+﻿@using XerifeTv.CMS.Modules.Authentication.Enums
+
+@{
   ViewData["Title"] = "SignIn";
 }
 
@@ -22,9 +24,13 @@
 <div class="container d-flex flex-column justify-content-center align-items-center" style="height: 80vh;">
   
   <form 
+    id="signInForm"
     asp-controller="Users"
     asp-action="SignIn"
     class="w-50 p-4 py-5 signin-form position-relative">
+
+    <input type="hidden" id="provider" name="provider" value="@((int)ELoginProvider.Basic)" />
+    <input type="hidden" id="externalToken" name="externalToken" value="" />
 
     <div class="w-100 d-flex justify-content-center mb-5 py-1">
       <img src="~/assets/logo.png" alt="logo" style="width: 60%;"/>
@@ -61,6 +67,7 @@
     </div>
 
     <button type="submit" class="btn btn-primary w-100 mt-1">Login</button>
+    <div id="googleSignInDiv" class="mt-3"></div>
 
     <div 
       class="w-100 d-flex justify-content-center align-items-center position-absolute"
@@ -74,3 +81,32 @@
     </div>
   </form>
 </div>
+
+@section scripts {
+    <script>
+        function handleGoogleCredentialResponse(response) {
+            const idToken = response.credential;
+            $('#externalToken').val(idToken);
+            $('#provider').val(@((int)ELoginProvider.Google));
+
+            $('button').prop('disabled', true);
+            $('input').prop('readonly', true);
+            $('#signInForm').trigger('submit');
+        }
+
+        $(document).ready(function () {
+            google.accounts.id.initialize({
+                client_id: '@ViewBag.GoogleClientId',
+                callback: handleGoogleCredentialResponse
+            });
+
+            google.accounts.id.renderButton(
+                document.getElementById('googleSignInDiv'), { 
+                    theme: 'outline', 
+                    size: 'large',
+                    logo_alignment: 'left'
+                }
+            );
+        });
+    </script>
+}

@@ -12,6 +12,7 @@ namespace XerifeTv.CMS.Controllers;
 public class UsersController(
 	IUserService _userService, 
 	IAuthService _authService,
+	IConfiguration _configuration,
 	ILogger<UsersController> _logger) : Controller
 {
 	private readonly CookieOptions _cookieOptions = new()
@@ -41,6 +42,8 @@ public class UsersController(
 		if (User.Identity != null && User.Identity.IsAuthenticated)
 			return RedirectToAction("Index", "Home");
 
+		ViewBag.GoogleClientId = _configuration["OAuth2Google:ClientId"];
+
 		return View();
 	}
 
@@ -53,6 +56,7 @@ public class UsersController(
 		if (response.IsFailure)
 		{
 			TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty);
+			ViewBag.GoogleClientId = _configuration["OAuth2Google:ClientId"];
 			_logger.LogInformation("There was an unsuccessful login attempt");
 			return View();
 		}

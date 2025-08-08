@@ -3,42 +3,24 @@ using XerifeTv.CMS.Modules.Authentication.Dtos.Response;
 using XerifeTv.CMS.Modules.Authentication.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.User.Interfaces;
-using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.Authentication.Services;
 
 public class AuthService(
     IUserService _userService,
-    ITokenService _tokenService) : IAuthService
+    ITokenService _tokenService,
+	IEnumerable<ILoginStrategy> _loginStrategies) : IAuthService
 {
     public async Task<Result<LoginResponseDto>> LoginAsync(LoginRequestDto dto)
     {
         try
         {
-            var response = RegexHelper.IsValidEmail(dto.UserNameOrEmail)
-                ? await _userService.GetByEmailAsync(dto.UserNameOrEmail)
-                : await _userService.GetByUsernameAsync(dto.UserNameOrEmail);
+			var loginStrategy = _loginStrategies.FirstOrDefault(s => s.CanHandle(dto.Provider));
 
-            if (response.IsFailure)
-                return Result<LoginResponseDto>.Failure(response.Error);
+            if (loginStrategy == null)
+                return Result<LoginResponseDto>.Failure(new Error("400", "Login provider not supported"));
 
-            var userResult = response.Data!;
-
-            var isPasswordCorrectResponse = await _userService.IsPasswordCorrect(userResult.Id, dto.Password);
-
-            if (isPasswordCorrectResponse.IsFailure)
-                return Result<LoginResponseDto>.Failure(isPasswordCorrectResponse.Error);
-
-            if (!isPasswordCorrectResponse.Data)
-                return Result<LoginResponseDto>.Failure( new Error("401", "Credenciais invalidas"));
-
-            if (userResult.Blocked)
-                return Result<LoginResponseDto>.Failure(new Error("403", "Usuario bloqueado"));
-
-            return Result<LoginResponseDto>.Success(
-                new LoginResponseDto(
-                    _tokenService.GenerateToken(userResult.UserName, userResult.Role),
-                    _tokenService.GenerateRefreshToken(userResult.UserName)));
+            return await loginStrategy.AuthenticateAsync(dto);
         }
         catch (Exception ex)
         {
