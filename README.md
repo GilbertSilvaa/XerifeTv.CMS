@@ -19,6 +19,7 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 - [X]  **Supabase Storage Integration:** Store media files (.vtt, images, etc.) securely in a Supabase bucket.  
 - [X]  **User Roles & Permissions:** Granular access control for administrators, content managers, and viewers.  
 - [X]  **JWT Authentication:** Secure authentication using JSON Web Tokens (JWT).  
+- [X]  **Google OAuth2:** Sign in with Google.
 - [X]  **Refresh Token Implementation:** Improve session security with access and refresh token flow.  
 - [X]  **External Content API:** Public REST API to expose registered content for external apps or clients.  
 - [X]  **API Caching:** Improve API response times by caching data from the external content API.  
@@ -31,6 +32,7 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 - Razor Pages
 - Bootstrap
 - JWT Authentication
+- Google OAuth2
 - MongoDB
 - MVC Architecture
 - Cache In Memory
@@ -45,14 +47,16 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
 - [.NET SDK](https://dotnet.microsoft.com/download) version **8.0** or higher  
 - **MongoDB** running locally or accessible remotely  
 - A **[TMDB account](https://www.themoviedb.org/)** to generate your API key  
-- A **[Supabase account](https://supabase.com/)** to manage file storage and access API keys
+- A **[Supabase account](https://supabase.com/)** to manage file storage and access API keys  
+- A **[Google Cloud Project](https://console.cloud.google.com/)** with **OAuth 2.0 Client ID** configured for **Web application**  
+  - Enable the **Google Identity Services API**  
+  - Add authorized JavaScript origins (e.g., `http://localhost:5003`) 
 
 ### Setup Steps
 
 
 #### 1. Clone the repository:
     git clone https://github.com/GilbertSilvaa/XerifeTv.CMS.git
-
 
 #### 2. Navigate to the project directory:
     cd XerifeTv.CMS
@@ -80,7 +84,7 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
             "Audience": "Xerifetvcms",
             "ExpirationTimeInMinutes": "",
             "RefreshExpirationTimeInMinutes": ""
-        },
+        }
     }
 
 #### 6. Configure the Settings for the Supabase in the `appsettings.json` file:
@@ -91,14 +95,14 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
         }
     }
 
-#### 7. Configure the settings for the Tmdb API integration in the 'appsettings.json' file:
+#### 7. Configure the settings for the Tmdb API integration in the `appsettings.json` file:
     {
         "Tmdb": {
             "Key": "examplekey0examplekey0examplekey"
         }
     }
 
-### 8. Configure the settings for sending email in the 'appsettings.json' file:
+#### 8. Configure the settings for sending email in the `appsettings.json` file:
     {
         "EmailSettings": {
             "From": "emailexample@gmail.com",
@@ -106,22 +110,28 @@ XerifeTv CMS is a content management system (CMS) developed for Over-The-Top (OT
         }
     }
 
-### 9. Set the base url in the file 'appsettings.json':
+#### 9. Set the base url in the `appsettings.json` file:
     {
         "baseUrl": "http://localhost:5003"
     }
 
-#### 10. Restore dependencies and compile the project:
+#### 10. Configure Google OAuth2 Client ID in the `appsettings.json` file:
+    {
+        "OAuth2Google": {
+            "ClientId": "your-google-oauth2-client-id.apps.googleusercontent.com"
+        }
+    }
+
+#### 11. Restore dependencies and compile the project:
     dotnet restore
     dotnet build
 
-
-#### 11. Start the server:
+#### 12. Start the server:
     dotnet run
 
-
-#### 12. Access the application in the browser:
+#### 13. Access the application in the browser:
     http://localhost:5003
+
 
 ## License
 
