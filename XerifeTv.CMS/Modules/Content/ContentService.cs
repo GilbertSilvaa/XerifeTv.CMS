@@ -26,7 +26,6 @@ public sealed class ContentService(
   ICacheService _cacheService) : IContentService
 {
 	const int limitTotalResult = 50;
-	const int limitPartialResult = 2;
 
 	public async Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
 	{
