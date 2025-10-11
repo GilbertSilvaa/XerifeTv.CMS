@@ -13,6 +13,9 @@ RUN dotnet publish -c Release -o out
 # Step 2: Setting up the runtime environment
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
 WORKDIR /app
+
+RUN apt-get update && apt-get install -y ca-certificates
+
 COPY --from=build-env /app/out .
 
 # Expose port 88 to the container
