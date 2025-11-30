@@ -48,7 +48,27 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
         }
     }
 
-    public async Task<Result<string>> CreateAsync(CreateMovieRequestDto dto)
+	public async Task<Result<GetMovieResponseDto?>> GetByImdbIdAsync(string imdbId)
+	{
+		try
+		{
+			var response = await _repository.GetByImdbIdAsync(imdbId);
+
+			if (response is null)
+				return Result<GetMovieResponseDto?>
+				  .Failure(new Error("404", "Conteudo nao encontrado"));
+
+			return Result<GetMovieResponseDto?>
+			  .Success(GetMovieResponseDto.FromEntity(response));
+		}
+		catch (Exception ex)
+		{
+			var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+			return Result<GetMovieResponseDto?>.Failure(error);
+		}
+	}
+
+	public async Task<Result<string>> CreateAsync(CreateMovieRequestDto dto)
     {
         try
         {
