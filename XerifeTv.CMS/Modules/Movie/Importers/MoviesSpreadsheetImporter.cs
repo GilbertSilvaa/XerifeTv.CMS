@@ -93,43 +93,72 @@ public class MoviesSpreadsheetImporter(
 
 			foreach (var movieItem in movieList)
 			{
-				var movieByImdbResponse = await _imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
+				var movieImdbAPIResponse = await _imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
 
-				if (movieByImdbResponse.IsFailure)
+				if (movieImdbAPIResponse.IsFailure)
 				{
 					failCount++;
-					errorList.Add(movieByImdbResponse.Error.Description ?? string.Empty);
+					errorList.Add(movieImdbAPIResponse.Error.Description ?? string.Empty);
 					UpdateProgress();
 					continue;
 				}
 
-				var createMovieDto = new CreateMovieRequestDto
+				var movieByImdbIdResponse = await _service.GetByImdbIdAsync(movieItem.ImdbId);
+
+				Result<string>? responseCreateOrUpdate = null;
+
+				if (movieByImdbIdResponse.IsSuccess)
 				{
-					ImdbId = movieItem.ImdbId,
-					Title = movieByImdbResponse.Data?.Title ?? string.Empty,
-					Synopsis = movieByImdbResponse.Data?.Overview ?? string.Empty,
-					Categories = String.Join(", ", movieByImdbResponse?.Data?.Genres.Select(g => g.Name.ToLower()) ?? []),
-					PosterUrl = movieByImdbResponse?.Data?.PosterUrl ?? string.Empty,
-					BannerUrl = movieByImdbResponse?.Data?.BannerUrl ?? string.Empty,
-					ReleaseYear = int.Parse(movieByImdbResponse?.Data?.ReleaseYear ?? "0"),
-					Review = movieByImdbResponse?.Data?.VoteAverage ?? 0,
-					ParentalRating = movieItem.ParentalRating,
-					VideoUrl = movieItem.Video?.Url ?? string.Empty,
-					VideoDuration = movieByImdbResponse?.Data?.DurationInSeconds ?? 0,
-					VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
-					VideoSubtitle = movieItem.Video?.Subtitle
-				};
+					var updateMovieDto = new UpdateMovieRequestDto
+					{
+						Id = movieByImdbIdResponse.Data!.Id,
+						ImdbId = movieItem.ImdbId,
+						Title = movieByImdbIdResponse.Data!.Title,
+						Synopsis = movieByImdbIdResponse.Data!.Synopsis,
+						Categories = movieByImdbIdResponse.Data!.Categories,
+						PosterUrl = movieByImdbIdResponse.Data!.PosterUrl,
+						BannerUrl = movieByImdbIdResponse.Data!.BannerUrl,
+						ReleaseYear = movieByImdbIdResponse.Data!.ReleaseYear,
+						Review = movieByImdbIdResponse.Data!.Review,
+						ParentalRating = movieItem.ParentalRating,
+						VideoUrl = movieItem.Video?.Url ?? string.Empty,
+						VideoDuration = movieByImdbIdResponse.Data!.Video?.Duration ?? 0,
+						VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
+						VideoSubtitle = movieItem.Video?.Subtitle
+					};
 
-				var response = await _service.CreateAsync(createMovieDto);
+					responseCreateOrUpdate = await _service.UpdateAsync(updateMovieDto);									
+				}
+				else
+				{
+					var createMovieDto = new CreateMovieRequestDto
+					{
+						ImdbId = movieItem.ImdbId,
+						Title = movieImdbAPIResponse.Data?.Title ?? string.Empty,
+						Synopsis = movieImdbAPIResponse.Data?.Overview ?? string.Empty,
+						Categories = String.Join(", ", movieImdbAPIResponse?.Data?.Genres.Select(g => g.Name.ToLower()) ?? []),
+						PosterUrl = movieImdbAPIResponse?.Data?.PosterUrl ?? string.Empty,
+						BannerUrl = movieImdbAPIResponse?.Data?.BannerUrl ?? string.Empty,
+						ReleaseYear = int.Parse(movieImdbAPIResponse?.Data?.ReleaseYear ?? "0"),
+						Review = movieImdbAPIResponse?.Data?.VoteAverage ?? 0,
+						ParentalRating = movieItem.ParentalRating,
+						VideoUrl = movieItem.Video?.Url ?? string.Empty,
+						VideoDuration = movieImdbAPIResponse?.Data?.DurationInSeconds ?? 0,
+						VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
+						VideoSubtitle = movieItem.Video?.Subtitle
+					};
 
-				if (response.IsSuccess)
+					responseCreateOrUpdate = await _service.CreateAsync(createMovieDto);
+				}
+
+				if (responseCreateOrUpdate.IsSuccess)
 				{
 					successCount++;
 				}
 				else
 				{
 					failCount++;
-					errorList.Add(response.Error?.Description ?? string.Empty);
+					errorList.Add(responseCreateOrUpdate.Error?.Description ?? string.Empty);
 				}
 
 				UpdateProgress();
