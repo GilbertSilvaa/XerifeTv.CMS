@@ -46,7 +46,8 @@
         type="button" 
         role="tab" 
         aria-controls="v-pills-profile" 
-        aria-selected="true">
+        aria-selected="true"
+        href="#updateprofile">
         <i class="fa-solid fa-user"></i>
         <span>Perfil</span>
       </button>
@@ -59,7 +60,8 @@
         type="button"
         role="tab"
         aria-controls="v-pills-edit-password"
-        aria-selected="true">
+        aria-selected="true"
+        href="#updatepassword">
         <i class="fa-solid fa-key"></i>
         <span>Alterar Senha</span>
       </button>
@@ -85,3 +87,20 @@
     </div>
   </div>
 </div>
+
+@section scripts {
+    <script>
+        $(document).ready(function () {
+            const hash = window.location.hash;
+
+            if (hash) {
+                const $tab = $(`.nav-link[href="${hash}"]`);
+
+                if ($tab.length) {
+                    const tab = new bootstrap.Tab($tab[0]);
+                    tab.show();
+                }
+            }
+        });
+    </script>
+}
