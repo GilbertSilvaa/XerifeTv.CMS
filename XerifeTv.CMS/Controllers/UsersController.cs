@@ -189,7 +189,7 @@ public class UsersController(
 
 		_logger.LogInformation($"{User.Identity?.Name} updated your own profile");
 
-		return RedirectToAction("Settings");
+		return Redirect(Url.Action("Settings") + "#updateprofile");
 	}
 
 	[HttpPost]
@@ -199,8 +199,8 @@ public class UsersController(
 		if (dto.NewPassword != dto.NewPasswordConfirm)
 		{
 			TempData["Notification"] = MessageViewHelper.ErrorJson("Confirmacao de senha incorreta");
-			return RedirectToAction("Settings");
-		}
+            return Redirect(Url.Action("Settings") + "#updatepassword");
+        }
 
 		var response = await _userService.UpdatePasswordAsync(dto);
 
@@ -210,8 +210,8 @@ public class UsersController(
 
 		_logger.LogInformation($"{User.Identity?.Name} updated your password");
 
-		return RedirectToAction("Settings");
-	}
+		return Redirect(Url.Action("Settings") + "#updatepassword");
+    }
 
 	[HttpPost]
 	[Authorize(Roles = "admin")]

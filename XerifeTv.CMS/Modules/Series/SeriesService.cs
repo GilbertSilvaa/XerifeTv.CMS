@@ -157,11 +157,11 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
     }
 
     public async Task<Result<GetEpisodesResponseDto>> GetEpisodesBySeasonAsync(
-      string serieId, int season, bool includeDisabled)
+      string serieId, int season, bool includeDisabled, int? specificEpisode = null)
     {
         try
         {
-            var response = await _repository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled);
+            var response = await _repository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled, specificEpisode);
 
             if (response is null)
                 return Result<GetEpisodesResponseDto>

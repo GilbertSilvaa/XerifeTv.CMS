@@ -34,8 +34,8 @@ public class BackgroundJobEntity : BaseEntity
 			Type = type,
 			JobName = type switch
 			{
-				EBackgroundJobType.REGISTER_SPREADSHEET_MOVIES => $"Cadastro de Filmes ({spreadsheetFileName})",
-				EBackgroundJobType.REGISTER_SPREADSHEET_SERIES => $"Cadastro de Series ({spreadsheetFileName})",
+				EBackgroundJobType.REGISTER_SPREADSHEET_MOVIES => $"Cadastro/Atualizacao de Filmes ({spreadsheetFileName})",
+				EBackgroundJobType.REGISTER_SPREADSHEET_SERIES => $"Cadastro/Atualizacao de Series ({spreadsheetFileName})",
 				EBackgroundJobType.REGISTER_SPREADSHEET_CHANNELS => $"Cadastro de Canais ({spreadsheetFileName})",
 				_ => string.Empty
 			},

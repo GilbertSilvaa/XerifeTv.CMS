@@ -13,7 +13,7 @@ public interface ISeriesService
     Task<Result<string>> UpdateAsync(UpdateSeriesRequestDto dto);
     Task<Result<bool>> DeleteAsync(string id);
     Task<Result<PagedList<GetSeriesResponseDto>>> GetByFilterAsync(GetSeriesByFilterRequestDto dto);
-    Task<Result<GetEpisodesResponseDto>> GetEpisodesBySeasonAsync(string serieId, int season, bool includeDisabled);
+    Task<Result<GetEpisodesResponseDto>> GetEpisodesBySeasonAsync(string serieId, int season, bool includeDisabled, int? specificEpisode = null);
     Task<Result<string>> CreateEpisodeAsync(CreateEpisodeRequestDto dto);
     Task<Result<string>> UpdateEpisodeAsync(UpdateEpisodeRequestDto dto);
     Task<Result<bool>> DeleteEpisodeAsync(string serieId, string id);
