@@ -6,5 +6,6 @@ public enum ECollection
     SERIES,
     CHANNELS,
     USERS,
-    BACKGROUND_JOB_QUEUE
+    BACKGROUND_JOB_QUEUE,
+    WEBHOOKS
 }

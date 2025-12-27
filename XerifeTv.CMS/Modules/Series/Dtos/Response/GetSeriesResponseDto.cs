@@ -1,6 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Series;
-
-namespace XerifeTv.CMS.Modules.Series.Dtos.Response;
+﻿namespace XerifeTv.CMS.Modules.Series.Dtos.Response;
 
 public class GetSeriesResponseDto
 {
