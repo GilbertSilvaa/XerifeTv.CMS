@@ -1,4 +1,6 @@
 ﻿using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -6,7 +8,9 @@ using XerifeTv.CMS.Modules.Movie.Specifications;
 
 namespace XerifeTv.CMS.Modules.Movie;
 
-public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
+public sealed class MovieSevice(
+    IMovieRepository _repository,
+    IWebhookService _webhookService) : IMovieService
 {
     public async Task<Result<PagedList<GetMovieResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -80,6 +84,9 @@ public sealed class MovieSevice(IMovieRepository _repository) : IMovieService
                   new Error("409", $"Filme nao cadastrado. Imdb ID {entity.ImdbId} duplicado"));
 
             var response = await _repository.CreateAsync(entity);
+
+            _ = _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.MOVIE_PUBLISHED, response);
+
             return Result<string>.Success(response);
         }
         catch (Exception ex)

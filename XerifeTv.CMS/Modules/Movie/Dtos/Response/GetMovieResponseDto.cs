@@ -1,5 +1,4 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
-using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.Movie.Dtos.Response;

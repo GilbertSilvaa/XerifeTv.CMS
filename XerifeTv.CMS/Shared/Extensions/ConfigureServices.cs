@@ -14,6 +14,8 @@ using XerifeTv.CMS.Modules.Content.Interfaces;
 using XerifeTv.CMS.Modules.Dashboard;
 using XerifeTv.CMS.Modules.Dashboard.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Integrations.Webhook;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Importers;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -46,6 +48,7 @@ public static class ConfigureServices
 		services.AddScoped<ISeriesRepository, SeriesRepository>();
 		services.AddScoped<IChannelRepository, ChannelRepository>();
 		services.AddScoped<IUserRepository, UserRepository>();
+		services.AddScoped<IWebhookRepository, WebhookRepository>();
 		return services;
 	}
 
@@ -73,7 +76,10 @@ public static class ConfigureServices
 		services.AddScoped<IBackgroundJobQueueService, BackgroundJobQueueService>();
 		services.AddScoped<ILoginStrategy, BasicLoginStrategy>();
 		services.AddScoped<ILoginStrategy, GoogleLoginStrategy>();
-		services.AddHostedService<BackgroundJobQueueWorker>();
+		services.AddScoped<IWebhookService, WebhookService>();
+
+        services.AddHostedService<BackgroundJobQueueWorker>();
+
 		return services;
 	}
 

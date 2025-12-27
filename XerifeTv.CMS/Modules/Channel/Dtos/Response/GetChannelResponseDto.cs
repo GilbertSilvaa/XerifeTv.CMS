@@ -1,5 +1,4 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
-using XerifeTv.CMS.Modules.Channel;
 
 namespace XerifeTv.CMS.Modules.Channel.Dtos.Response;
 

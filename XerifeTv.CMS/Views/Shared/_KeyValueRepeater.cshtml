@@ -1,0 +1,81 @@
+﻿@using XerifeTv.CMS.Views.Shared.Models
+@model KeyValueRepeaterViewModel
+
+<div class="kv-repeater">
+
+    @if (Model != null && Model.KeysValues.Any())
+    {
+        var index = 0;
+
+        foreach (var item in Model.KeysValues)
+        {
+            var isLast = index == Model.KeysValues.Count - 1;
+
+            <div class="kv-row row align-items-center mb-2" data-index="@index">
+                <div class="col-11">
+                    <div class="input-group">
+                        <input type="text"
+                               name="@(Model.PropertyName + $"[{index}].Key")"
+                               class="form-control shadow-sm kv-key"
+                               placeholder="Key"
+                               value="@item.Key">
+
+                        <input type="text"
+                               name="@(Model.PropertyName + $"[{index}].Value")"
+                               class="form-control shadow-sm kv-value"
+                               placeholder="Value"
+                               value="@item.Value">
+                    </div>
+                </div>
+
+                <div class="col-1 text-end d-flex gap-1 justify-content-end align-items-center">
+
+                    @if (isLast)
+                    {
+                        <button type="button" class="btn btn-sm btn-outline-success border-3 rounded-circle kv-add-btn">
+                            <i class="fa-solid fa-plus"></i>
+                        </button>                
+                    }
+
+                    <button type="button"
+                            class="btn btn-sm btn-outline-danger border-3 rounded-circle kv-remove-btn @(isLast ? "d-none" : "")">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                </div>
+            </div>
+
+            index++;
+        }
+    }
+    else
+    {
+        <div class="kv-row row align-items-center mb-2" data-index="0">
+            <div class="col-11">
+                <div class="input-group">
+                    <input type="text"
+                           name="@(Model!.PropertyName + $"[0].Key")"
+                           class="form-control shadow-sm kv-key"
+                           placeholder="Key">
+
+                    <input type="text"
+                           name="@(Model!.PropertyName + $"[0].Value")"
+                           class="form-control shadow-sm kv-value"
+                           placeholder="Value">
+                </div>
+            </div>
+
+            <div class="col-1 text-end d-flex gap-1 justify-content-end align-items-center">
+                <button type="button"
+                        class="btn btn-sm btn-outline-success border-3 rounded-circle kv-add-btn"
+                        disabled>
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+
+                <button type="button"
+                        class="btn btn-sm btn-outline-danger border-3 rounded-circle kv-remove-btn d-none">
+                    <i class="fa-solid fa-trash-can"></i>
+                </button>
+            </div>
+        </div>
+    }
+</div>

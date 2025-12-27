@@ -3,10 +3,14 @@ using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Specifications;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Channel;
 
-public sealed class ChannelService(IChannelRepository _repository) : IChannelService
+public sealed class ChannelService(
+    IChannelRepository _repository,
+    IWebhookService _webhookService) : IChannelService
 {
     public async Task<Result<PagedList<GetChannelResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -62,6 +66,9 @@ public sealed class ChannelService(IChannelRepository _repository) : IChannelSer
             }
 
             var response = await _repository.CreateAsync(entity);
+
+            _ = _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.CHANNEL_PUBLISHED, response);
+
             return Result<string>.Success(response);
         }
         catch (Exception ex)

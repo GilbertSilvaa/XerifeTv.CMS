@@ -1,0 +1,82 @@
+﻿@using XerifeTv.CMS.Modules.Common.Enums
+@using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response
+@using XerifeTv.CMS.Modules.Integrations.Webhook.Enums
+
+@model IEnumerable<GetWebhookResponseDto>
+
+@{
+    var webhookDtoEmpty = new GetWebhookResponseDto();
+}
+
+<div class="d-flex flex-column gap-4">
+    @await Html.PartialAsync("_WebhookFormModal", webhookDtoEmpty)
+
+    <div>
+        <a class="btn btn-sm btn-primary shadow-sm"
+           role="button"
+           data-bs-toggle="modal"
+           data-bs-target="#webhookFormModal-@webhookDtoEmpty.Id">
+            <i class="fa-solid fa-plus"></i> Cadastrar
+        </a>
+    </div>
+
+    <div class="d-flex flex-column gap-4" style="padding-right: 1rem;">    
+        @foreach (var webhook in Model)
+        {
+            <div class="card" style="@(webhook.IsDisabled ? "opacity: 72%" : "")">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 style="line-height: 0; margin-bottom: 0;">@webhook.Name</h5>
+                    <h5 style="line-height: 0; margin-bottom: 0;">
+                        <span class="badge rounded-pill text-bg-success">@webhook.TriggerEvent.GetDescription()</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="card-text">@webhook.Description</p>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>                          
+                            <h5 style="line-height: 0; margin-bottom: 0;">
+                                @if (webhook.HttpMethod == EHttpMethod.GET)
+                                {
+                                    <span class="badge text-bg-primary">@webhook.HttpMethod.ToString()</span>
+                                }
+                                @if (webhook.HttpMethod == EHttpMethod.POST)
+                                {
+                                    <span class="badge text-bg-success">@webhook.HttpMethod.ToString()</span>
+                                }
+                                @if (webhook.HttpMethod == EHttpMethod.PUT)
+                                {
+                                    <span class="badge text-bg-warning">@webhook.HttpMethod.ToString()</span>
+                                }
+                                @if (webhook.HttpMethod == EHttpMethod.PATCH)
+                                {
+                                    <span class="badge text-bg-warning">@webhook.HttpMethod.ToString()</span>
+                                }
+                                @if (webhook.HttpMethod == EHttpMethod.DELETE)
+                                {
+                                    <span class="badge text-bg-danger">@webhook.HttpMethod.ToString()</span>
+                                }
+                            </h5>
+                        </div>
+
+                        <a class="btn btn-sm btn-primary shadow-sm float-end"
+                           role="button"
+                           data-bs-toggle="modal"
+                           data-bs-target="#webhookFormModal-@webhook.Id">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+
+                    </div>
+
+                </div>
+            </div>
+
+            @await Html.PartialAsync("_WebhookFormModal", webhook)
+        }
+
+        @if (Model.Count() <= 0)
+        {
+            <p>Nenhum registro encontrado.</p>
+        }
+    </div>
+</div>
