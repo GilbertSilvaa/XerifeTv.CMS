@@ -1,0 +1,288 @@
+﻿@using XerifeTv.CMS.Modules.Common.Enums
+@using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response
+@using XerifeTv.CMS.Modules.Integrations.Webhook.Enums
+@using XerifeTv.CMS.Views.Shared.Models
+
+@model GetWebhookResponseDto?
+
+
+<div class="modal fade"
+     id="webhookFormModal-@Model?.Id"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="webhookFormModal-@Model?.Id-Label"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content"
+              asp-controller="Settings"
+              asp-action="@(string.IsNullOrEmpty(Model?.Id) ? "RegisterWebhook" : "UpdateWebhook")">
+
+            <input type="hidden" name="id" value="@Model?.Id" />
+
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="webhookFormModal-@Model?.Id-Label">
+                    @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar") Webhook
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="name-@Model?.Id" class="form-label">Nome do Webhook</label>
+                        <input type="text"
+                               class="form-control shadow-sm"
+                               id="name-@Model?.Id"
+                               name="name"
+                               placeholder="Digite aqui..."
+                               value="@Model?.Name"
+                               required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="description-@Model?.Id" class="form-label">Descrição</label>
+                        <textarea class="form-control shadow-sm"
+                                  style="height: 80px;"
+                                  id="description-@Model?.Id"
+                                  name="description"
+                                  placeholder="Digite aqui..."
+                                  required>@Model?.Description</textarea>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="triggerEvent-@Model?.Id" class="form-label">Evento de Envio</label>
+                        <select class="form-select"
+                                id="triggerEvent-@Model?.Id"
+                                name="triggerEvent"
+                                required>
+                            <option data-keywords='' value="" selected>Selecione uma opção</option>
+                            @foreach (var triggerEvent in Enum.GetValues<EWebhookTriggerEvent>())
+                            {
+                                if (Model?.TriggerEvent == triggerEvent)
+                                {
+                                    <option data-keywords='@Html.Raw(Json.Serialize(triggerEvent.GetKeywords()))'
+                                            value="@triggerEvent"
+                                            selected>
+                                        @triggerEvent.GetDescription()
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option data-keywords='@Html.Raw(Json.Serialize(triggerEvent.GetKeywords()))'
+                                            value="@triggerEvent">
+                                        @triggerEvent.GetDescription()
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="url-@Model?.Id" class="form-label">URL</label>
+                        <input type="url"
+                               class="form-control shadow-sm"
+                               id="url-@Model?.Id"
+                               name="url"
+                               placeholder="https://webhook.com/example"
+                               value="@Model?.Url"
+                               required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="httpMethod-@Model?.Id" class="form-label">Método HTTP</label>
+                        <select class="form-select"
+                                id="httpMethod-@Model?.Id"
+                                name="httpMethod"
+                                required>
+
+                            @foreach (var method in Enum.GetValues<EHttpMethod>())
+                            {
+                                if (Model?.HttpMethod == method)
+                                {
+                                    <option value="@method" selected>@method</option>
+                                }
+                                else
+                                {
+                                    <option value="@method">@method</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="form-label">Headers</label>
+
+                    <div class="webhook-headers-@Model?.Id row">
+                        @await Html.PartialAsync("_KeyValueRepeater", new KeyValueRepeaterViewModel("Headers", (Model?.Headers ?? [])))
+                    </div>
+                </div>
+
+
+                <div class="row mb-3 payload-template-container-@Model?.Id"
+                     style="@((Model?.HttpMethod == EHttpMethod.GET || Model?.HttpMethod == EHttpMethod.DELETE) ? "display:none" : "")">
+
+                    <label class="form-label">Payload Template</label>
+
+                    <div class="col-lg-9">
+                        <div class="position-relative">
+                            <textarea id="payloadTemplate-@Model?.Id"
+                                      name="payloadTemplate"
+                                      rows="10"
+                                      class="form-control font-monospace shadow-sm"
+                                      placeholder='{ "user": "{{nome}}" }'
+                                      spellcheck="false">@Model?.PayloadTemplate</textarea>
+
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary shadow-sm position-absolute bottom-0 end-0 mb-3 me-3"
+                                    id="formatJsonBtn-@Model?.Id"
+                                    title="Formatar JSON">
+                                <i class="fa-solid fa-code"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 mt-3 mt-lg-0">
+                        <div class="border rounded shadow-sm h-100 bg-body p-3">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <strong class="small text-uppercase text-muted">
+                                    Variáveis
+                                </strong>
+                            </div>
+
+                            <div class="d-flex flex-column gap-2" data-target="payloadTemplate-@Model?.Id">
+
+                                @if (Model?.TriggerEvent != null)
+                                {
+                                    foreach (var keyword in Model.TriggerEvent.GetKeywords())
+                                    {
+                                        <button type="button"
+                                                class="btn btn-sm btn-outline-secondary text-start shadow-sm template-var-@Model?.Id"
+                                                data-value="@keyword"
+                                                onclick="addKeywordInPaylodTemplate(this)">
+                                            @keyword
+                                        </button>
+                                    }
+                                }
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+                @if (Model is GetWebhookResponseDto && !string.IsNullOrEmpty(Model?.Id))
+                {
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input id="isDisabled-@Model?.Id"
+                                       name="isDisabled"
+                                       class="form-check-input"
+                                       type="checkbox"
+                                       value="@(Model!.IsDisabled ? "true" : "false")"
+                                       @(Model!.IsDisabled ? "checked" : "")>
+                                <label class="form-check-label" for="isDisabled-@Model?.Id">
+                                    Desativar
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">
+                    @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
+                </button>
+
+                @if (!string.IsNullOrEmpty(Model?.Id))
+                {
+                    <a role="button" class="btn btn-danger btn-delete-webhook-@Model?.Id">
+                        <i class="fa fa-trash" aria-hidden="true"></i> Remover
+                    </a>
+                }
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('formatJsonBtn-@Model?.Id').addEventListener('click', () => {
+        const textarea = document.getElementById('payloadTemplate-@Model?.Id');
+
+        try {
+            const obj = JSON.parse(textarea.value);
+            textarea.value = JSON.stringify(obj, null, 2);
+            textarea.classList.remove('is-invalid');
+        } catch {
+            textarea.classList.add('is-invalid');
+        }
+    });
+
+    function addKeywordInPaylodTemplate(el) {
+        const container = el.closest('[data-target]');
+        const textareaId = container.getAttribute('data-target');
+        const textarea = document.getElementById(textareaId);
+
+        const value = el.dataset.value;
+
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+
+        textarea.value =
+            textarea.value.substring(0, start) +
+            value +
+            textarea.value.substring(end);
+
+        textarea.focus();
+        textarea.selectionStart = textarea.selectionEnd = start + value.length;
+    }
+
+    document.getElementById('triggerEvent-@Model?.Id').addEventListener('change', function () {
+        document.querySelector('div[data-target="payloadTemplate-@Model?.Id"]').innerHTML = '';
+
+        const selectedOption = this.options[this.selectedIndex];
+
+        const keywordsJson = selectedOption.dataset.keywords;
+        const keywords = JSON.parse(keywordsJson);
+
+        for (keyword of keywords) {
+            document.querySelector('div[data-target="payloadTemplate-@Model?.Id"]').insertAdjacentHTML('beforeend', `
+                <button type="button"
+                        class="btn btn-sm btn-outline-secondary text-start shadow-sm template-var-@Model?.Id"
+                        data-value="${keyword}"
+                        onclick="addKeywordInPaylodTemplate(this)">
+                    ${keyword}
+                </button>
+            `);
+        }
+    });
+
+    document.getElementById('httpMethod-@Model?.Id').addEventListener('change', function () {
+        if (this.value.toUpperCase() == 'GET' || this.value.toUpperCase() == 'DELETE') {
+            document.querySelector('.payload-template-container-@Model?.Id').style.display = 'none';
+        }
+        else {
+            document.querySelector('.payload-template-container-@Model?.Id').style.display = 'flex';
+        }
+    });
+
+    document.getElementById('isDisabled-@Model?.Id')?.addEventListener('change', function () {
+        this.value = this.checked;
+    })
+
+    document.querySelector('.btn-delete-webhook-@Model?.Id').addEventListener('click', function () {
+        if (!confirm('Deseja realmente remover o webhook?')) return;
+        location.href = '@Url.Action("DeleteWebhook", new { id = Model?.Id })';
+    })
+</script>

@@ -1,5 +1,7 @@
 ﻿using MongoDB.Driver.Linq;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -7,7 +9,9 @@ using XerifeTv.CMS.Modules.Series.Specifications;
 
 namespace XerifeTv.CMS.Modules.Series;
 
-public class SeriesService(ISeriesRepository _repository) : ISeriesService
+public class SeriesService(
+    ISeriesRepository _repository,
+    IWebhookService _webhookService) : ISeriesService
 {
     public async Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -80,7 +84,10 @@ public class SeriesService(ISeriesRepository _repository) : ISeriesService
                 return Result<string>.Failure(
                   new Error("409", $"Serie nao cadastrada. Imdb ID {entity.ImdbId} duplicado"));
 
-            await _repository.CreateAsync(entity);
+            var response = await _repository.CreateAsync(entity);
+
+            _ = _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.SERIES_PUBLISHED, response);
+
             return Result<string>.Success(entity.Id);
         }
         catch (Exception ex)

@@ -161,57 +161,12 @@ public class UsersController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson("Usuario cadastrado com sucesso");
+		  : MessageViewHelper.SuccessJson($"Usuario {dto.UserName} cadastrado com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} registered a new user");
 
 		return RedirectToAction("Index");
 	}
-
-	[HttpPost]
-	[Authorize]
-	public async Task<IActionResult> UpdateProfile(UpdateUserProfileRequestDto dto)
-	{
-		var updateUserRequestDto = new UpdateUserRequestDto
-		{
-			Id = dto.Id,
-			Email = dto.Email,
-			UserName = dto.UserName,
-			Role = null,
-			Blocked = null
-		};
-
-		var response = await _userService.UpdateAsync(updateUserRequestDto);
-
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson("Perfil atualizado com sucesso");
-
-		_logger.LogInformation($"{User.Identity?.Name} updated your own profile");
-
-		return Redirect(Url.Action("Settings") + "#updateprofile");
-	}
-
-	[HttpPost]
-	[Authorize]
-	public async Task<IActionResult> UpdatePassword(UpdatePasswordUserRequestDto dto)
-	{
-		if (dto.NewPassword != dto.NewPasswordConfirm)
-		{
-			TempData["Notification"] = MessageViewHelper.ErrorJson("Confirmacao de senha incorreta");
-            return Redirect(Url.Action("Settings") + "#updatepassword");
-        }
-
-		var response = await _userService.UpdatePasswordAsync(dto);
-
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson("Senha atualizada com sucesso");
-
-		_logger.LogInformation($"{User.Identity?.Name} updated your password");
-
-		return Redirect(Url.Action("Settings") + "#updatepassword");
-    }
 
 	[HttpPost]
 	[Authorize(Roles = "admin")]
@@ -221,7 +176,7 @@ public class UsersController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson("Usuario atualizado com sucesso");
+		  : MessageViewHelper.SuccessJson($"Usuario {dto.UserName} atualizado com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
 		return RedirectToAction("Index");
@@ -276,15 +231,5 @@ public class UsersController(
 		}
 
 		return RedirectToAction("SignIn");
-	}
-
-	[Authorize]
-	public async Task<IActionResult> Settings()
-	{
-		var response = await _userService.GetByUsernameAsync(User.Identity?.Name ?? string.Empty);
-
-		if (response.IsFailure) return Logout();
-
-		return View(response.Data);
 	}
 }

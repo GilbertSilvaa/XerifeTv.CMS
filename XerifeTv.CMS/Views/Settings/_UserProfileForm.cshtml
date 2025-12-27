@@ -4,8 +4,8 @@
 
 <form 
   class="w-100" 
-  asp-action="UpdateProfile" 
-  asp-controller="Users"
+  asp-action="UserUpdateProfile" 
+  asp-controller="Settings"
   method="post"
   data-confirm="Se o nome de usuário for alterado, será necessário fazer login novamente. Deseja continuar?">
   <input type="hidden" name="id" value="@Model?.Id"/>
