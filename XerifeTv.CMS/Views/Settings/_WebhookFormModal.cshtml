@@ -139,7 +139,7 @@
                             <textarea id="payloadTemplate-@Model?.Id"
                                       name="payloadTemplate"
                                       rows="10"
-                                      class="form-control font-monospace shadow-sm"
+                                      class="form-control font-monospace shadow-sm subtle-scrollbar"
                                       placeholder='{ "user": "{{nome}}" }'
                                       spellcheck="false">@Model?.PayloadTemplate</textarea>
 
@@ -279,10 +279,10 @@
 
     document.getElementById('isDisabled-@Model?.Id')?.addEventListener('change', function () {
         this.value = this.checked;
-    })
+    });
 
-    document.querySelector('.btn-delete-webhook-@Model?.Id').addEventListener('click', function () {
+    document.querySelector('.btn-delete-webhook-@Model?.Id')?.addEventListener('click', function () {
         if (!confirm('Deseja realmente remover o webhook?')) return;
         location.href = '@Url.Action("DeleteWebhook", new { id = Model?.Id })';
-    })
+    });
 </script>

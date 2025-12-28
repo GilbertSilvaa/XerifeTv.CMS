@@ -149,7 +149,13 @@ public sealed class WebhookService(
                     request.Content = new StringContent(payloadContent, System.Text.Encoding.UTF8, "application/json");
                 }
 
-                _ = await httpClient.SendAsync(request);
+                var response = await httpClient.SendAsync(request);
+
+                if (!response.IsSuccessStatusCode)
+                {
+                    _logger.LogError("The webhook {WebhookName} returned the status code {StatusCode}", webhook.Name, response.StatusCode);
+                    continue;
+                }
 
                 _logger.LogInformation("The webhook {WebhookName} was executed successfully", webhook.Name);
             }

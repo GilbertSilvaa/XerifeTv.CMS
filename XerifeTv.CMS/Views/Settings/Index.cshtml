@@ -21,6 +21,32 @@
             margin-bottom: 1rem;
         }
     }
+
+    .subtle-scrollbar {
+        /* Firefox */
+        scrollbar-width: thin;
+        scrollbar-color: rgba(120, 120, 120, 0.45) transparent;
+    }
+        /* Chrome, Edge, Safari */
+        .subtle-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .subtle-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .subtle-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(120, 120, 120, 0.25);
+            border-radius: 8px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+            transition: background-color 0.2s ease;
+        }
+
+        .subtle-scrollbar:hover::-webkit-scrollbar-thumb {
+            background-color: rgba(120, 120, 120, 0.5);
+        }
 </style>
 
 <div class="container">

@@ -1,4 +1,5 @@
-﻿using XerifeTv.CMS.Modules.Common.Enums;
+﻿using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 
 namespace XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Request;
@@ -10,7 +11,7 @@ public class UpdateWebhookRequestDto
     public string Description { get; init; } = string.Empty;
     public string Url { get; init; } = string.Empty;
     public EHttpMethod HttpMethod { get; init; } = EHttpMethod.POST;
-    public Dictionary<string, string> Headers { get; init; } = [];
+    public List<KeyValueInput> Headers { get; init; } = [];
     public string? PayloadTemplate { get; init; }
     public EWebhookTriggerEvent TriggerEvent { get; init; }
     public bool IsDisabled { get; init; }
@@ -24,7 +25,7 @@ public class UpdateWebhookRequestDto
             Description = Description,
             Url = Url,
             HttpMethod = HttpMethod,
-            Headers = Headers,
+            Headers = Headers.Where(x => !string.IsNullOrWhiteSpace(x.Key)).ToDictionary(x => x.Key!, x => x.Value ?? ""),
             PayloadTemplate = PayloadTemplate,
             TriggerEvent = TriggerEvent,
             IsDisabled = IsDisabled
