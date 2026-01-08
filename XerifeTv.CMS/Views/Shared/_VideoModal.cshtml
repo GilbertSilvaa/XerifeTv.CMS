@@ -1,73 +1,78 @@
 ﻿
-<div 
-  class="modal fade" 
-  id="videoModal" 
-  data-bs-backdrop="static" 
-  data-bs-keyboard="false" 
-  tabindex="-1" 
-  aria-labelledby="videoModalLabel" 
-  aria-hidden="true">
+<div class="modal fade"
+     id="videoModal"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="videoModalLabel"
+     aria-hidden="true">
 
-  <div class="modal-dialog modal-dialog-centered modal-xl">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="videoModalLabel"></h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body" style="height: 65vh;">
-        <video 
-          id="player" 
-          class="video-js vjs-default-skin w-100" 
-          style="min-height: 100%; max-height: 100%;" 
-          controls>
-        </video>
-      </div>
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="videoModalLabel"></h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" style="height: 65vh;">
+                <video id="player"
+                       class="video-js vjs-default-skin w-100"
+                       style="min-height: 100%; max-height: 100%;"
+                       controls>
+                </video>
+            </div>
+        </div>
     </div>
-  </div>
 </div>
 
 <script defer>
-  const modal = document.getElementById('videoModal')
-  var player = undefined
+    const modal = document.getElementById('videoModal')
+    var player = undefined
 
-  if (modal) {
-    modal.addEventListener('show.bs.modal', event => {
-      const button = event.relatedTarget
+    if (modal) {
+      modal.addEventListener('show.bs.modal', event => {
+        const button = event.relatedTarget
 
-      const modalTitle = document.querySelector('.modal-title')
-      modalTitle.textContent = button.getAttribute('data-bs-title')
+        const modalTitle = document.querySelector('.modal-title')
+        modalTitle.textContent = button.getAttribute('data-bs-title')
 
-      player = videojs('player', {
-        controls: true,
-        preload: 'auto'
+        player = videojs('player', {
+          controls: true,
+          preload: 'auto',
+          playbackRates: [0.5, 1, 1.25, 1.5, 2],
+          controlBar: {
+              skipButtons: {
+                  forward: 10,
+                  backward: 10
+              }
+          }
+        })
+
+        player.hlsQualitySelector({
+          displayCurrentQuality: true
+        })
+
+        const streamFormat = button.getAttribute('data-bs-video-format') === 'mp4'
+          ? 'video/mp4'
+          : 'application/x-mpegURL'
+
+        player.src({
+          src: button.getAttribute('data-bs-video-url'),
+          type: streamFormat
+        })
+
+        const subtitle = button.getAttribute('data-bs-video-subtitle')
+
+        if (subtitle)
+          player.addRemoteTextTrack({
+            kind: 'captions',
+            src: subtitle,
+            srclang: 'pt',
+            label: 'Português'
+          }, false)
       })
 
-      player.hlsQualitySelector({
-        displayCurrentQuality: true
+      modal.addEventListener('hide.bs.modal', event => {
+        if (player) player.pause()
       })
-
-      const streamFormat = button.getAttribute('data-bs-video-format') === 'mp4' 
-        ? 'video/mp4'
-        : 'application/x-mpegURL'
-
-      player.src({
-        src: button.getAttribute('data-bs-video-url'),
-        type: streamFormat
-      })
-
-      const subtitle = button.getAttribute('data-bs-video-subtitle')
-
-      if (subtitle) 
-        player.addRemoteTextTrack({
-          kind: 'captions',
-          src: subtitle,
-          srclang: 'pt',
-          label: 'Português'
-        }, false)
-    })
-
-    modal.addEventListener('hide.bs.modal', event => {
-      if (player) player.pause()
-    })
-  }
+    }
 </script>
