@@ -6,6 +6,7 @@ using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Request;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Interfaces;
 using XerifeTv.CMS.Shared.Helpers;
@@ -16,6 +17,7 @@ namespace XerifeTv.CMS.Controllers;
 public class SettingsController(
     IUserService _userService,
     IWebhookService _webhookService,
+    IMediaDeliveryProfileService _mediaDeliveryProfileService,
     ILogger<SettingsController> _logger) : Controller
 {
     [Authorize]
@@ -27,7 +29,10 @@ public class SettingsController(
         var webhooksResponse = await _webhookService.GetAsync(currentPage: 1, limit: 50);
         if (webhooksResponse.IsFailure) return RedirectToAction("Index", "Home");
 
-        SettingsModelView model = new(userResponse.Data!, webhooksResponse.Data?.Items ?? []);
+        var mediaDeliveryProfilesResponse = await _mediaDeliveryProfileService.GetAsync(currentPage: 1, limit: 50);
+        if (mediaDeliveryProfilesResponse.IsFailure) return RedirectToAction("Index", "Home");
+
+        SettingsModelView model = new(userResponse.Data!, webhooksResponse.Data?.Items ?? [], mediaDeliveryProfilesResponse.Data?.Items ?? []);
 
         return View(model);
     }

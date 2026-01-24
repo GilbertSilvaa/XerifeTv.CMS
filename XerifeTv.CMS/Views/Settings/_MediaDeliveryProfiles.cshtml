@@ -1,0 +1,76 @@
+﻿@using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response
+@using XerifeTv.CMS.Modules.Media.Delivery.Enums
+
+@model IEnumerable<GetMediaDeliveryProfileResponseDto>
+
+@{
+    var mediaDeliveryProfileDtoEmpty = new GetMediaDeliveryProfileResponseDto();
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    @await Html.PartialAsync("_MediaDeliveryProfileFormModal", mediaDeliveryProfileDtoEmpty)
+
+    <button class="btn btn-primary btn-sm shadow-sm"
+            role="button"
+            data-bs-toggle="modal"
+            data-bs-target="#mediaDeliveryProfileFormModal-@mediaDeliveryProfileDtoEmpty.Id">
+        <i class="fa-solid fa-plus"></i>
+        Novo perfil
+    </button>
+</div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table">
+        <tr>
+            <th>Nome</th>
+            <th>Base URL</th>
+            <th>Stream Format</th>
+            <th>Estratégia de Token</th>
+            <th class="text-end">...</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                    Nenhuma registro encontrado.
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td class="text-truncate" style="max-width: 300px;">
+                        @item.BaseUrl
+                    </td>
+                    <td>@item.StreamFormat</td>
+                    <td class="text-truncate" style="max-width: 200px;">
+                        <span class="badge bg-secondary">
+                            @item.TokenStrategy.ToDescriptionString()
+                        </span>
+                    </td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-secondary shadow-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#mediaDeliveryProfileFormModal-@item.Id">
+                            Editar
+                        </button>
+                    </td>
+                </tr>
+
+            }
+        }
+    </tbody>
+</table>
+
+@if (Model.Any())
+{
+    foreach (var item in Model)
+    {
+        @await Html.PartialAsync("_MediaDeliveryProfileFormModal", item)
+    }
+}

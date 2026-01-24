@@ -3,7 +3,7 @@ using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
 
 namespace XerifeTv.CMS.Modules.Movie;
 
-public class MovieEntity : Midia
+public class MovieEntity : MediaContent
 {
     public string ImdbId { get; set; } = string.Empty;
     public ICollection<string> Categories { get; set; } = [];

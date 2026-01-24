@@ -88,6 +88,22 @@
                     <span>Integrações</span>
                 </button>
             }
+
+            @if (User.IsInRole("admin"))
+            {
+                <button class="nav-link d-flex align-items-center justify-content-start gap-2 ps-4"
+                        id="v-pills-streaming-tab"
+                        data-bs-toggle="pill"
+                        data-bs-target="#v-pills-streaming"
+                        type="button"
+                        role="tab"
+                        aria-selected="false">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Streaming</span>
+                </button>
+            }
+
+
         </div>
 
         <div class="tab-content px-3 py-1 flex-grow-1" id="settings-tabContent">
@@ -176,6 +192,44 @@
                     </div>
                 </div>
             }
+
+            @if (User.IsInRole("admin"))
+            {
+                <div class="tab-pane fade"
+                     id="v-pills-streaming"
+                     role="tabpanel"
+                     aria-labelledby="v-pills-streaming-tab">
+
+                    <ul class="nav nav-tabs mb-4" id="streamingTabs" role="tablist">
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active"
+                                    id="media-delivery-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#media-delivery"
+                                    type="button"
+                                    role="tab"
+                                    aria-selected="true">
+                                Perfis de Entrega de Midia
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+
+                        <div class="tab-pane fade show active"
+                             id="media-delivery"
+                             role="tabpanel"
+                             aria-labelledby="media-delivery-tab">
+
+                            @await Html.PartialAsync("_MediaDeliveryProfiles", Model.MediaDeliveryProfiles)
+
+                        </div>
+
+                    </div>
+                </div>
+            }
+
         </div>
     </div>
 </div>
