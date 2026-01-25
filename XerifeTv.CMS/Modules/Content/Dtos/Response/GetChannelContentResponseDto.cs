@@ -10,6 +10,12 @@ public class GetChannelContentResponseDto
     public ICollection<string> Categories { get; private set; } = [];
     public string LogoUrl { get; private set; } = string.Empty;
     public Video? Video { get; private set; }
+    public string? MediaDeliveryProfileId { get; private set; }
+    public string? MediaRoute { get; private set; }
+    public string? UrlResolverAddress
+        => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
+            ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
+            : null;
 
     public static GetChannelContentResponseDto FromEntity(ChannelEntity entity)
     {
@@ -19,7 +25,9 @@ public class GetChannelContentResponseDto
             Title = entity.Title,
             Categories = entity.Categories,
             LogoUrl = entity.LogoUrl,
-            Video = entity.Video
+            Video = entity.Video,
+            MediaRoute = entity.MediaRoute,
+            MediaDeliveryProfileId = entity.MediaDeliveryProfileId
         };
     }
 }

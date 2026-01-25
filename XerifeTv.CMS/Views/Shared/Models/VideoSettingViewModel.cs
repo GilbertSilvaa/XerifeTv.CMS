@@ -9,11 +9,10 @@ public record VideoSettingViewModel
     public string? VideoUrl { get; set; }
     public string? VideoStreamFormat { get; set; }
     public string? VideoSubtitle { get; set; }
-    public long? VideoDuration { get; set; }
-
     public string? MediaDeliveryProfileId { get; set; }
     public string? MediaRoute { get; set; }
 
     public IEnumerable<GetMediaDeliveryProfileResponseDto> MediaDeliveryProfiles { get; set; } = [];
     public IEnumerable<string> StreamFormats { get; set; } = [];
+    public bool IsShowVideoSubtitleInput { get; set; } = true;
 }

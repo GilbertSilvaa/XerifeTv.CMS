@@ -17,8 +17,8 @@ public sealed class GetMovieResponseDto
     public float Review { get; private set; }
     public DateTime RegistrationDate { get; private set; }
     public Video? Video { get; private set; }
-    public string? MediaDeliveryProfileId { get; set; }
-    public string? MediaRoute { get; set; }
+    public string? MediaDeliveryProfileId { get; private set; }
+    public string? MediaRoute { get; private set; }
     public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
     public bool Disabled { get; private set; } = false;
     public string? UrlResolverAddress

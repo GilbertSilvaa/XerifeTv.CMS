@@ -4,151 +4,143 @@
 @model IEnumerable<GetMovieResponseDto>;
 
 @{
-  ViewData["Title"] = "Filmes";
+    ViewData["Title"] = "Filmes";
 
-  ICollection<string[]> filters = [];
-  filters.Add([EMovieSearchFilter.TITLE.ToString().ToLower(), "Titulo"]);
-  filters.Add([EMovieSearchFilter.CATEGORY.ToString().ToLower(), "Categoria"]);
-  filters.Add([EMovieSearchFilter.RELEASE_YEAR.ToString().ToLower(), "Ano de Lançamento"]);
+    ICollection<string[]> filters = [];
+    filters.Add([EMovieSearchFilter.TITLE.ToString().ToLower(), "Titulo"]);
+    filters.Add([EMovieSearchFilter.CATEGORY.ToString().ToLower(), "Categoria"]);
+    filters.Add([EMovieSearchFilter.RELEASE_YEAR.ToString().ToLower(), "Ano de Lançamento"]);
 }
 
 <div class="container">
-  <header>
-    <div class="d-flex align-items-center justify-content-between gap-4">
-      <span class="fs-3 fw-normal">Filmes</span>
-
-      @if (!User.IsInRole("visitor"))
-      {
-        <a class="btn btn-primary" asp-controller="Movies" asp-action="Form">
-          <i class="fa-solid fa-plus"></i> Cadastrar
-        </a>
-      }
-    </div>
-    <hr />
-  </header>
-
-  <div class="row mb-3 justify-content-between">
-    <a class="d-none d-md-block col-1 fs-5" role="button" asp-controller="Movies" asp-action="Index">
-      <i class="fa-solid fa-rotate"></i>
-    </a>
-
-    <div class="col-md-8 col-lg-5">
-      <form 
-        class="input-group input-group-sm" 
-        asp-controller="Movies" 
-        asp-action="Index" 
-        method="get">
-
-        <input 
-          type="hidden" 
-          name="currentPage" 
-          value="@(ViewBag.Filter is not null ? ViewBag.CurrentPage : 1)"/>
-
-        <select class="form-select shadow-none" name="filter">
-          @foreach (var filter in filters)
-          {
-            if (filter[0].Equals(ViewBag.Filter))
-            {
-              <option value="@filter[0]" selected>@filter[1]</option>
-            }
-            else
-            {
-              <option value="@filter[0]">@filter[1]</option>   
-            }
-          }
-        </select>
-
-        <input 
-          type="text" 
-          name="search" 
-          class="form-control shadow-none" 
-          value="@ViewBag.Search"
-          required>
-        <button class="btn btn-success shadow-none" type="submit">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-      </form>
-    </div>
-  </div>
-
-
-  @await Html.PartialAsync("_VideoModal")
-
-  <div class="row gap-3">
-    @foreach (var movie in Model)
-    {
-      <div class="card col-md-4 col-xl-2 pt-1">
-        <div class="w-auto h-100 position-relative">
-          <img
-            src="@movie.PosterUrl"
-            onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
-            class="card-img-top object-fit-cover"
-            alt="@movie.Title"
-            loading="lazy" style="height: 14rem;"/>
-          
-          @if (!string.IsNullOrEmpty(@movie?.Video?.Subtitle))
-          {
-            <span 
-              class="position-absolute rounded-1 fw-bolder p-1 bg-info text-white" 
-              style="bottom: 6px; right: 6px; font-size: 12px;">
-              CC
-            </span>
-          }
-          
-          @if (@movie?.Disabled ?? false)
-          {
-            <span 
-              class="position-absolute text-danger"
-              style="top: 6px; left: 8px; font-size: 24px;">
-              <i class="fa-solid fa-circle-exclamation"></i>
-            </span>
-          }
-        </div>
-
-        <div class="card-body">
-          <h5 class="card-title text-nowrap overflow-hidden text-truncate">@movie?.Title</h5>
-          <p class="card-text">@movie?.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
-
-          <div class="d-flex gap-1">
-            <a class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#movielDetailsModal-@movie?.Id">
-              <i class="fa-solid fa-eye"></i>
-            </a>
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4">
+            <span class="fs-3 fw-normal">Filmes</span>
 
             @if (!User.IsInRole("visitor"))
             {
-              <a
-                class="btn btn-sm btn-primary"
-                asp-controller="Movies"
-                asp-action="Form"
-                asp-route-id="@movie?.Id">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </a>
+                <a class="btn btn-primary" asp-controller="Movies" asp-action="Form">
+                    <i class="fa-solid fa-plus"></i> Cadastrar
+                </a>
             }
-
-            <a
-              class="btn btn-sm btn-secondary"
-              data-bs-toggle="modal"
-              data-bs-target="#videoModal"
-              data-bs-title="@movie?.Title"
-              data-bs-banner="@movie?.BannerUrl"
-              data-bs-video-url="@movie?.Video?.Url"
-              data-bs-video-format="@movie?.Video?.StreamFormat"
-              data-bs-video-subtitle="@movie?.Video?.Subtitle"
-              data-bs-video-resolver="@movie?.UrlResolverAddress">
-              <i class="fa-solid fa-play"></i>
-            </a>
-          </div>
         </div>
-      </div>
+        <hr />
+    </header>
 
-      @await Html.PartialAsync("_DetailsModal", movie)
-    }
+    <div class="row mb-3 justify-content-between">
+        <a class="d-none d-md-block col-1 fs-5" role="button" asp-controller="Movies" asp-action="Index">
+            <i class="fa-solid fa-rotate"></i>
+        </a>
 
-    @if (Model?.Count() <= 0)
-    {
-      <p>Nenhum registro encontrado.</p>
-    }
-  </div>
+        <div class="col-md-8 col-lg-5">
+            <form class="input-group input-group-sm"
+                  asp-controller="Movies"
+                  asp-action="Index"
+                  method="get">
+
+                <input type="hidden"
+                       name="currentPage"
+                       value="@(ViewBag.Filter is not null ? ViewBag.CurrentPage : 1)" />
+
+                <select class="form-select shadow-none" name="filter">
+                    @foreach (var filter in filters)
+                    {
+                        if (filter[0].Equals(ViewBag.Filter))
+                        {
+                            <option value="@filter[0]" selected>@filter[1]</option>
+                        }
+                        else
+                        {
+                            <option value="@filter[0]">@filter[1]</option>
+                        }
+                    }
+                </select>
+
+                <input type="text"
+                       name="search"
+                       class="form-control shadow-none"
+                       value="@ViewBag.Search"
+                       required>
+                <button class="btn btn-success shadow-none" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    @await Html.PartialAsync("_VideoModal")
+
+    <div class="row gap-3">
+        @foreach (var movie in Model)
+        {
+            <div class="card col-md-4 col-xl-2 pt-1">
+                <div class="w-auto h-100 position-relative">
+                    <img src="@movie.PosterUrl"
+                         onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
+                         class="card-img-top object-fit-cover"
+                         alt="@movie.Title"
+                         loading="lazy" style="height: 14rem;" />
+
+                    @if (!string.IsNullOrEmpty(@movie?.Video?.Subtitle))
+                    {
+                        <span class="position-absolute rounded-1 fw-bolder p-1 bg-info text-white"
+                              style="bottom: 6px; right: 6px; font-size: 12px;">
+                            CC
+                        </span>
+                    }
+
+                    @if (@movie?.Disabled ?? false)
+                    {
+                        <span class="position-absolute text-danger"
+                              style="top: 6px; left: 8px; font-size: 24px;">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        </span>
+                    }
+                </div>
+
+                <div class="card-body">
+                    <h5 class="card-title text-nowrap overflow-hidden text-truncate">@movie?.Title</h5>
+                    <p class="card-text">@movie?.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
+
+                    <div class="d-flex gap-1">
+                        <a class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#movielDetailsModal-@movie?.Id">
+                            <i class="fa-solid fa-eye"></i>
+                        </a>
+
+                        @if (!User.IsInRole("visitor"))
+                        {
+                            <a class="btn btn-sm btn-primary"
+                               asp-controller="Movies"
+                               asp-action="Form"
+                               asp-route-id="@movie?.Id">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                        }
+
+                        <a class="btn btn-sm btn-secondary"
+                           data-bs-toggle="modal"
+                           data-bs-target="#videoModal"
+                           data-bs-title="@movie?.Title"
+                           data-bs-banner="@movie?.BannerUrl"
+                           data-bs-video-url="@movie?.Video?.Url"
+                           data-bs-video-format="@movie?.Video?.StreamFormat"
+                           data-bs-video-subtitle="@movie?.Video?.Subtitle"
+                           data-bs-video-resolver="@movie?.UrlResolverAddress">
+                            <i class="fa-solid fa-play"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @await Html.PartialAsync("_DetailsModal", movie)
+        }
+
+        @if (Model?.Count() <= 0)
+        {
+            <p>Nenhum registro encontrado.</p>
+        }
+    </div>
 
     @await Html.PartialAsync("_Pagination")
 </div>

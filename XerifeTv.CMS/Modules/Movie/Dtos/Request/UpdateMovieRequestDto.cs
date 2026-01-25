@@ -18,8 +18,8 @@ public class UpdateMovieRequestDto
     public long VideoDuration { get; init; }
     public string VideoStreamFormat { get; init; } = string.Empty;
     public string? VideoSubtitle { get; init; }
-    public string? MediaDeliveryProfileId { get; set; }
-    public string? MediaRoute { get; set; }
+    public string? MediaDeliveryProfileId { get; init; }
+    public string? MediaRoute { get; init; }
     public bool Disabled { get; init; } = false;
 
     public MovieEntity ToEntity()

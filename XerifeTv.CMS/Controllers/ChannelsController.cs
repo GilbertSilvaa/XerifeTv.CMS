@@ -6,7 +6,10 @@ using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Enums;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Shared.Helpers;
+using XerifeTv.CMS.Views.Channels.Models;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -14,7 +17,8 @@ namespace XerifeTv.CMS.Controllers;
 public class ChannelsController(
   IChannelService _service,
   ILogger<ChannelsController> _logger,
-  ISpreadsheetBatchImporter<IChannelService> _spreadsheetBatchImporter) : Controller
+  ISpreadsheetBatchImporter<IChannelService> _spreadsheetBatchImporter,
+  IMediaDeliveryProfileService _mediaDeliveryProfileService) : Controller
 {
     private const int limitResultsPage = 20;
 
@@ -58,13 +62,17 @@ public class ChannelsController(
     [Authorize(Roles = "admin, common")]
     public async Task<IActionResult> Form(string? id)
     {
+        IEnumerable<GetMediaDeliveryProfileResponseDto> mediaDeliveryProfiles = [];
+        var mediaProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
+        if (mediaProfilesResponse.IsSuccess) mediaDeliveryProfiles = mediaProfilesResponse.Data ?? [];
+        
         if (id is not null)
         {
             var response = await _service.GetAsync(id);
-            if (response.IsSuccess) return View(response.Data);
+            if (response.IsSuccess) return View(new ChannelFormModelView(response.Data, mediaDeliveryProfiles));
         }
 
-        return View();
+        return View(new ChannelFormModelView(null, mediaDeliveryProfiles));
     }
 
     [Authorize(Roles = "admin, common")]

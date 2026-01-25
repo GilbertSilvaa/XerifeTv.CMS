@@ -1,182 +1,170 @@
 ﻿@using XerifeTv.CMS.Modules.Channel.Dtos.Response
 @using XerifeTv.CMS.Shared.Helpers
+@using XerifeTv.CMS.Views.Channels.Models
+@using XerifeTv.CMS.Views.Shared.Models
 
-@model GetChannelResponseDto?
+@model ChannelFormModelView
 
 @{
-  ViewData["Title"] = "Canais";
+    ViewData["Title"] = "Canais";
+
+    bool isMediaDeliveryProfileSelected = !string.IsNullOrWhiteSpace(Model?.ChannelDto?.MediaDeliveryProfileId);
 }
 
 @await Html.PartialAsync("_ImportFromExcelModal")
 
 <div class="container">
-  <header>
-    <div class="d-flex justify-content-between">
-      <div class="d-flex align-items-center gap-4">
-        <a asp-controller="Channels" asp-action="Index" class="fs-4">
-          <i class="fa fa-undo" aria-hidden="true"></i>
-        </a>
-        <span class="fs-3 fw-normal">
-          @(Model is GetChannelResponseDto ? "Editar" : "Cadastrar") Canal
-        </span>
-      </div>
-      
-      @if (Model is null)
-      {
-        <div class="d-none d-lg-flex align-items-center gap-3">
-          <button
-            class="btn btn-sm btn-success d-flex justify-content-center align-items-center gap-2 shadow-none"
-            data-bs-toggle="modal"
-            data-bs-target="#importFromExcelModal">
-            <i class="fa-regular fa-file-excel"></i> Importar
-          </button>
-        </div>
-      }
-    </div>
-    <hr />
-  </header>
-  
-  <main>
-    <form asp-controller="Channels" asp-action="@(Model is null ? "Create" : "Update")">
-      <input type="hidden" name="id" value="@Model?.Id">
-
-      <div class="row mb-3">
-        <div class="col-12 col-md-7">
-          <label for="title" class="form-label">Titulo</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="title" 
-            name="title" 
-            placeholder="Digite aqui..." 
-            value="@Model?.Title"
-            required>
-        </div>
-
-        <div class="col-12 col-md-5">
-          <label for="categories" class="form-label">Categorias</label>
-
-          <div class="input-group-tags">
-            <input
-              type="text"
-              class="form-control input-tags"
-              placeholder="ação, aventura, comédia..."
-              value="@Model?.Categories">
-
-            <input
-              type="hidden"
-              name="categories"
-              class="input-tags-value"
-              data-required-message="Informe no minino uma categoria"
-              required>
-
-            <div class="w-100 container-tags d-flex flex-wrap gap-1 mt-2"></div>
-          </div>
-        </div>
-      </div> 
-
-      <div class="row mb-3">
-        <div class="col-12">
-          <label for="logoUrl" class="form-label">Logo (URL)</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="logoUrl" 
-            name="logoUrl" 
-            placeholder="http://imagem.com/image.jpg" 
-            value="@Model?.LogoUrl"
-            required>
-        </div>
-      </div>
-
-      <div class="row mb-4">
-        <div class="col-6">
-          <label for="videoUrl" class="form-label">Video (URL)</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="videoUrl" 
-            name="videoUrl" 
-            placeholder="http://video.com/video.m3u8" 
-            value="@Model?.Video?.Url"
-            required>
-        </div>
-
-        <div class="col-6">
-          <label for="videoStreamFormat" class="form-label">Stream Format</label>
-          <select 
-            class="form-select" 
-            id="videoStreamFormat" 
-            name="videoStreamFormat" 
-            required>
-            <option selected value="">Selecione uma opção</option>
-            @foreach (var format in StreamFormatsHelper.Streaming)
-            {
-              if (Model?.Video?.StreamFormat == format)
-              {
-                <option value="@format" selected>@format</option>
-              }
-              else
-              {
-                <option value="@format">@format</option>
-              }
-            }
-          </select>
-        </div>  
-
-        <input 
-          type="hidden" 
-          class="form-control" 
-          id="videoDuration" 
-          name="videoDuration" 
-          placeholder="0" 
-          value="0">
-      </div>
-
-      @if (Model is GetChannelResponseDto)
-      {
-        <div class="row mb-4">
-          <div class="col-6">
-            <div class="form-check">
-              <input
-                id="disabled"
-                name="disabled"
-                class="form-check-input"
-                type="checkbox"
-                value="@(Model.Disabled ? "true" : "false")"
-                @(Model.Disabled ? "checked" : "")>
-              <label class="form-check-label" for="disabled">
-                Desativar
-              </label>
+    <header>
+        <div class="d-flex justify-content-between">
+            <div class="d-flex align-items-center gap-4">
+                <a asp-controller="Channels" asp-action="Index" class="fs-4">
+                    <i class="fa fa-undo" aria-hidden="true"></i>
+                </a>
+                <span class="fs-3 fw-normal">
+                    @(Model?.ChannelDto is GetChannelResponseDto ? "Editar" : "Cadastrar") Canal
+                </span>
             </div>
-          </div>
+
+            @if (Model is null)
+            {
+                <div class="d-none d-lg-flex align-items-center gap-3">
+                    <button class="btn btn-sm btn-success d-flex justify-content-center align-items-center gap-2 shadow-none"
+                            data-bs-toggle="modal"
+                            data-bs-target="#importFromExcelModal">
+                        <i class="fa-regular fa-file-excel"></i> Importar
+                    </button>
+                </div>
+            }
         </div>
-      }
+        <hr />
+    </header>
 
-      <hr />
-      <div class="d-flex align-items-center justify-content-between">
-        <button type="submit" class="btn btn-primary mt-2">
-          @(Model is GetChannelResponseDto ? "Editar" : "Cadastrar")
-        </button>
+    <main>
+        <form asp-controller="Channels" asp-action="@(Model?.ChannelDto is null ? "Create" : "Update")">
+            <input type="hidden" name="id" value="@Model?.ChannelDto?.Id">
 
-        @if (Model is GetChannelResponseDto)
-        {
-          <button type="button" class="btn btn-danger" onclick="deleteChannel()">
-            <i class="fa fa-trash" aria-hidden="true"></i> Remover
-          </button>
-        }
-      </div>
-    </form>
-  </main>
+            <div class="row mb-3">
+                <div class="col-12 col-md-6">
+                    <label for="title" class="form-label">Titulo</label>
+                    <input type="text"
+                           class="form-control"
+                           id="title"
+                           name="title"
+                           placeholder="Digite aqui..."
+                           value="@Model?.ChannelDto?.Title"
+                           required>
+                </div>
+
+                <div class="col-12 col-md-6">
+                    <label for="categories" class="form-label">Categorias</label>
+
+                    <div class="input-group-tags">
+                        <input type="text"
+                               class="form-control input-tags"
+                               placeholder="ação, aventura, comédia..."
+                               value="@Model?.ChannelDto?.Categories">
+
+                        <input type="hidden"
+                               name="categories"
+                               class="input-tags-value"
+                               data-required-message="Informe no minino uma categoria"
+                               required>
+
+                        <div class="w-100 container-tags d-flex flex-wrap gap-1 mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-6">
+                    <label for="logoUrl" class="form-label">Logo (URL)</label>
+                    <input type="text"
+                           class="form-control"
+                           id="logoUrl"
+                           name="logoUrl"
+                           placeholder="http://imagem.com/image.jpg"
+                           value="@Model?.ChannelDto?.LogoUrl"
+                           required>
+                </div>
+
+                <div class="col-6">
+                    <label for="videoSourceType" class="form-label">Fonte da Video</label>
+                    <select id="channel_videoSourceType"
+                            name="videoSourceType"
+                            class="form-select">
+                        @if (isMediaDeliveryProfileSelected)
+                        {
+                            <option value="direct">URL fixa</option>
+                            <option value="delivery" selected>Perfil de entrega de mídia</option>
+                        }
+                        else
+                        {
+                            <option value="direct" selected>URL fixa</option>
+                            <option value="delivery">Perfil de entrega de mídia</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            @await Html.PartialAsync("_VideoSetting", new VideoSettingViewModel
+            {
+                IdPrefix = "channel",
+                VideoUrl = Model?.ChannelDto?.Video?.Url,
+                VideoStreamFormat = Model?.ChannelDto?.Video?.StreamFormat,
+                MediaDeliveryProfileId = Model?.ChannelDto?.MediaDeliveryProfileId,
+                MediaRoute = Model?.ChannelDto?.MediaRoute,
+                MediaDeliveryProfiles = Model?.MediaDeliveryProfiles ?? [],
+                StreamFormats = StreamFormatsHelper.Streaming,
+                IsShowVideoSubtitleInput = false
+            })
+
+            @if (Model?.ChannelDto is GetChannelResponseDto channel)
+            {
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <div class="form-check">
+                            <input id="disabled"
+                                   name="disabled"
+                                   class="form-check-input"
+                                   type="checkbox"
+                                   value="@(channel.Disabled ? "true" : "false")"
+                                   @(channel.Disabled ? "checked" : "")>
+                            <label class="form-check-label" for="disabled">
+                                Desativar
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <hr />
+            <div class="d-flex align-items-center justify-content-between">
+                <button type="submit" class="btn btn-primary mt-2">
+                    @(Model?.ChannelDto is GetChannelResponseDto ? "Editar" : "Cadastrar")
+                </button>
+
+                @if (Model?.ChannelDto is GetChannelResponseDto)
+                {
+                    <button type="button" class="btn btn-danger" onclick="deleteChannel()">
+                        <i class="fa fa-trash" aria-hidden="true"></i> Remover
+                    </button>
+                }
+            </div>
+        </form>
+    </main>
 </div>
 
 @section scripts {
-  <script defer>
-    function deleteChannel() {
-      if (!confirm('Deseja realmente remover o canal?')) return;
-      location.href = '/Channels/Delete/@Model?.Id'
-    }
+    <script defer>
+        function deleteChannel() {
+          if (!confirm('Deseja realmente remover o canal?')) return;
+          location.href = '/Channels/Delete/@Model?.ChannelDto?.Id'
+        }
 
-    $('#disabled').change(e => e.target.value = e.target.checked);
-  </script>
+        $('#disabled').change(e => e.target.value = e.target.checked);
+    </script>
+
+    <script>
+        initVideoSetting('channel');
+    </script>
 }

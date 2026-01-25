@@ -16,8 +16,8 @@ public class GetMovieContentResponseDto
     public int ParentalRating { get; private set; }
     public float Review { get; private set; }
     public Video? Video { get; private set; }
-    public string? MediaDeliveryProfileId { get; set; }
-    public string? MediaRoute { get; set; }
+    public string? MediaDeliveryProfileId { get; private set; }
+    public string? MediaRoute { get; private set; }
     public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
     public string? UrlResolverAddress
         => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)

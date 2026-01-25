@@ -87,28 +87,32 @@
         </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-12">
-            <label for="@($"{prefix}_videoSubtitle")" class="form-label">Legenda (URL)</label>
-            <div class="input-group">
-                <input type="text"
-                       class="form-control"
-                       id="@($"{prefix}_videoSubtitle")"
-                       name="videoSubtitle"
-                       placeholder="https://subtitle.com/vtts/video.vtt"
-                       value="@Model?.VideoSubtitle" />
+    @if (Model?.IsShowVideoSubtitleInput == true)
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <label for="@($"{prefix}_videoSubtitle")" class="form-label">Legenda (URL)</label>
+                <div class="input-group">
+                    <input type="text"
+                           class="form-control"
+                           id="@($"{prefix}_videoSubtitle")"
+                           name="videoSubtitle"
+                           placeholder="https://subtitle.com/vtts/video.vtt"
+                           value="@Model?.VideoSubtitle" />
 
-                <input id="@($"{prefix}_subtitle_file")"
-                       type="file"
-                       accept=".vtt"
-                       style="display: none" />
+                    <input id="@($"{prefix}_subtitle_file")"
+                           type="file"
+                           accept=".vtt"
+                           style="display: none" />
 
-                <button id="@($"{prefix}_btn_subtitle_file")"
-                        class="btn btn-success"
-                        type="button">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                </button>
+                    <button id="@($"{prefix}_btn_subtitle_file")"
+                            class="btn btn-success"
+                            type="button">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
+    }
+
 </fieldset>
