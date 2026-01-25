@@ -17,8 +17,14 @@ public sealed class GetMovieResponseDto
     public float Review { get; private set; }
     public DateTime RegistrationDate { get; private set; }
     public Video? Video { get; private set; }
+    public string? MediaDeliveryProfileId { get; set; }
+    public string? MediaRoute { get; set; }
     public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
     public bool Disabled { get; private set; } = false;
+    public string? UrlResolverAddress
+        => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
+            ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
+            : null;
 
     public static GetMovieResponseDto FromEntity(MovieEntity entity)
     {
@@ -36,7 +42,9 @@ public sealed class GetMovieResponseDto
             Review = entity.Review,
             RegistrationDate = entity.CreateAt,
             Video = entity.Video,
-            Disabled = entity.Disabled
+            Disabled = entity.Disabled,
+            MediaRoute = entity.MediaRoute,
+            MediaDeliveryProfileId = entity.MediaDeliveryProfileId
         };
     }
 }

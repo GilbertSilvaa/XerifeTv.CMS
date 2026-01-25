@@ -26,53 +26,82 @@
 
 <script defer>
     const modal = document.getElementById('videoModal')
-    var player = undefined
+    let player = undefined
 
     if (modal) {
-      modal.addEventListener('show.bs.modal', event => {
-        const button = event.relatedTarget
+        modal.addEventListener('show.bs.modal', async event => {
+            const button = event.relatedTarget
 
-        const modalTitle = document.querySelector('.modal-title')
-        modalTitle.textContent = button.getAttribute('data-bs-title')
+            const modalTitle = document.querySelector('.modal-title')
+            modalTitle.textContent = button.getAttribute('data-bs-title')
 
-        player = videojs('player', {
-          controls: true,
-          preload: 'auto',
-          playbackRates: [0.5, 1, 1.25, 1.5, 2],
-          controlBar: {
-              skipButtons: {
-                  forward: 10,
-                  backward: 10
-              }
-          }
+            if (!player) {
+                player = videojs('player', {
+                    controls: true,
+                    preload: 'auto',
+                    playbackRates: [0.5, 1, 1.25, 1.5, 2],
+                    controlBar: {
+                        skipButtons: {
+                            forward: 10,
+                            backward: 10
+                        }
+                    }
+                })
+
+                player.hlsQualitySelector({
+                    displayCurrentQuality: true
+                })
+            }
+
+            const resolverUrl = button.getAttribute('data-bs-video-resolver')
+
+            try {
+                let finalUrl = null
+                let streamFormat = null
+
+                if (resolverUrl) {
+                    const response = await fetch(resolverUrl)
+                    if (!response.ok) throw new Error('Erro ao resolver URL')
+
+                    const data = await response.json()
+                    finalUrl = data.url || data.Url
+                    streamFormat = data.streamFormat || data.StreamFormat || streamFormat             
+                } 
+                else {
+                    finalUrl = button.getAttribute('data-bs-video-url')
+                    streamFormat = button.getAttribute('data-bs-video-format')
+                }
+
+                streamFormat = streamFormat === 'mp4'
+                        ? 'video/mp4'
+                        : 'application/x-mpegURL'
+
+                player.src({
+                    src: finalUrl,
+                    type: streamFormat
+                })
+
+                const subtitle = button.getAttribute('data-bs-video-subtitle')
+
+                if (subtitle) {
+                    player.addRemoteTextTrack({
+                        kind: 'captions',
+                        src: subtitle,
+                        srclang: 'pt',
+                        label: 'Português'
+                    }, false)
+                }
+
+            } catch (err) {
+                console.error('Erro ao carregar vídeo:', err)
+            }
         })
 
-        player.hlsQualitySelector({
-          displayCurrentQuality: true
+        modal.addEventListener('hide.bs.modal', () => {
+            if (player) {
+                player.pause()
+                player.reset()
+            }
         })
-
-        const streamFormat = button.getAttribute('data-bs-video-format') === 'mp4'
-          ? 'video/mp4'
-          : 'application/x-mpegURL'
-
-        player.src({
-          src: button.getAttribute('data-bs-video-url'),
-          type: streamFormat
-        })
-
-        const subtitle = button.getAttribute('data-bs-video-subtitle')
-
-        if (subtitle)
-          player.addRemoteTextTrack({
-            kind: 'captions',
-            src: subtitle,
-            srclang: 'pt',
-            label: 'Português'
-          }, false)
-      })
-
-      modal.addEventListener('hide.bs.modal', event => {
-        if (player) player.pause()
-      })
     }
 </script>

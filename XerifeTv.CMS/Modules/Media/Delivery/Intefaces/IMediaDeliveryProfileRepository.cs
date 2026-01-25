@@ -2,4 +2,7 @@
 
 namespace XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 
-public interface IMediaDeliveryProfileRepository : IBaseRepository<MediaDeliveryProfileEntity>;
+public interface IMediaDeliveryProfileRepository : IBaseRepository<MediaDeliveryProfileEntity>
+{
+    Task<IEnumerable<MediaDeliveryProfileEntity>> GetAsync(bool isIncludeDisabled = false);
+}

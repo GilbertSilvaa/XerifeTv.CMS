@@ -1,4 +1,5 @@
-﻿using XerifeTv.CMS.Modules.Common;
+﻿using System.Collections.Generic;
+using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Request;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
@@ -27,6 +28,21 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
         }
     }
 
+    public async Task<Result<IEnumerable<GetMediaDeliveryProfileResponseDto>>> GetAllAsync(bool isIncludeDisabled = false)
+    {
+        try
+        {
+            var response = await _repository.GetAsync(isIncludeDisabled);
+
+            return Result<IEnumerable<GetMediaDeliveryProfileResponseDto>>.Success(response.Select(GetMediaDeliveryProfileResponseDto.FromEntity));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<IEnumerable<GetMediaDeliveryProfileResponseDto>>.Failure(error);
+        }
+    }
+
     public async Task<Result<GetMediaDeliveryProfileResponseDto?>> GetAsync(string id)
     {
         try
@@ -35,7 +51,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
 
             if (response == null)
                 return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de midia nao encontrado"));
-        
+
             return Result<GetMediaDeliveryProfileResponseDto?>.Success(GetMediaDeliveryProfileResponseDto.FromEntity(response));
         }
         catch (Exception ex)

@@ -7,7 +7,10 @@ using XerifeTv.CMS.Shared.Helpers;
 namespace XerifeTv.CMS.Controllers;
 
 [Authorize(Roles = "admin")]
-public class MediaDeliveryProfilesController(IMediaDeliveryProfileService _service, ILogger<MediaDeliveryProfilesController> _logger) : Controller
+public class MediaDeliveryProfilesController(
+    IMediaDeliveryProfileService _service,
+    IMediaDeliveryUrlResolver _urlResolver,
+    ILogger<MediaDeliveryProfilesController> _logger) : Controller
 {
     public async Task<IActionResult> Create(CreateMediaDeliveryProfileRequestDto dto)
     {
@@ -49,5 +52,16 @@ public class MediaDeliveryProfilesController(IMediaDeliveryProfileService _servi
         }
 
         return Redirect(Url.Action("Index", "Settings") + "#media-delivery");
+    }
+
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> ResolveUrl(string mediaPath, string mediaDeliveryProfileId)
+    {
+        var response = await _urlResolver.ResolveUrlAsync(mediaPath, mediaDeliveryProfileId);
+        if (response.IsFailure)
+            return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
+
+        return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
     }
 }

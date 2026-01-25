@@ -18,6 +18,8 @@ public class UpdateMovieRequestDto
     public long VideoDuration { get; init; }
     public string VideoStreamFormat { get; init; } = string.Empty;
     public string? VideoSubtitle { get; init; }
+    public string? MediaDeliveryProfileId { get; set; }
+    public string? MediaRoute { get; set; }
     public bool Disabled { get; init; } = false;
 
     public MovieEntity ToEntity()
@@ -40,7 +42,9 @@ public class UpdateMovieRequestDto
             ParentalRating = ParentalRating,
             Review = Review,
             Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle),
-            Disabled = Disabled
+            Disabled = Disabled,
+            MediaRoute = MediaRoute,
+            MediaDeliveryProfileId = MediaDeliveryProfileId
         };
     }
 }
