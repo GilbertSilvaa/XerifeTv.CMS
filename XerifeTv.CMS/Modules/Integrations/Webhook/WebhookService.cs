@@ -131,7 +131,7 @@ public sealed class WebhookService(
 
                     _logger.LogWarning("Retrying webhook {WebhookName}, attempt {Attempt}/{MaxAttempts}", webhook.Name, attempt, MAX_RETRY_ATTEMPTS);
 
-                    await Task.Delay(TimeSpan.FromSeconds(attempt * 2));
+                    await Task.Delay(TimeSpan.FromSeconds(attempt * 6));
                 }
                 catch (Exception ex)
                 {
