@@ -85,7 +85,7 @@ public sealed class MovieSevice(
 
             var response = await _repository.CreateAsync(entity);
 
-            _ = _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.MOVIE_PUBLISHED, response);
+            await _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.MOVIE_PUBLISHED, response);
 
             return Result<string>.Success(response);
         }
