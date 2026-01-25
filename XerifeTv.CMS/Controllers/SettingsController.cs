@@ -29,10 +29,10 @@ public class SettingsController(
         var webhooksResponse = await _webhookService.GetAsync(currentPage: 1, limit: 50);
         if (webhooksResponse.IsFailure) return RedirectToAction("Index", "Home");
 
-        var mediaDeliveryProfilesResponse = await _mediaDeliveryProfileService.GetAsync(currentPage: 1, limit: 50);
+        var mediaDeliveryProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: true);
         if (mediaDeliveryProfilesResponse.IsFailure) return RedirectToAction("Index", "Home");
 
-        SettingsModelView model = new(userResponse.Data!, webhooksResponse.Data?.Items ?? [], mediaDeliveryProfilesResponse.Data?.Items ?? []);
+        SettingsModelView model = new(userResponse.Data!, webhooksResponse.Data?.Items ?? [], mediaDeliveryProfilesResponse.Data ?? []);
 
         return View(model);
     }

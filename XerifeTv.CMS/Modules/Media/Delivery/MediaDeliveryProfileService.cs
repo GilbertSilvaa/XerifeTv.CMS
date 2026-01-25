@@ -34,7 +34,10 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
         {
             var response = await _repository.GetAsync(isIncludeDisabled);
 
-            return Result<IEnumerable<GetMediaDeliveryProfileResponseDto>>.Success(response.Select(GetMediaDeliveryProfileResponseDto.FromEntity));
+            return Result<IEnumerable<GetMediaDeliveryProfileResponseDto>>.Success(
+                response
+                .OrderBy(p => p.Name)
+                .Select(GetMediaDeliveryProfileResponseDto.FromEntity));
         }
         catch (Exception ex)
         {

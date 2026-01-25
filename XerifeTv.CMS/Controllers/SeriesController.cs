@@ -3,11 +3,14 @@ using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
 using XerifeTv.CMS.Shared.Helpers;
+using XerifeTv.CMS.Views.Series.Models;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -17,7 +20,8 @@ public class SeriesController(
   IImdbService _imdbService,
   ILogger<SeriesController> _logger,
   IEpisodesImporter _episodesImporter,
-  ISpreadsheetBatchImporter<ISeriesService> _spreadsheetBatchImporter) : Controller
+  ISpreadsheetBatchImporter<ISeriesService> _spreadsheetBatchImporter,
+  IMediaDeliveryProfileService _mediaDeliveryProfileService) : Controller
 {
 	private const int limitResultsPage = 20;
 
@@ -129,7 +133,11 @@ public class SeriesController(
 			ViewBag.NumberSeasons = response.Data?.NumberSeasons;
 			_logger.LogInformation($"{User.Identity?.Name} accessed the series episodes with id = {id}");
 
-			return View(response.Data);
+            IEnumerable<GetMediaDeliveryProfileResponseDto> mediaDeliveryProfiles = [];
+            var mediaProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
+            if (mediaProfilesResponse.IsSuccess) mediaDeliveryProfiles = mediaProfilesResponse.Data ?? [];
+
+            return View(new EpisodesModelView(response.Data, mediaDeliveryProfiles));
 		}
 
 		return RedirectToAction("Index");

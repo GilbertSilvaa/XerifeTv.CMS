@@ -1,199 +1,172 @@
 ﻿@using XerifeTv.CMS.Modules.Series
 @using XerifeTv.CMS.Shared.Helpers
+@using XerifeTv.CMS.Views.Series.Models
+@using XerifeTv.CMS.Views.Shared.Models
 
-@model Episode?
+@model EpisodeFormModelView
 
-<div 
-  class="modal fade" 
-  id="episodeFormModal-@Model?.Id" 
-  data-bs-backdrop="static" 
-  data-bs-keyboard="false" 
-  tabindex="-1"
-  aria-labelledby="episodeFormModal-@Model?.Id-Label"
-  aria-hidden="true">
+@{
+    bool isMediaDeliveryProfileSelected = !string.IsNullOrWhiteSpace(Model?.Episode?.MediaDeliveryProfileId);
+}
 
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <form 
-      class="modal-content" 
-      asp-controller="Series"
-      asp-action="@(string.IsNullOrEmpty(Model?.Id) ? "CreateEpisode" : "UpdateEpisode")">
+<div class="modal fade"
+     id="episodeFormModal-@Model?.Episode?.Id"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="episodeFormModal-@Model?.Episode?.Id-Label"
+     aria-hidden="true">
 
-      <input type="hidden" name="serieId" value="@ViewBag.SerieId" />
-      <input type="hidden" name="id" value="@Model?.Id" />
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content"
+              asp-controller="Series"
+              asp-action="@(string.IsNullOrEmpty(Model?.Episode?.Id) ? "CreateEpisode" : "UpdateEpisode")">
 
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="episodeFormModal-@Model?.Id-Label">
-          @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar") Episódio
-        </h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row mb-2">
-          <div class="col-6">
-            <label for="season" class="form-label">Temporada</label>
-            <select 
-              class="form-select" 
-              id="season-@Model?.Id" 
-              name="season" 
-              required>
-              <option selected value="">Selecione uma opção</option>
-              @for (var i=1; i<=(ViewBag.NumberSeasons ?? 1); i++) 
-              {
-                if (i == Model?.Season)
-                {
-                  <option value="@i" selected>@i ª Temporada</option>
-                }
-                else
-                {
-                  <option value="@i">@i ª Temporada</option>
-                }
-              }
-            </select>
-          </div>
+            <input type="hidden" name="serieId" value="@ViewBag.SerieId" />
+            <input type="hidden" name="id" value="@Model?.Episode?.Id" />
 
-          <div class="col-6">
-            <label for="number" class="form-label">Episódio</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="number-@Model?.Id" 
-              name="number" 
-              placeholder="18" 
-              value="@(Model?.Number > 0 ? Model?.Number : "")"
-              required>
-          </div>
-        </div>
-
-        <div class="row mb-2">
-          <div class="col-12">
-            <label for="title" class="form-label">Titulo</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="title-@Model?.Id" 
-              name="title" 
-              placeholder="Digite aqui..." 
-              value="@Model?.Title"
-              required>
-          </div>
-        </div>
-
-        <div class="row mb-2">
-          <div class="col-12">
-            <label for="bannerUrl" class="form-label">Banner (URL)</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="bannerUrl-@Model?.Id" 
-              name="bannerUrl" 
-              placeholder="http://imagem.com/image.jpg" 
-              value="@Model?.BannerUrl"
-              required>
-          </div>
-        </div>
-
-        <div class="mb-2">
-          <label for="videoUrl" class="form-label">Video (URL)</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="videoUrl--@Model?.Id" 
-            name="videoUrl" 
-            placeholder="http://video.com/video.m3u8"
-            value="@Model?.Video?.Url"
-            required>
-        </div>
-
-        <div class="row mb-2">
-          <div class="col-6">
-            <label for="videoStreamFormat" class="form-label">Stream Format</label>
-            <select 
-              class="form-select" 
-              id="videoStreamFormat-@Model?.Id" 
-              name="videoStreamFormat" 
-              required>
-              <option selected value="">Selecione uma opção</option>
-              @foreach (var format in StreamFormatsHelper.Vod)
-              {
-                if (format == Model?.Video?.StreamFormat)
-                {
-                  <option value="@format" selected>@format</option>
-                }
-                else
-                {
-                  <option value="@format">@format</option>
-                }
-              }
-            </select>
-          </div>  
-
-          <div class="col-6">
-            <label for="videoDuration" class="form-label">Duração(segundos)</label>
-            <input 
-              type="text" 
-              class="form-control duration" 
-              id="videoDuration-@Model?.Id" 
-              name="videoDuration" 
-              placeholder="3600" 
-              value="@Model?.Video?.Duration"
-              required>
-          </div>
-        </div>
-
-        <div class="row mb-4">
-          <label for="videoSubtitle" class="form-label">Legenda (URL)</label>
-          
-          <div class="input-group">
-            <input
-              type="text"
-              class="form-control videoSubtitle"
-              id="videoSubtitle-@Model?.Id"
-              name="videoSubtitle"
-              placeholder="http://video.com/subtitles/video.vtt"
-              value="@Model?.Video?.Subtitle"/>
-            
-            <button
-              class="btn btn-success btn-subtitle-file"
-              type="button"
-              onclick="$('#subtitle-file').click()">
-              <i class="fa-solid fa-cloud-arrow-up"></i>
-            </button>
-          </div>
-          
-        </div>
-
-        @if (!string.IsNullOrEmpty(Model?.Id))
-        {
-          <div class="row">
-            <div class="col-6">
-              <div class="form-check">
-                <input
-                  name="disabled"
-                  class="form-check-input disabled"
-                  type="checkbox"
-                  value="@(Model.Disabled ? "true" : "false")"
-                  @(Model.Disabled ? "checked" : "")>
-                <label class="form-check-label">
-                  Desativar
-                </label>
-              </div>
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="episodeFormModal-@Model?.Episode?.Id-Label">
+                    @(string.IsNullOrEmpty(Model?.Episode?.Id) ? "Cadastrar" : "Editar") Episódio
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
-        }
-      </div>
-      
-      <div class="modal-footer d-flex justify-content-between">
-        <button type="submit" class="btn btn-primary">
-          @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
-        </button>
+            <div class="modal-body">
+                <div class="row mb-2">
+                    <div class="col-6">
+                        <label for="season" class="form-label">Temporada</label>
+                        <select class="form-select"
+                                id="season-@Model?.Episode?.Id"
+                                name="season"
+                                required>
+                            <option selected value="">Selecione uma opção</option>
+                            @for (var i = 1; i <= (ViewBag.NumberSeasons ?? 1); i++)
+                            {
+                                if (i == Model?.Episode?.Season)
+                                {
+                                    <option value="@i" selected>@i ª Temporada</option>
+                                }
+                                else
+                                {
+                                    <option value="@i">@i ª Temporada</option>
+                                }
+                            }
+                        </select>
+                    </div>
 
-        @if (!string.IsNullOrEmpty(Model?.Id))
-        {
-          <button type="button" class="btn btn-danger" onclick="remove('@Model?.Id')">
-            Excluir
-          </button>
-        }
-      </div>
-    </form>
-  </div>
+                    <div class="col-6">
+                        <label for="number" class="form-label">Episódio</label>
+                        <input type="text"
+                               class="form-control"
+                               id="number-@Model?.Episode?.Id"
+                               name="number"
+                               placeholder="18"
+                               value="@(Model?.Episode?.Number > 0 ? Model?.Episode?.Number : "")"
+                               required>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <label for="title" class="form-label">Titulo</label>
+                        <input type="text"
+                               class="form-control"
+                               id="title-@Model?.Episode?.Id"
+                               name="title"
+                               placeholder="Digite aqui..."
+                               value="@Model?.Episode?.Title"
+                               required>
+                    </div>
+                </div>
+
+                <div class="row mb-2">
+                    <div class="col-12">
+                        <label for="bannerUrl" class="form-label">Banner (URL)</label>
+                        <input type="text"
+                               class="form-control"
+                               id="bannerUrl-@Model?.Episode?.Id"
+                               name="bannerUrl"
+                               placeholder="http://imagem.com/image.jpg"
+                               value="@Model?.Episode?.BannerUrl"
+                               required>
+                    </div>
+                </div>
+
+                <div class="row mb-4">
+                   
+                    <div class="col-6">
+                        <label for="videoDuration" class="form-label">Duração(segundos)</label>
+                        <input type="text"
+                               class="form-control duration"
+                               id="videoDuration-@Model?.Episode?.Id"
+                               name="videoDuration"
+                               placeholder="3600"
+                               value="@Model?.Episode?.Video?.Duration"
+                               required>
+                    </div>
+
+                    <div class="col-6">
+                        <label for="episode_@(Model?.Episode?.Id)_videoSourceType" class="form-label">Fonte do vídeo</label>
+                        <select id="episode_@(Model?.Episode?.Id)_videoSourceType"
+                                name="videoSourceType"
+                                class="form-select">
+                            @if (isMediaDeliveryProfileSelected)
+                            {
+                                <option value="direct">URL fixa</option>
+                                <option value="delivery" selected>Perfil de entrega de mídia</option>
+                            }
+                            else
+                            {
+                                <option value="direct" selected>URL fixa</option>
+                                <option value="delivery">Perfil de entrega de mídia</option>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                @await Html.PartialAsync("_VideoSetting", new VideoSettingViewModel
+                {
+                    IdPrefix = $"episode_{Model?.Episode?.Id}",
+                    VideoUrl = Model?.Episode?.Video?.Url,
+                    VideoStreamFormat = Model?.Episode?.Video?.StreamFormat,
+                    VideoSubtitle = Model?.Episode?.Video?.Subtitle,
+                    MediaDeliveryProfileId = Model?.Episode?.MediaDeliveryProfileId,
+                    MediaRoute = Model?.Episode?.MediaRoute,
+                    MediaDeliveryProfiles = Model?.MediaDeliveryProfiles ?? [],
+                    StreamFormats = StreamFormatsHelper.Vod
+                })
+
+                @if (!string.IsNullOrEmpty(Model?.Episode?.Id))
+                {
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input name="disabled"
+                                       class="form-check-input disabled"
+                                       type="checkbox"
+                                       value="@(Model?.Episode?.Disabled == true ? "true" : "false")"
+                                       @(Model?.Episode?.Disabled == true ? "checked" : "")>
+                                <label class="form-check-label">
+                                    Desativar
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">
+                    @(string.IsNullOrEmpty(Model?.Episode?.Id) ? "Cadastrar" : "Editar")
+                </button>
+
+                @if (!string.IsNullOrEmpty(Model?.Episode?.Id))
+                {
+                    <button type="button" class="btn btn-danger" onclick="remove('@Model?.Episode?.Id')">
+                        Excluir
+                    </button>
+                }
+            </div>
+        </form>
+    </div>
 </div>
