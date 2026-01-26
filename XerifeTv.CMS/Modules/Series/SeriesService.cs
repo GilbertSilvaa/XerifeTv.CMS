@@ -86,7 +86,7 @@ public class SeriesService(
 
             var response = await _repository.CreateAsync(entity);
 
-            _ = _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.SERIES_PUBLISHED, response);
+            _ = Task.Run(() => _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.SERIES_PUBLISHED, response));
 
             return Result<string>.Success(entity.Id);
         }
