@@ -174,15 +174,73 @@ public sealed class WebhookService(
         HttpRequestMessage requestMessage,
         WebhookEntity webhook)
     {
-        var response = await httpClient.SendAsync(requestMessage);
+        HttpResponseMessage? response = null;
+        string? responseBody = null;
 
-        if (!response.IsSuccessStatusCode)
+        try
         {
-            _logger.LogError("The webhook {WebhookName} returned the status code {StatusCode}", webhook.Name, response.StatusCode);
-            return Result<bool>.Failure(new Error(response.StatusCode.ToString()));
-        }
+            response = await httpClient.SendAsync(requestMessage);
 
-        _logger.LogInformation("The webhook {WebhookName} was executed successfully", webhook.Name);
-        return Result<bool>.Success(true);
+            responseBody = response.Content != null
+                ? await response.Content.ReadAsStringAsync()
+                : null;
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogError(
+                    """
+                    Webhook execution failed
+                    Webhook: {WebhookName}
+                    Request:
+                      Method: {Method}
+                      Url: {Url}
+                      Headers: {@RequestHeaders}
+
+                    Response:
+                      StatusCode: {StatusCode}
+                      ReasonPhrase: {ReasonPhrase}
+                      Headers: {@ResponseHeaders}
+                      Body: {ResponseBody}
+                    """,
+                    webhook.Name,
+                    requestMessage.Method.Method,
+                    requestMessage.RequestUri,
+                    requestMessage.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                    (int)response.StatusCode,
+                    response.ReasonPhrase,
+                    response.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                    responseBody
+                );
+
+                return Result<bool>.Failure(new Error(response.StatusCode.ToString(), "Webhook returned a non-success status code"));
+            }
+
+            _logger.LogInformation("Webhook {WebhookName} executed successfully with status code {StatusCode}", webhook.Name, (int)response.StatusCode);
+
+            return Result<bool>.Success(true);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                """
+                Exception while executing webhook
+                Webhook: {WebhookName}
+                Request:
+                  Method: {Method}
+                  Url: {Url}
+                  Headers: {@RequestHeaders}
+                ResponseBody (if any): {ResponseBody}
+                """,
+                webhook.Name,
+                requestMessage.Method.Method,
+                requestMessage.RequestUri,
+                requestMessage.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
+                responseBody
+            );
+
+            return Result<bool>.Failure(new Error("500", ex.Message));
+        }
     }
+
 }
