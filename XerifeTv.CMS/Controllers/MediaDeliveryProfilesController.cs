@@ -64,4 +64,16 @@ public class MediaDeliveryProfilesController(
 
         return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
     }
+
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> ResolveUrlFixed(string urlFixed, string streamFormat)
+    {
+        var response = await _urlResolver.ResolveUrlFixedAsync(urlFixed, streamFormat);
+
+        if (response.IsFailure)
+            return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
+
+        return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
+    }
 }

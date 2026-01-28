@@ -13,10 +13,11 @@ public class GetChannelResponseDto
     public string? MediaRoute { get; private set; }
     public DateTime RegistrationDate { get; private set; }
     public bool Disabled { get; private set; } = false;
+
     public string? UrlResolverAddress
         => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
             ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
-            : null;
+            : $"/MediaDeliveryProfiles/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(Video?.Url ?? "")}&streamFormat={Video?.StreamFormat}";
 
     public static GetChannelResponseDto FromEntity(ChannelEntity entity)
     {

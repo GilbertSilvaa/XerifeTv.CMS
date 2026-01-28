@@ -21,10 +21,11 @@ public sealed class GetMovieResponseDto
     public string? MediaRoute { get; private set; }
     public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
     public bool Disabled { get; private set; } = false;
+
     public string? UrlResolverAddress
         => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
             ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
-            : null;
+            : $"/MediaDeliveryProfiles/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(Video?.Url ?? "")}&streamFormat={Video?.StreamFormat}";
 
     public static GetMovieResponseDto FromEntity(MovieEntity entity)
     {

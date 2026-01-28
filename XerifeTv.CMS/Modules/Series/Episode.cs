@@ -13,8 +13,9 @@ public class Episode : BaseEntity
     public string? MediaDeliveryProfileId { get; set; }
     public string? MediaRoute { get; set; }
     public bool Disabled { get; set; } = false;
+
     public string? UrlResolverAddress
         => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
             ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
-            : null;
+            : $"/MediaDeliveryProfiles/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(Video?.Url ?? "")}&streamFormat={Video?.StreamFormat}";
 }

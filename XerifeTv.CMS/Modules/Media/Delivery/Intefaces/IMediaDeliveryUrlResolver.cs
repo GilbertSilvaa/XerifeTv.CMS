@@ -6,4 +6,5 @@ namespace XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 public interface IMediaDeliveryUrlResolver
 {
     Task<Result<GetResolveUrlResponseDto>> ResolveUrlAsync(string mediaPath, string mediaDeliveryProfileId);
+    Task<Result<GetResolveUrlResponseDto>> ResolveUrlFixedAsync(string urlFixed, string streamFormat);
 }

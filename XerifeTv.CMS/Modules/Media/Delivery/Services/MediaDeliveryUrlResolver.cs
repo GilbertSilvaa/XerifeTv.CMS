@@ -46,4 +46,9 @@ public class MediaDeliveryUrlResolver(
             return Result<GetResolveUrlResponseDto>.Failure(error);
         }
     }
+
+    public async Task<Result<GetResolveUrlResponseDto>> ResolveUrlFixedAsync(string urlFixed, string streamFormat)
+    {
+       return await Task.FromResult(Result<GetResolveUrlResponseDto>.Success(new(urlFixed, streamFormat)));
+    }
 }

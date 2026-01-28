@@ -56,28 +56,19 @@
             const resolverUrl = button.getAttribute('data-bs-video-resolver')
 
             try {
-                let finalUrl = null
-                let streamFormat = null
+                const response = await fetch(resolverUrl)
+                if (!response.ok) throw new Error('Erro ao resolver URL')
 
-                if (resolverUrl) {
-                    const response = await fetch(resolverUrl)
-                    if (!response.ok) throw new Error('Erro ao resolver URL')
-
-                    const data = await response.json()
-                    finalUrl = data.url || data.Url
-                    streamFormat = data.streamFormat || data.StreamFormat || streamFormat             
-                } 
-                else {
-                    finalUrl = button.getAttribute('data-bs-video-url')
-                    streamFormat = button.getAttribute('data-bs-video-format')
-                }
+                const data = await response.json()
+                const url = data.url || data.Url
+                let streamFormat = data.streamFormat || data.StreamFormat
 
                 streamFormat = streamFormat === 'mp4'
-                        ? 'video/mp4'
-                        : 'application/x-mpegURL'
+                    ? 'video/mp4'
+                    : 'application/x-mpegURL'
 
                 player.src({
-                    src: finalUrl,
+                    src: url,
                     type: streamFormat
                 })
 
@@ -91,8 +82,8 @@
                         label: 'Português'
                     }, false)
                 }
-
-            } catch (err) {
+            } 
+            catch (err) {
                 console.error('Erro ao carregar vídeo:', err)
             }
         })
