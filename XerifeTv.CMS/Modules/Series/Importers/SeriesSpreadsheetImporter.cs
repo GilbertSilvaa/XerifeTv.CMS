@@ -3,6 +3,7 @@ using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -13,7 +14,8 @@ public class SeriesSpreadsheetImporter(
     ISeriesService _service,
     IImdbService _imdbService,
     ICacheService _cacheService,
-    ISpreadsheetReaderService _spreadsheetReaderService) : ISpreadsheetBatchImporter<ISeriesService>
+    ISpreadsheetReaderService _spreadsheetReaderService,
+    IMediaDeliveryProfileService _mediaDeliveryProfileService) : ISpreadsheetBatchImporter<ISeriesService>
 {
     public async Task<Result<string>> ImportAsync(IFormFile file)
     {
@@ -57,8 +59,10 @@ public class SeriesSpreadsheetImporter(
                 "EPISODE (REQUIRED)",
                 "TITLE (REQUIRED)",
                 "URL BANNER (REQUIRED)",
-                "URL VIDEO (REQUIRED)",
-                "STREAM FORMAT (REQUIRED)",
+                "MEDIA DELIVERY PROFILE NAME",
+                "MEDIA PATH",
+                "URL VIDEO FIXED",
+                "STREAM FORMAT",
                 "DURATION INSECONDS (REQUIRED)",
                 "URL SUBTITLES"
             ];
@@ -133,7 +137,7 @@ public class SeriesSpreadsheetImporter(
                 if (seriesByImdbResponse.IsFailure)
                 {
                     seriesFailCount++;
-                    errorList.Add(seriesByImdbResponse.Error.Description ?? string.Empty);
+                    errorList.Add($"[{seriesItem.ImdbId}] {seriesByImdbResponse.Error.Description ?? string.Empty}");
                     UpdateProgress();
                     continue;
                 }
@@ -161,7 +165,7 @@ public class SeriesSpreadsheetImporter(
                 else
                 {
                     seriesFailCount++;
-                    errorList.Add(response.Error?.Description ?? string.Empty);
+                    errorList.Add($"[{seriesItem.ImdbId}] {response.Error?.Description ?? string.Empty}");
                 }
 
                 UpdateProgress();
@@ -170,12 +174,27 @@ public class SeriesSpreadsheetImporter(
 
             foreach (var item in episodeList)
             {
+                if (!string.IsNullOrWhiteSpace(item.MediaDeliveryProfileName))
+                {
+                    var mediaProfileResponse = await _mediaDeliveryProfileService.GetByNameAsync(item.MediaDeliveryProfileName);
+
+                    if (mediaProfileResponse.IsFailure)
+                    {
+                        episodesFailCount++;
+                        errorList.Add($"[{item.SeriesImdbId}:S{item.Season}E{item.Episode}] {mediaProfileResponse.Error.Description ?? string.Empty}");
+                        UpdateProgress();
+                        continue;
+                    }
+
+                    item.MediaDeliveryProfileId = mediaProfileResponse.Data!.Id;
+                }
+
                 var seriesResult = await _service.GetByImdbIdAsync(item.SeriesImdbId);
 
                 if (seriesResult.IsFailure)
                 {
                     episodesFailCount++;
-                    errorList.Add(seriesResult.Error.Description ?? string.Empty);
+                    errorList.Add($"[{item.SeriesImdbId}:S{item.Season}E{item.Episode}] {seriesResult.Error?.Description ?? string.Empty}");
                     UpdateProgress();
                     continue;
                 }
@@ -204,6 +223,8 @@ public class SeriesSpreadsheetImporter(
                         VideoDuration = item.Video?.Duration ?? episode.Video?.Duration ??  0,
                         VideoStreamFormat = item.Video?.StreamFormat ?? episode.Video?.StreamFormat ?? string.Empty,
                         VideoSubtitle = item.Video?.Subtitle ?? episode.Video?.Subtitle ?? string.Empty,
+                        MediaDeliveryProfileId = item.MediaDeliveryProfileId ?? episode.MediaDeliveryProfileId,
+                        MediaRoute = item.MediaRoute ?? episode.MediaRoute,
                         Disabled = false
                     };
 
@@ -221,7 +242,9 @@ public class SeriesSpreadsheetImporter(
                         VideoUrl = item.Video?.Url ?? string.Empty,
                         VideoDuration = item.Video?.Duration ?? 0,
                         VideoStreamFormat = item.Video?.StreamFormat ?? string.Empty,
-                        VideoSubtitle = item.Video?.Subtitle ?? string.Empty
+                        VideoSubtitle = item.Video?.Subtitle ?? string.Empty,
+                        MediaDeliveryProfileId = item.MediaDeliveryProfileId,
+                        MediaRoute = item.MediaRoute
                     };
 
                     responseCreateOrUpdate = await _service.CreateEpisodeAsync(createEpisodeDto);
@@ -234,7 +257,7 @@ public class SeriesSpreadsheetImporter(
                 else
                 {
                     episodesFailCount++;
-                    errorList.Add(responseCreateOrUpdate.Error?.Description ?? string.Empty);
+                    errorList.Add($"[{item.SeriesImdbId}:S{item.Season}E{item.Episode}] {responseCreateOrUpdate.Error?.Description ?? string.Empty}");
                 }
 
                 UpdateProgress();

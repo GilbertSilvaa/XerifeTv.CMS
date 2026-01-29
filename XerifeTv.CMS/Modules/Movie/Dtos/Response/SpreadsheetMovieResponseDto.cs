@@ -9,9 +9,9 @@ public sealed class SpreadsheetMovieResponseDto
     public string ImdbId { get; private set; } = string.Empty;
     public int ParentalRating { get; private set; }
     public Video? Video { get; private set; }
-    public string? MediaDeliveryProfileId { get; set; }
     public string? MediaDeliveryProfileName { get; private set; }
     public string? MediaRoute { get; private set; }
+    public string? MediaDeliveryProfileId { get; set; }
 
     public static SpreadsheetMovieResponseDto FromCollunsStr(string[] cols)
     {

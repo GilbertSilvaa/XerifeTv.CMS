@@ -16,9 +16,11 @@ public class MediaDeliveryProfileRepository : BaseRepository<MediaDeliveryProfil
             .ToListAsync();
     }
 
-    public async Task<MediaDeliveryProfileEntity?> GetByNameAsync(string name)
+    public async Task<MediaDeliveryProfileEntity?> GetByNameAsync(string name, bool isIncludeDisabled = false)
     {
-        return await _collection.Find(r => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+        return await _collection.Find(r
+            => r.Name.Equals(name, StringComparison.OrdinalIgnoreCase) &&
+               ((isIncludeDisabled) || (!isIncludeDisabled && !r.IsDisabled)))
             .FirstOrDefaultAsync();
     }
 }

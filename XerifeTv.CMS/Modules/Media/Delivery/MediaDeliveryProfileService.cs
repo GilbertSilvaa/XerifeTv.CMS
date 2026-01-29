@@ -64,11 +64,11 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
         }
     }
 
-    public async Task<Result<GetMediaDeliveryProfileResponseDto?>> GetByNameAsync(string name)
+    public async Task<Result<GetMediaDeliveryProfileResponseDto?>> GetByNameAsync(string name, bool isIncludeDisabled = false)
     {
         try
         {
-            var response = await _repository.GetByNameAsync(name);
+            var response = await _repository.GetByNameAsync(name, isIncludeDisabled);
 
             if (response == null)
                 return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de midia nao encontrado"));

@@ -105,7 +105,7 @@ public class MoviesSpreadsheetImporter(
 					if (mediaProfileResponse.IsFailure)
 					{
                         failCount++;
-                        errorList.Add(mediaProfileResponse.Error.Description ?? string.Empty);
+                        errorList.Add($"[{movieItem.ImdbId}] {mediaProfileResponse.Error?.Description ?? string.Empty}");
                         UpdateProgress();
                         continue;
                     }
@@ -118,8 +118,8 @@ public class MoviesSpreadsheetImporter(
 				if (movieImdbAPIResponse.IsFailure)
 				{
 					failCount++;
-					errorList.Add(movieImdbAPIResponse.Error.Description ?? string.Empty);
-					UpdateProgress();
+                    errorList.Add($"[{movieItem.ImdbId}] {movieImdbAPIResponse.Error?.Description ?? string.Empty}");
+                    UpdateProgress();
 					continue;
 				}
 
@@ -182,8 +182,8 @@ public class MoviesSpreadsheetImporter(
 				else
 				{
 					failCount++;
-					errorList.Add(responseCreateOrUpdate.Error?.Description ?? string.Empty);
-				}
+                    errorList.Add($"[{movieItem.ImdbId}] {responseCreateOrUpdate.Error?.Description ?? string.Empty}");
+                }
 
 				UpdateProgress();
 				await Task.Delay(1200);

@@ -5,13 +5,15 @@ using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 
 namespace XerifeTv.CMS.Modules.Channel.Importers;
 
 public class ChannelsSpreadsheetImporter(
 	IChannelService _service,
 	ICacheService _cacheService,
-	ISpreadsheetReaderService _spreadsheetReaderService) : ISpreadsheetBatchImporter<IChannelService>
+	ISpreadsheetReaderService _spreadsheetReaderService,
+    IMediaDeliveryProfileService _mediaDeliveryProfileService) : ISpreadsheetBatchImporter<IChannelService>
 {
 	public async Task<Result<string>> ImportAsync(IFormFile file)
 	{
@@ -46,8 +48,10 @@ public class ChannelsSpreadsheetImporter(
 				"TITLE (REQUIRED)",
 				"CATEGORIES (REQUIRED)",
 				"URL LOGO (REQUIRED)",
-				"URL VIDEO (REQUIRED)",
-				"STREAM FORMAT (REQUIRED)"
+                "MEDIA DELIVERY PROFILE NAME",
+                "MEDIA PATH",
+				"URL VIDEO FIXED",
+				"STREAM FORMAT"
 			];
 
 			using var stream = new MemoryStream();
@@ -91,13 +95,30 @@ public class ChannelsSpreadsheetImporter(
 
 			foreach (var channelItem in channelList)
 			{
-				var createChannelDto = new CreateChannelRequestDto
+                if (!string.IsNullOrWhiteSpace(channelItem.MediaDeliveryProfileName))
+                {
+                    var mediaProfileResponse = await _mediaDeliveryProfileService.GetByNameAsync(channelItem.MediaDeliveryProfileName);
+
+                    if (mediaProfileResponse.IsFailure)
+                    {
+                        failCount++;
+						errorList.Add($"[{channelItem.Title[..8]}] {mediaProfileResponse.Error?.Description ?? string.Empty}");
+                        UpdateProgress();
+                        continue;
+                    }
+
+                    channelItem.MediaDeliveryProfileId = mediaProfileResponse.Data!.Id;
+                }
+
+                var createChannelDto = new CreateChannelRequestDto
 				{
 					Title = channelItem.Title,
 					Categories = channelItem.Categories,
 					VideoStreamFormat = channelItem.Video?.StreamFormat ?? string.Empty,
 					LogoUrl = channelItem.LogoUrl,
-					VideoUrl = channelItem.Video?.Url ?? string.Empty
+					VideoUrl = channelItem.Video?.Url ?? string.Empty,
+					MediaDeliveryProfileId = channelItem.MediaDeliveryProfileId,
+					MediaRoute = channelItem.MediaRoute
 				};
 
 				var response = await _service.CreateAsync(createChannelDto);
@@ -109,8 +130,8 @@ public class ChannelsSpreadsheetImporter(
 				else
 				{
 					failCount++;
-					errorList.Add(response.Error?.Description ?? string.Empty);
-				}
+                    errorList.Add($"[{channelItem.Title[..8]}] {response.Error?.Description ?? string.Empty}");
+                }
 
 				UpdateProgress();
 				await Task.Delay(1200);
@@ -126,7 +147,7 @@ public class ChannelsSpreadsheetImporter(
 				var failCount = currentProgress?.FailCount ?? 0;
 				var errorList = currentProgress?.ErrorList.ToList() ?? [];
 				errorList.Add(ex.InnerException?.Message ?? ex.Message);
-
+				
 				var _newDto = new ImportSpreadsheetResponseDto(
 					TotalItemsCount: currentProgress?.TotalItemsCount,
 					SuccessCount: currentProgress?.SuccessCount,
