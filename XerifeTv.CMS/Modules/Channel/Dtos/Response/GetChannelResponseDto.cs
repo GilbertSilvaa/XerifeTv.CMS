@@ -14,7 +14,7 @@ public class GetChannelResponseDto
     public DateTime RegistrationDate { get; private set; }
     public bool Disabled { get; private set; } = false;
 
-    public string? UrlResolverAddress
+    public string? UrlResolverPath
         => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
             ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
             : $"/MediaDeliveryProfiles/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(Video?.Url ?? "")}&streamFormat={Video?.StreamFormat}";

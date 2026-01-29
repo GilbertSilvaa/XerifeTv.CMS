@@ -64,6 +64,24 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
         }
     }
 
+    public async Task<Result<GetMediaDeliveryProfileResponseDto?>> GetByNameAsync(string name)
+    {
+        try
+        {
+            var response = await _repository.GetByNameAsync(name);
+
+            if (response == null)
+                return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de midia nao encontrado"));
+
+            return Result<GetMediaDeliveryProfileResponseDto?>.Success(GetMediaDeliveryProfileResponseDto.FromEntity(response));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<GetMediaDeliveryProfileResponseDto?>.Failure(error);
+        }
+    }
+
     public async Task<Result<string>> CreateAsync(CreateMediaDeliveryProfileRequestDto dto)
     {
         try

@@ -9,6 +9,7 @@ public interface IMediaDeliveryProfileService
     Task<Result<PagedList<GetMediaDeliveryProfileResponseDto>>> GetAsync(int currentPage, int limit);
     Task<Result<IEnumerable<GetMediaDeliveryProfileResponseDto>>> GetAllAsync(bool isIncludeDisabled = false);
     Task<Result<GetMediaDeliveryProfileResponseDto?>> GetAsync(string id);
+    Task<Result<GetMediaDeliveryProfileResponseDto?>> GetByNameAsync(string name);
     Task<Result<string>> CreateAsync(CreateMediaDeliveryProfileRequestDto dto);
     Task<Result<string>> UpdateAsync(UpdateMediaDeliveryProfileRequestDto dto);
     Task<Result<bool>> DeleteAsync(string id);

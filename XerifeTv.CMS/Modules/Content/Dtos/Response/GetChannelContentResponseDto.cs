@@ -12,7 +12,7 @@ public class GetChannelContentResponseDto
     public Video? Video { get; private set; }
     public string? MediaDeliveryProfileId { get; private set; }
     public string? MediaRoute { get; private set; }
-    public string? UrlResolverAddress
+    public string? UrlResolverPath
         => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
             ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
             : null;
