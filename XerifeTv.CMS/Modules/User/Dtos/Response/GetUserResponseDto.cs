@@ -10,6 +10,7 @@ public class GetUserResponseDto
     public EUserRole Role { get; private set; } = EUserRole.COMMON;
     public string RoleName => GetRoleName(Role);
     public bool Blocked { get; private set; } = false;
+    public int FailedLoginAttempts { get; private set; }
 
     public static GetUserResponseDto FromEntity(UserEntity entity)
     {
@@ -19,7 +20,8 @@ public class GetUserResponseDto
             UserName = entity.UserName,
             Email = entity.Email,
             Role = entity.Role,
-			Blocked = entity.Blocked
+			Blocked = entity.Blocked,
+            FailedLoginAttempts = entity.FailedLoginAttempts 
 		};
     }
 

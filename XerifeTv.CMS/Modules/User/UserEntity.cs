@@ -26,4 +26,5 @@ public class UserEntity : BaseEntity
     public Guid? ResetPasswordGuid { get; set; }
     public DateTimeOffset? ResetPasswordGuidExpires { get; set; }
     public bool Blocked { get; set; } = false;
+    public int FailedLoginAttempts { get; set; }
 }

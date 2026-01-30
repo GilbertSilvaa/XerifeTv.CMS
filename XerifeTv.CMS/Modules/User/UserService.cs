@@ -119,6 +119,9 @@ public sealed class UserService(
 			if (!await usernameSpec.IsSatisfiedByAsync(dto.ToEntity()))
 				return Result<string>.Failure(new Error("409", "Username ja esta em uso"));
 
+			if (dto.Blocked == false && user.Blocked)
+				user.FailedLoginAttempts = 0;
+
 			user.Email = dto.Email ?? user.Email;
 			user.UserName = dto.UserName ?? user.UserName;
 			user.Role = dto.Role ?? user.Role;
@@ -259,6 +262,8 @@ public sealed class UserService(
 
     public async Task<Result<bool>> IsPasswordCorrect(string userId, string password)
     {
+		const int MAX_FAILED_LOGIN_ATTEMPS = 5;
+
         try
         {
             var user = await _repository.GetAsync(userId);
@@ -267,8 +272,20 @@ public sealed class UserService(
                 return Result<bool>.Failure(new Error("404", "Usuario nao encontrado"));
 
 			if (!_hashPassword.Verify(password, user.Password))
+			{
+				user.FailedLoginAttempts++;
+
+				if (user.FailedLoginAttempts >= MAX_FAILED_LOGIN_ATTEMPS)
+					user.Blocked = true;
+
+				await _repository.UpdateAsync(user);
+
 				return Result<bool>.Success(false);
-            
+			}
+
+			user.FailedLoginAttempts = 0;
+            await _repository.UpdateAsync(user);
+
             return Result<bool>.Success(true);
         }
         catch (Exception ex)

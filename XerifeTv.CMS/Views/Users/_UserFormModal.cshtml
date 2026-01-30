@@ -4,140 +4,133 @@
 @model GetUserResponseDto?
 
 @{
-  ICollection<string[]> roles = [];
-  roles.Add([EUserRole.COMMON.ToString().ToLower(), "Comum"]);
-  roles.Add([EUserRole.VISITOR.ToString().ToLower(), "Visitante"]);
+    ICollection<string[]> roles = [];
+    roles.Add([EUserRole.COMMON.ToString().ToLower(), "Comum"]);
+    roles.Add([EUserRole.VISITOR.ToString().ToLower(), "Visitante"]);
 }
 
-<div 
-class="modal fade" 
-id="userFormModal-@Model?.Id" 
-data-bs-backdrop="static" 
-data-bs-keyboard="false" 
-tabindex="-1"
-aria-labelledby="userFormModal-@Model?.Id-Label"
-aria-hidden="true">
+<div class="modal fade"
+     id="userFormModal-@Model?.Id"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="userFormModal-@Model?.Id-Label"
+     aria-hidden="true">
 
-  <div class="modal-dialog modal-lg modal-dialog-centered">
-    <form 
-      class="modal-content" 
-      asp-controller="Users"
-      asp-action="@(string.IsNullOrEmpty(Model?.Id) ? "Register" : "Update")">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content"
+              asp-controller="Users"
+              asp-action="@(string.IsNullOrEmpty(Model?.Id) ? "Register" : "Update")">
 
-      <input type="hidden" name="id" value="@Model?.Id" />
+            <input type="hidden" name="id" value="@Model?.Id" />
 
-      <div class="modal-header">
-        <h1 class="modal-title fs-5" id="userFormModal-@Model?.Id-Label">
-          @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar") Usuário
-        </h1>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <div class="row mb-3">
-          <div class="col-6">
-            <label for="userName" class="form-label">Nome de Usuário</label>
-            <input 
-              type="text" 
-              class="form-control" 
-              id="userName-@Model?.Id" 
-              name="userName" 
-              placeholder="digite aqui..."
-              value="@Model?.UserName"
-              required>
-          </div>
-
-          <div class="col-6">
-            <label for="email" class="form-label">E-mail</label>
-            <input 
-              type="email"
-              class="form-control"
-              id="email-@Model?.Id"
-              name="email"
-              placeholder="email@example.com"
-              value="@Model?.Email"
-              required>
-          </div>
-        </div>
-
-        @if (string.IsNullOrEmpty(Model?.Id))
-        {
-          <div class="row mb-3">
-            <div class="col-12">
-              <label for="password" class="form-label">Senha</label>
-              <input 
-                type="password"
-                class="form-control"
-                id="password-@Model?.Id"
-                name="password"
-                placeholder="digite aqui..."
-                required>
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="userFormModal-@Model?.Id-Label">
+                    @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar") Usuário
+                </h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-          </div>
-        }
-
-        @if (User.IsInRole("admin"))
-        {
-          <div class="row mb-4">
-            <div class="col-12">
-              <label for="role" class="form-label">Cargo</label>
-              <select 
-                class="form-select"
-                id="role-@Model?.Id"
-                name="role"
-                required>
-                <option selected value="">Selecione uma opção</option>
-                @foreach (var role in roles)
-                {
-                  if (role[0] == Model?.Role.ToString().ToLower())
-                  {
-                    <option value="@role[0]" selected>@role[1]</option>
-                  }
-                  else
-                  {
-                    <option value="@role[0]">@role[1]</option>
-                  }
-                }
-              </select>
-            </div>
-          </div>
-
-          @if (!string.IsNullOrEmpty(Model?.Id))
-          {
-              <div class="row mb-1">
-                <div class="col-6">
-                    <div class="form-check">
-                      <input
-                        id="blocked-@Model?.Id"
-                        name="blocked"
-                        class="form-check-input" 
-                        type="checkbox"
-                        value="@((Model?.Blocked ?? false) ? "true" : "false")"
-                         @((Model?.Blocked ?? false) ? "checked" : "")>
-
-                      <label class="form-check-label" for="disabled-@Model?.Id">
-                        Bloquear
-                      </label>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <label for="userName-@Model?.Id" class="form-label">Nome de Usuário</label>
+                        <input type="text"
+                               class="form-control"
+                               id="userName-@Model?.Id"
+                               name="userName"
+                               placeholder="digite aqui..."
+                               value="@Model?.UserName"
+                               required>
                     </div>
-                  </div>
-              </div>         
-          }
-        }
-        
-      </div>
-      <div class="modal-footer d-flex justify-content-between">
-        <button type="submit" class="btn btn-primary">
-          @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
-        </button>
 
-        @if (!string.IsNullOrEmpty(Model?.Id) && User.IsInRole("admin"))
-        {
-          <button type="button" class="btn btn-danger" onclick="deleteUser('@Model?.Id')">
-            Excluir
-          </button>
-        }
-      </div>
-    </form>
-  </div>
+                    <div class="col-6">
+                        <label for="email-@Model?.Id" class="form-label">E-mail</label>
+                        <input type="email"
+                               class="form-control"
+                               id="email-@Model?.Id"
+                               name="email"
+                               placeholder="email@example.com"
+                               value="@Model?.Email"
+                               required>
+                    </div>
+                </div>
+
+                @if (string.IsNullOrEmpty(Model?.Id))
+                {
+                    <div class="row mb-3">
+                        <div class="col-12">
+                            <label for="password-@Model?.Id" class="form-label">Senha</label>
+                            <input type="password"
+                                   class="form-control"
+                                   id="password-@Model?.Id"
+                                   name="password"
+                                   placeholder="digite aqui..."
+                                   required>
+                        </div>
+                    </div>
+                }
+
+                @if (User.IsInRole("admin"))
+                {
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <label for="role-@Model?.Id" class="form-label">Cargo</label>
+                            <select class="form-select"
+                                    id="role-@Model?.Id"
+                                    name="role"
+                                    required>
+                                <option selected value="">Selecione uma opção</option>
+                                @foreach (var role in roles)
+                                {
+                                    if (role[0] == Model?.Role.ToString().ToLower())
+                                    {
+                                        <option value="@role[0]" selected>@role[1]</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@role[0]">@role[1]</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model?.Id))
+                    {
+                        <div class="row mb-1">
+                            <div class="col-6">
+                                <div class="form-check">
+                                    <input id="blocked-@Model?.Id"
+                                           name="blocked"
+                                           class="form-check-input"
+                                           type="checkbox"
+                                           value="@((Model?.Blocked ?? false) ? "true" : "false")"
+                                           @((Model?.Blocked ?? false) ? "checked" : "")>
+
+                                    <label class="form-check-label" for="blocked-@Model?.Id">
+                                        Bloquear
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">
+                    @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
+                </button>
+
+                @if (!string.IsNullOrEmpty(Model?.Id) && User.IsInRole("admin"))
+                {
+                    <button type="button" class="btn btn-danger" onclick="deleteUser('@Model?.Id')">
+                        Excluir
+                    </button>
+                }
+            </div>
+        </form>
+    </div>
 </div>
 
 @if (!string.IsNullOrEmpty(Model?.Id))
