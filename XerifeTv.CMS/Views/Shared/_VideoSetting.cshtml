@@ -1,4 +1,4 @@
-@using XerifeTv.CMS.Views.Shared.Models
+ï»¿@using XerifeTv.CMS.Views.Shared.Models
 @using XerifeTv.CMS.Shared.Helpers
 
 @model VideoSettingViewModel
@@ -13,7 +13,7 @@
 }
 
 <fieldset class="border rounded p-3 mb-4">
-    <legend class="float-none w-auto px-2 fs-5">Configuração de vídeo</legend>
+    <legend class="float-none w-auto px-2 fs-5">ConfiguraÃ§Ã£o de vÃ­deo</legend>
 
     <div id="@($"{prefix}_video-direct-section")" class="row mb-3 @(isDeliverySelected ? "d-none" : "")">
         <div class="col-6">
@@ -34,7 +34,7 @@
                     name="videoStreamFormat"
                     @(isDeliverySelected ? "" : "required")>
 
-                <option selected value="">Selecione uma opção</option>
+                <option selected value="">Selecione uma opÃ§Ã£o</option>
 
                 @foreach (var format in streamFormats)
                 {
@@ -75,7 +75,7 @@
             </div>
 
             <div class="col-6">
-                <label for="@($"{prefix}_mediaRoute")" class="form-label">Rota da mídia</label>
+                <label for="@($"{prefix}_mediaRoute")" class="form-label">Rota da mÃ­dia</label>
                 <input type="text"
                        class="form-control"
                        id="@($"{prefix}_mediaRoute")"
