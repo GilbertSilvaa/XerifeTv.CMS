@@ -3,59 +3,104 @@
 @model IEnumerable<GetUserResponseDto>
 
 @{
-  ViewData["Title"] = "Usuários";
+    ViewData["Title"] = "Usuários";
 
-  var userDtoEmpty = new GetUserResponseDto();
+    var userDtoEmpty = new GetUserResponseDto();
 }
 
 <div class="container">
-  @await Html.PartialAsync("_UserFormModal", userDtoEmpty)
+    @await Html.PartialAsync("_UserFormModal", userDtoEmpty)
 
-  <header>
-    <div class="d-flex align-items-center justify-content-between gap-4">
-      <span class="fs-3 fw-normal">Usuários</span>
-      <a class="btn btn-primary" role="button" data-bs-toggle="modal" data-bs-target="#userFormModal-@userDtoEmpty.Id">
-        <i class="fa-solid fa-plus"></i> Cadastrar
-      </a>
-    </div>
-    <hr />
-  </header>
-
-  <div class="row gap-2 mt-4">
-    @foreach (var user in Model)
-    {
-      <div class="col-md-6 col-xl-3">
-        <div class="card">
-          <div class=" card-header">
-            @user.RoleName
-          </div>
-          <div class="card-body d-flex justify-content-between align-items-center">
-            <span class="card-text">@user.UserName</span>
-
-            <div class="d-flex align-items-center gap-2">
-              <a class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#userFormModal-@user.Id">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </a>
-            </div>
-          </div>
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4">
+            <span class="fs-3 fw-normal">Usuários</span>
+            <a class="btn btn-primary" role="button" data-bs-toggle="modal" data-bs-target="#userFormModal-@userDtoEmpty.Id">
+                <i class="fa-solid fa-plus"></i> Cadastrar
+            </a>
         </div>
-      </div>
+        <hr />
+    </header>
 
-      @await Html.PartialAsync("_UserFormModal", user)
-    }
+    <div class="row gap-2 mt-4">
+        <div class="table-responsive mt-4">
+            <table class="table table-striped table-hover align-middle">
+                <thead class="table">
+                    <tr>
+                        <th>Usuário</th>
+                        <th>Email</th>
+                        <th>Perfil</th>
+                        <th>Status</th>
+                        <th class="text-end">...</th>
+                    </tr>
+                </thead>
 
-    @if (Model?.Count() <= 0)
-    {
-      <p>Nenhum registro encontrado.</p>
-    }
-  </div>
+                <tbody>
+                    @if (Model.Any())
+                    {
+                        @foreach (var user in Model)
+                        {
+                            <tr>
+                                <td class="fw-semibold">
+                                    @user.UserName
+                                </td>
+
+                                <td>
+                                    @user.Email
+                                </td>
+
+                                <td>
+                                    <span class="badge bg-secondary">
+                                        @user.RoleName
+                                    </span>
+                                </td>
+
+                                <td>
+                                    @if (user.Blocked)
+                                    {
+                                        <span class="badge bg-danger">Bloqueado</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-success">Ativo</span>
+                                    }
+                                </td>
+
+                                <td class="text-end">
+                                    <button class="btn btn-sm btn-outline-primary shadow-sm"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#userFormModal-@user.Id"
+                                            title="Editar usuário">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                                <i class="fa-solid fa-circle-info me-2"></i>
+                                Nenhum registro encontrado.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.Any())
+        {
+            @foreach (var user in Model) @await Html.PartialAsync("_UserFormModal", user)
+        }
+    </div>
 </div>
 
 @section scripts {
-  <script defer>
-    function deleteUser(id) {
-      if (!confirm('Deseja realmente remover o usuário?')) return;
-      location.href = `/Users/Delete/${id}`
-    }
-  </script>
+    <script defer>
+        function deleteUser(id) {
+          if (!confirm('Deseja realmente remover o usuário?')) return;
+          location.href = `/Users/Delete/${id}`
+        }
+    </script>
 }

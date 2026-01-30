@@ -1,0 +1,118 @@
+@using XerifeTv.CMS.Views.Shared.Models
+@using XerifeTv.CMS.Shared.Helpers
+
+@model VideoSettingViewModel
+
+@{
+    var prefix = Model?.IdPrefix ?? string.Empty;
+    bool isDeliverySelected = !string.IsNullOrWhiteSpace(Model?.MediaDeliveryProfileId);
+
+    var streamFormats = (Model?.StreamFormats != null && Model.StreamFormats.Any())
+                        ? Model.StreamFormats
+                        : StreamFormatsHelper.Vod;
+}
+
+<fieldset class="border rounded p-3 mb-4">
+    <legend class="float-none w-auto px-2 fs-5">Configuração de vídeo</legend>
+
+    <div id="@($"{prefix}_video-direct-section")" class="row mb-3 @(isDeliverySelected ? "d-none" : "")">
+        <div class="col-6">
+            <label for="@($"{prefix}_videoUrl")" class="form-label">Video (URL)</label>
+            <input type="text"
+                   class="form-control"
+                   id="@($"{prefix}_videoUrl")"
+                   name="videoUrl"
+                   placeholder="https://video.com/video.m3u8"
+                   value="@Model?.VideoUrl"
+                   @(isDeliverySelected ? "" : "required")>
+        </div>
+
+        <div class="col-6">
+            <label for="@($"{prefix}_videoStreamFormat")" class="form-label">Stream Format</label>
+            <select class="form-select"
+                    id="@($"{prefix}_videoStreamFormat")"
+                    name="videoStreamFormat"
+                    @(isDeliverySelected ? "" : "required")>
+
+                <option selected value="">Selecione uma opção</option>
+
+                @foreach (var format in streamFormats)
+                {
+                    if (format == Model?.VideoStreamFormat)
+                    {
+                        <option value="@format" selected>@format</option>
+                    }
+                    else
+                    {
+                        <option value="@format">@format</option>
+                    }
+                }
+            </select>
+        </div>
+    </div>
+
+    <div id="@($"{prefix}_video-delivery-section")" class="@(!isDeliverySelected ? "d-none" : "")">
+        <div class="row mb-3">
+            <div class="col-6">
+                <label for="@($"{prefix}_mediaDeliveryProfileId")" class="form-label">Perfil de entrega</label>
+                <select class="form-select"
+                        id="@($"{prefix}_mediaDeliveryProfileId")"
+                        name="mediaDeliveryProfileId"
+                        @(isDeliverySelected ? "required" : "")>
+                    <option value="">Selecione um perfil</option>
+                    @foreach (var profile in Model?.MediaDeliveryProfiles ?? [])
+                    {
+                        if (Model?.MediaDeliveryProfileId == profile?.Id)
+                        {
+                            <option value="@profile?.Id" selected>@profile?.Name</option>
+                        }
+                        else
+                        {
+                            <option value="@profile?.Id">@profile?.Name</option>
+                        }
+                    }
+                </select>
+            </div>
+
+            <div class="col-6">
+                <label for="@($"{prefix}_mediaRoute")" class="form-label">Rota da mídia</label>
+                <input type="text"
+                       class="form-control"
+                       id="@($"{prefix}_mediaRoute")"
+                       name="mediaRoute"
+                       value="@Model?.MediaRoute"
+                       placeholder="/path/to/stream.m3u8"
+                       @(isDeliverySelected ? "required" : "")>
+            </div>
+        </div>
+    </div>
+
+    @if (Model?.IsShowVideoSubtitleInput == true)
+    {
+        <div class="row mb-4">
+            <div class="col-12">
+                <label for="@($"{prefix}_videoSubtitle")" class="form-label">Legenda (URL)</label>
+                <div class="input-group">
+                    <input type="text"
+                           class="form-control"
+                           id="@($"{prefix}_videoSubtitle")"
+                           name="videoSubtitle"
+                           placeholder="https://subtitle.com/vtts/video.vtt"
+                           value="@Model?.VideoSubtitle" />
+
+                    <input id="@($"{prefix}_subtitle_file")"
+                           type="file"
+                           accept=".vtt"
+                           style="display: none" />
+
+                    <button id="@($"{prefix}_btn_subtitle_file")"
+                            class="btn btn-success"
+                            type="button">
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+</fieldset>

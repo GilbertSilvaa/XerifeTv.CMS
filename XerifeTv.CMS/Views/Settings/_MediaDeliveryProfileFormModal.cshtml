@@ -1,0 +1,182 @@
+﻿@using XerifeTv.CMS.Modules.Media.Delivery.Enums
+@using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response
+@using XerifeTv.CMS.Shared.Helpers
+@using XerifeTv.CMS.Views.Shared.Models
+
+@model GetMediaDeliveryProfileResponseDto?
+
+
+<div class="modal fade"
+     id="mediaDeliveryProfileFormModal-@Model?.Id"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="mediaDeliveryProfileFormModal-@Model?.Id-Label"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <form class="modal-content"
+              asp-controller="MediaDeliveryProfiles"
+              asp-action="@(string.IsNullOrEmpty(Model?.Id) ? "Create" : "Update")">
+
+            <input type="hidden" name="id" value="@Model?.Id" />
+
+            <div class="modal-header">
+                <h1 class="modal-title fs-5"
+                    id="mediaDeliveryProfileFormModal-@Model?.Id-Label">
+                    @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
+                    Perfil de Entrega de Midia
+                </h1>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="name-@Model?.Id" class="form-label">
+                            Nome da Perfil
+                        </label>
+                        <input type="text"
+                               class="form-control shadow-sm"
+                               id="name-@Model?.Id"
+                               name="name"
+                               placeholder="Ex: CDN CloudFront HLS"
+                               value="@Model?.Name"
+                               required />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="baseUrl-@Model?.Id" class="form-label">
+                            Base URL
+                        </label>
+                        <input type="url"
+                               class="form-control shadow-sm"
+                               id="baseUrl-@Model?.Id"
+                               name="baseUrl"
+                               placeholder="https://cdn.exemplo.com"
+                               value="@Model?.BaseUrl"
+                               required />
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="streamFormat-@Model?.Id" class="form-label">
+                            Stream Format
+                        </label>
+                        <select class="form-select shadow-sm"
+                                id="streamFormat-@Model?.Id"
+                                name="streamFormat"
+                                required>
+                            <option selected value="">Selecione uma opção</option>
+                            @foreach (var format in StreamFormatsHelper.Vod.Concat(StreamFormatsHelper.Streaming))
+                            {
+                                if (Model?.StreamFormat == format)
+                                {
+                                    <option value="@format" selected>@format</option>
+                                }
+                                else
+                                {
+                                    <option value="@format">@format</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-12">
+                        <label for="tokenStrategy-@Model?.Id" class="form-label">
+                            Estratégia de Token
+                        </label>
+
+                        <select class="form-select shadow-sm"
+                                id="tokenStrategy-@Model?.Id"
+                                name="tokenStrategy"
+                                required>
+                            @foreach (var strategy in Enum.GetValues<EMediaDeliveryTokenStrategyType>())
+                            {
+                                if (Model?.TokenStrategy == strategy)
+                                {
+                                    <option value="@strategy" selected>
+                                        @strategy.ToDescriptionString()
+                                    </option>
+                                }
+                                else
+                                {
+                                    <option value="@strategy">
+                                        @strategy.ToDescriptionString()
+                                    </option>
+                                }
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <label class="form-label">Parâmetros de Query</label>
+
+                    <div class="media-query-params-@Model?.Id row">
+                        @await Html.PartialAsync("_KeyValueRepeater", new KeyValueRepeaterViewModel("QueryParameters", Model?.QueryParameters ?? []))
+                    </div>
+                </div>
+
+                @if (Model is GetMediaDeliveryProfileResponseDto && !string.IsNullOrEmpty(Model?.Id))
+                {
+                    <div class="row mb-4">
+                        <div class="col-6">
+                            <div class="form-check">
+                                <input id="isDisabled-@Model?.Id"
+                                       name="isDisabled"
+                                       class="form-check-input"
+                                       type="checkbox"
+                                       value="@(Model!.IsDisabled ? "true" : "false")"
+                                       @(Model!.IsDisabled ? "checked" : "") />
+
+                                <label class="form-check-label" for="isDisabled-@Model?.Id">
+                                    Desativar
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                }
+
+            </div>
+
+            <div class="modal-footer d-flex justify-content-between">
+                <button type="submit" class="btn btn-primary">
+                    @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Salvar")
+                </button>
+
+                @if (!string.IsNullOrEmpty(Model?.Id))
+                {
+                    <a role="button"
+                       class="btn btn-danger btn-delete-media-profile-@Model?.Id">
+                        <i class="fa fa-trash"></i>
+                        Remover
+                    </a>
+                }
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+    document.getElementById('isDisabled-@Model?.Id')?.addEventListener('change', function () {
+        this.value = this.checked;
+    });
+
+    document.querySelector('.btn-delete-media-profile-@Model?.Id')?.addEventListener('click', function () {
+        if (!confirm('Deseja realmente remover este Perfil Entrega de Midia?')) return;
+
+        location.href = '@Url.Action("Delete", "MediaDeliveryProfiles", new { id = Model?.Id })';
+    });
+</script>

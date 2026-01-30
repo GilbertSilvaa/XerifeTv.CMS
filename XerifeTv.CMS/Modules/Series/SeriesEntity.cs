@@ -2,7 +2,7 @@
 
 namespace XerifeTv.CMS.Modules.Series;
 
-public sealed class SeriesEntity : Midia
+public sealed class SeriesEntity : MediaContent
 {
     public string ImdbId { get; set; } = string.Empty;
     public ICollection<string> Categories { get; set; } = [];

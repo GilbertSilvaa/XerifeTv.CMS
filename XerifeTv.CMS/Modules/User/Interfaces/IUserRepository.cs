@@ -1,5 +1,4 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
-using XerifeTv.CMS.Modules.User;
 
 namespace XerifeTv.CMS.Modules.User.Interfaces;
 

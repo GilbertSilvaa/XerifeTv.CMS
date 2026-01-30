@@ -16,7 +16,13 @@ public class GetMovieContentResponseDto
     public int ParentalRating { get; private set; }
     public float Review { get; private set; }
     public Video? Video { get; private set; }
+    public string? MediaDeliveryProfileId { get; private set; }
+    public string? MediaRoute { get; private set; }
     public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
+    public string? UrlResolverPath
+        => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
+            ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
+            : null;
 
     public static GetMovieContentResponseDto FromEntity(MovieEntity entity)
     {
@@ -31,7 +37,9 @@ public class GetMovieContentResponseDto
             ReleaseYear = entity.ReleaseYear,
             ParentalRating = entity.ParentalRating,
             Review = entity.Review,
-            Video = entity.Video
+            Video = entity.Video,
+            MediaDeliveryProfileId = entity.MediaDeliveryProfileId,
+            MediaRoute = entity.MediaRoute
         };
     }
 }

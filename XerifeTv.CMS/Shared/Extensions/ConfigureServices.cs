@@ -16,6 +16,10 @@ using XerifeTv.CMS.Modules.Dashboard.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Integrations.Webhook;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
+using XerifeTv.CMS.Modules.Media.Delivery;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
+using XerifeTv.CMS.Modules.Media.Delivery.Services;
+using XerifeTv.CMS.Modules.Media.Delivery.Services.MediaTokenStrategies;
 using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Importers;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -49,6 +53,7 @@ public static class ConfigureServices
 		services.AddScoped<IChannelRepository, ChannelRepository>();
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IWebhookRepository, WebhookRepository>();
+		services.AddScoped<IMediaDeliveryProfileRepository, MediaDeliveryProfileRepository>();
 		return services;
 	}
 
@@ -77,6 +82,12 @@ public static class ConfigureServices
 		services.AddScoped<ILoginStrategy, BasicLoginStrategy>();
 		services.AddScoped<ILoginStrategy, GoogleLoginStrategy>();
 		services.AddScoped<IWebhookService, WebhookService>();
+
+		services.AddScoped<IMediaDeliveryProfileService, MediaDeliveryProfileService>();
+		services.AddScoped<IMediaDeliveryUrlResolver, MediaDeliveryUrlResolver>();
+		services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenNoneStrategy>();
+		services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenStaticQueryStrategy>();
+        services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenSignedQueryStrategy>();
 
         services.AddHostedService<BackgroundJobQueueWorker>();
 

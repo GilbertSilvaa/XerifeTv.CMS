@@ -1,375 +1,308 @@
 ﻿@using XerifeTv.CMS.Modules.Movie.Dtos.Response
 @using XerifeTv.CMS.Shared.Helpers
+@using XerifeTv.CMS.Views.Movies.Models
+@using XerifeTv.CMS.Views.Shared.Models
 
-@model GetMovieResponseDto?
+@model MovieFormModelView
 
 @{
-  ViewData["Title"] = "Filmes";
+    ViewData["Title"] = "Filmes";
+
+    bool isMediaDeliveryProfileSelected = !string.IsNullOrWhiteSpace(Model?.MovieDto?.MediaDeliveryProfileId);
 }
 
 @await Html.PartialAsync("_ImportFromExcelModal")
 
 <div class="container">
-  <header>
-    <div class="d-flex justify-content-between">
-      <div class="d-flex align-items-center gap-4">
-        <a asp-controller="Movies" asp-action="Index" class="fs-4">
-          <i class="fa fa-undo" aria-hidden="true"></i>
-        </a>
-        <span class="fs-3 fw-normal">
-          @(Model is GetMovieResponseDto ? "Editar" : "Cadastrar") Filme
-        </span>
-      </div>
-
-      @if (Model is null)
-      {
-        <div class="d-none d-lg-flex align-items-center gap-3">
-          <button 
-            class="btn btn-sm btn-success d-flex justify-content-center align-items-center gap-2 shadow-none"
-            data-bs-toggle="modal" 
-            data-bs-target="#importFromExcelModal">
-            <i class="fa-regular fa-file-excel"></i> Importar
-          </button>
-        </div>  
-      }
-    </div>
-    <hr />
-  </header>
-  
-  <main>
-    <form asp-controller="Movies" asp-action="@(Model is null ? "Create" : "Update")">
-      <input type="hidden" name="id" value="@Model?.Id">
-
-      <div class="row mb-3">
-        <div class="col-12 col-md-3">
-          <label for="imdbId" class="form-label">Imdb ID</label>
-          <div class="input-group">
-            <input
-              type="text"
-              name="imdbId"
-              id="imdbId"
-              class="form-control"
-              placeholder="tt999999"
-              value="@Model?.ImdbId"
-              required>
-
-            <button 
-              id="btn-get-imdb"
-              class="btn btn-success shadow-none" 
-              type="button">
-              <i class="fa-solid fa-magnifying-glass"></i>
-            </button>
-          </div>
-        </div>
-        
-        <div class="col-12 col-md-5">
-          <label for="title" class="form-label">Titulo</label>
-          <input
-            type="text"
-            class="form-control"
-            id="title"
-            name="title"
-            placeholder="Digite aqui..."
-            value="@Model?.Title"
-            required>
-        </div>
-
-        <div class="col-12 col-md-4">
-          <label for="categories" class="form-label">Categorias</label>
-
-          <div class="input-group-tags">
-            <input
-              type="text"
-              id="categories"
-              class="form-control input-tags"
-              placeholder="ação, aventura, comédia..."
-              value="@Model?.Categories">
-
-            <input
-              type="hidden"
-              name="categories"
-              class="input-tags-value"
-              data-required-message="Informe no minino uma categoria"
-              required>
-
-            <div class="w-100 container-tags d-flex flex-wrap gap-1 mt-2"></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="synopsis" class="form-label">Sinopse</label>
-        <textarea 
-          id="synopsis" 
-          name="synopsis" 
-          class="form-control" 
-          placeholder="Digite aqui..." 
-          style="height: 100px"
-          required>@Model?.Synopsis</textarea>
-      </div>
-
-      <div class="row mb-3">
-        <div class="col-12 col-md-4">
-          <label for="releaseYear" class="form-label">Ano de Lançamento</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="releaseYear" 
-            name="releaseYear" 
-            placeholder="2020" 
-            value="@Model?.ReleaseYear"
-            required>
-        </div>
-
-        <div class="col-sm-3 col-lg-5 px-4">
-          <label class="form-label">Classificação Indicativa</label>
-          <div class="d-flex flex-wrap">
-            @foreach (var year in ParentalRatingHelper.ParentalRatingList)
-            {
-              <div class="form-check form-check-inline">
-                <input 
-                  class="form-check-input"
-                  type="radio"
-                  name="parentalRating"
-                  id="parentalRating-@year"
-                  value="@year"
-                  @(Model?.ParentalRating == year ? "checked" : "")
-                  required>
-                  
-                <label class="form-check-label" for="parentalRating-@year">
-                  @(year == 0 ? "L" : year)
-                </label>
-              </div>
-            }
-          </div>
-        </div>
-
-        <div class="col-12 col-md-3">
-          <label for="review" class="form-label">Review</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="review" 
-            name="review" 
-            placeholder="7,9"
-            value="@Model?.Review" 
-            required>
-        </div>
-      </div>  
-
-      <div class="row mb-3">
-        <div class="col-6">
-          <label for="posterUrl" class="form-label">Poster (URL)</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="posterUrl" 
-            name="posterUrl" 
-            placeholder="http://imagem.com/image.jpg" 
-            value="@Model?.PosterUrl"
-            required>
-        </div>
-
-        <div class="col-6">
-          <label for="bannerUrl" class="form-label">Banner (URL)</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="bannerUrl" 
-            name="bannerUrl" 
-            placeholder="http://imagem.com/image.jpg" 
-            value="@Model?.BannerUrl"
-            required>
-        </div>
-      </div>
-
-      <div class="mb-3">
-        <label for="videoUrl" class="form-label">Video (URL)</label>
-        <input 
-          type="text" 
-          class="form-control" 
-          id="videoUrl" 
-          name="videoUrl" 
-          placeholder="https://video.com/video.m3u8" 
-          value="@Model?.Video?.Url"
-          required>
-      </div>
-
-      <div class="row mb-3">
-        <div class="col-6">
-          <label for="videoStreamFormat" class="form-label">Stream Format</label>
-          <select 
-            class="form-select" 
-            id="videoStreamFormat" 
-            name="videoStreamFormat" 
-            required>
-            <option selected value="">Selecione uma opção</option>
-            @foreach (var format in StreamFormatsHelper.Vod)
-            {
-              if (Model?.Video?.StreamFormat == format)
-              {
-                <option value="@format" selected>@format</option>
-              }
-              else
-              {
-                <option value="@format">@format</option>
-              }
-            }
-          </select>
-        </div>  
-
-        <div class="col-6">
-          <label for="videoDuration" class="form-label">Duração(segundos)</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="videoDuration" 
-            name="videoDuration" 
-            placeholder="3600" 
-            value="@Model?.Video?.Duration"
-            required>
-        </div>
-      </div>
-
-      <div class="row mb-4">
-        <div class="col-12">
-          <label for="videoSubtitle" class="form-label">Legenda (URL)</label>
-          
-          <div class="input-group">
-            <input
-              type="text"
-              class="form-control"
-              id="videoSubtitle"
-              name="videoSubtitle"
-              placeholder="https://subtitle.com/vtts/video.vtt"
-              value="@Model?.Video?.Subtitle">
-
-            <input 
-              id="subtitle-file" 
-              type="file" 
-              accept=".vtt" 
-              style="display: none" 
-              onchange="uploadSubtitleFile()"/>
-            
-            <button 
-              id="btn-subtitle-file" 
-              class="btn btn-success" 
-              type="button" 
-              onclick="$('#subtitle-file').click()">
-              <i class="fa-solid fa-cloud-arrow-up"></i>
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      @if (Model is GetMovieResponseDto)
-      {
-        <div class="row mb-4">
-          <div class="col-6">
-            <div class="form-check">
-              <input
-                id="disabled"
-                name="disabled"
-                class="form-check-input" 
-                type="checkbox"
-                value="@(Model.Disabled ? "true" : "false")"
-                @(Model.Disabled ? "checked" : "")>
-              <label class="form-check-label" for="disabled">
-                Desativar
-              </label>
+    <header>
+        <div class="d-flex justify-content-between">
+            <div class="d-flex align-items-center gap-4">
+                <a asp-controller="Movies" asp-action="Index" class="fs-4">
+                    <i class="fa fa-undo" aria-hidden="true"></i>
+                </a>
+                <span class="fs-3 fw-normal">
+                    @(Model?.MovieDto is GetMovieResponseDto ? "Editar" : "Cadastrar") Filme
+                </span>
             </div>
-          </div>
-        </div>
-      }
-      
-      <hr />
-      <div class="d-flex align-items-center justify-content-between">
-        <button type="submit" class="btn btn-primary mt-2">
-          @(Model is GetMovieResponseDto ? "Editar" : "Cadastrar")
-        </button>
 
-        @if (Model is GetMovieResponseDto)
-        {
-          <button type="button" class="btn btn-danger" onclick="deleteMovie()">
-            <i class="fa fa-trash" aria-hidden="true"></i> Remover
-          </button>
-        }
-      </div>
-    </form>
-  </main>
+            @if (Model?.MovieDto is null)
+            {
+                <div class="d-none d-lg-flex align-items-center gap-3">
+                    <button class="btn btn-sm btn-success d-flex justify-content-center align-items-center gap-2 shadow-none"
+                            data-bs-toggle="modal"
+                            data-bs-target="#importFromExcelModal">
+                        <i class="fa-regular fa-file-excel"></i> Importar
+                    </button>
+                </div>
+            }
+        </div>
+        <hr />
+    </header>
+
+    <main>
+        <form asp-controller="Movies" asp-action="@(Model?.MovieDto is null ? "Create" : "Update")">
+            <input type="hidden" name="id" value="@Model?.MovieDto?.Id">
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-3">
+                    <label for="imdbId" class="form-label">Imdb ID</label>
+                    <div class="input-group">
+                        <input type="text"
+                               name="imdbId"
+                               id="imdbId"
+                               class="form-control"
+                               placeholder="tt999999"
+                               value="@Model?.MovieDto?.ImdbId"
+                               required>
+
+                        <button id="btn-get-imdb"
+                                class="btn btn-success shadow-none"
+                                type="button">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-5">
+                    <label for="title" class="form-label">Titulo</label>
+                    <input type="text"
+                           class="form-control"
+                           id="title"
+                           name="title"
+                           placeholder="Digite aqui..."
+                           value="@Model?.MovieDto?.Title"
+                           required>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="categories" class="form-label">Categorias</label>
+
+                    <div class="input-group-tags">
+                        <input type="text"
+                               id="categories"
+                               class="form-control input-tags"
+                               placeholder="ação, aventura, comédia..."
+                               value="@Model?.MovieDto?.Categories">
+
+                        <input type="hidden"
+                               name="categories"
+                               class="input-tags-value"
+                               data-required-message="Informe no minino uma categoria"
+                               required>
+
+                        <div class="w-100 container-tags d-flex flex-wrap gap-1 mt-2"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="synopsis" class="form-label">Sinopse</label>
+                <textarea id="synopsis"
+                          name="synopsis"
+                          class="form-control"
+                          placeholder="Digite aqui..."
+                          style="height: 100px"
+                          required>@Model?.MovieDto?.Synopsis</textarea>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-4">
+                    <label for="releaseYear" class="form-label">Ano de Lançamento</label>
+                    <input type="text"
+                           class="form-control"
+                           id="releaseYear"
+                           name="releaseYear"
+                           placeholder="2020"
+                           value="@Model?.MovieDto?.ReleaseYear"
+                           required>
+                </div>
+
+                <div class="col-sm-3 col-lg-5 px-4">
+                    <label class="form-label">Classificação Indicativa</label>
+                    <div class="d-flex flex-wrap">
+                        @foreach (var year in ParentalRatingHelper.ParentalRatingList)
+                        {
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input"
+                                       type="radio"
+                                       name="parentalRating"
+                                       id="parentalRating-@year"
+                                       value="@year"
+                                       @(Model?.MovieDto?.ParentalRating == year ? "checked" : "")
+                                       required>
+
+                                <label class="form-check-label" for="parentalRating-@year">
+                                    @(year == 0 ? "L" : year)
+                                </label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-3">
+                    <label for="review" class="form-label">Review</label>
+                    <input type="text"
+                           class="form-control"
+                           id="review"
+                           name="review"
+                           placeholder="7,9"
+                           value="@Model?.MovieDto?.Review"
+                           required>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-6">
+                    <label for="posterUrl" class="form-label">Poster (URL)</label>
+                    <input type="text"
+                           class="form-control"
+                           id="posterUrl"
+                           name="posterUrl"
+                           placeholder="http://imagem.com/image.jpg"
+                           value="@Model?.MovieDto?.PosterUrl"
+                           required>
+                </div>
+
+                <div class="col-6">
+                    <label for="bannerUrl" class="form-label">Banner (URL)</label>
+                    <input type="text"
+                           class="form-control"
+                           id="bannerUrl"
+                           name="bannerUrl"
+                           placeholder="http://imagem.com/image.jpg"
+                           value="@Model?.MovieDto?.BannerUrl"
+                           required>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-6">
+                    <label for="videoDuration" class="form-label">Duração(segundos)</label>
+                    <input type="text"
+                           class="form-control"
+                           id="videoDuration"
+                           name="videoDuration"
+                           placeholder="3600"
+                           value="@Model?.MovieDto?.Video?.Duration"
+                           required>
+                </div>
+
+                <div class="col-6">
+                    <label for="movie_videoSourceType" class="form-label">Fonte do vídeo</label>
+                    <select id="movie_videoSourceType"
+                            name="videoSourceType"
+                            class="form-select">
+                        @if (isMediaDeliveryProfileSelected)
+                        {
+                            <option value="direct">URL fixa</option>
+                            <option value="delivery" selected>Perfil de entrega de mídia</option>
+                        }
+                        else
+                        {
+                            <option value="direct" selected>URL fixa</option>
+                            <option value="delivery">Perfil de entrega de mídia</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            @await Html.PartialAsync("_VideoSetting", new VideoSettingViewModel
+            {
+                IdPrefix = "movie",
+                VideoUrl = Model?.MovieDto?.Video?.Url,
+                VideoStreamFormat = Model?.MovieDto?.Video?.StreamFormat,
+                VideoSubtitle = Model?.MovieDto?.Video?.Subtitle,
+                MediaDeliveryProfileId = Model?.MovieDto?.MediaDeliveryProfileId,
+                MediaRoute = Model?.MovieDto?.MediaRoute,
+                MediaDeliveryProfiles = Model?.MediaDeliveryProfiles ?? [],
+                StreamFormats = StreamFormatsHelper.Vod           
+            })
+
+            @if (Model?.MovieDto is GetMovieResponseDto movie)
+            {
+                <div class="row mb-4">
+                    <div class="col-6">
+                        <div class="form-check">
+                            <input id="disabled"
+                                   name="disabled"
+                                   class="form-check-input"
+                                   type="checkbox"
+                                   value="@(movie.Disabled ? "true" : "false")"
+                                   @(movie.Disabled ? "checked" : "")>
+                            <label class="form-check-label" for="disabled">
+                                Desativar
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <hr />
+            <div class="d-flex align-items-center justify-content-between">
+                <button type="submit" class="btn btn-primary mt-2">
+                    @(Model?.MovieDto is GetMovieResponseDto ? "Editar" : "Cadastrar")
+                </button>
+
+                @if (Model?.MovieDto is GetMovieResponseDto)
+                {
+                    <button type="button" class="btn btn-danger" onclick="deleteMovie()">
+                        <i class="fa fa-trash" aria-hidden="true"></i> Remover
+                    </button>
+                }
+            </div>
+        </form>
+    </main>
 </div>
 
 @section scripts {
-  <script>
-    async function getMovieByTmdb(imdbId) {
-      const response = await fetch(`/Movies/GetByImdbId?imdbId=${imdbId}`);
-      return await response.json();
-    }
+    <script>
+        async function getMovieByTmdb(imdbId) {
+          const response = await fetch(`/Movies/GetByImdbId?imdbId=${imdbId}`);
+          return await response.json();
+        }
 
-    $('#btn-get-imdb').click(async (e) => {
-      e.preventDefault();
+        $('#btn-get-imdb').click(async (e) => {
+          e.preventDefault();
 
-      try {
-        $('.loading-global .label').text('Importando os dados, por favor aguarde...');
-        $('.loading-global').show();
+          try {
+            $('.loading-global .label').text('Importando os dados, por favor aguarde...');
+            $('.loading-global').show();
 
-        const imdbId = $('#imdbId').val();
-        if (!imdbId) return;
+            const imdbId = $('#imdbId').val();
+            if (!imdbId) return;
 
-        const response = await getMovieByTmdb(imdbId);
-        if (!response) return;
+            const response = await getMovieByTmdb(imdbId);
+            if (!response) return;
 
-        $('#title').val(response.title);
-        $('#categories').val(response.genres.map(g => g.name.toLowerCase()).join(', '));
-        $('#categories').blur();
-      
-        $('#synopsis').val(response.overview);
-        $('#releaseYear').val(response.releaseYear);
-        $('#review').val(String(response.voteAverage).replace(',', '.'));
-        $('#posterUrl').val(response.posterUrl);
-        $('#bannerUrl').val(response.bannerUrl);
-        $('#videoDuration').val(response.durationInSeconds);
-      }
-      finally {
-        $('.loading-global').hide();
-      }  
-    });
-    
-    $('#disabled').change(e => e.target.value = e.target.checked);
+            $('#title').val(response.title);
+            $('#categories').val(response.genres.map(g => g.name.toLowerCase()).join(', '));
+            $('#categories').blur();
 
-    $('#videoDuration').keyup(e => 
-      $('#videoDuration').val(convertHHmmToSeconds(e.target.value)));
-
-    function deleteMovie() {
-      if (!confirm('Deseja realmente remover o filme?')) return;
-      location.href = '/Movies/Delete/@Model?.Id';
-    }
-    
-    function uploadSubtitleFile() {
-      const fileInput = $('#subtitle-file')[0];
-      const file = fileInput.files[0];
-      
-      if (!file) return;
-      
-      const formData = new FormData();
-      formData.append('file', file);
-      
-      $('#btn-subtitle-file').attr('disabled', 'true');
-      $('.loading-global .label').text('Processando upload, por favor aguarde...');
-      $('.loading-global').show();
-      
-      fetch('/StorageFiles/UploadFile', {
-        method: 'POST',
-        body: formData
-      })
-        .then(response => response.json())
-        .then(({ isSuccess, data }) => {
-            if (isSuccess) $('#videoSubtitle').val(data);
-        })
-        .finally(() => {
-            $('#btn-subtitle-file').removeAttr('disabled');
+            $('#synopsis').val(response.overview);
+            $('#releaseYear').val(response.releaseYear);
+            $('#review').val(String(response.voteAverage).replace(',', '.'));
+            $('#posterUrl').val(response.posterUrl);
+            $('#bannerUrl').val(response.bannerUrl);
+            $('#videoDuration').val(response.durationInSeconds);
+          }
+          finally {
             $('.loading-global').hide();
-        })
-    }
-  </script>
+          }
+        });
+
+        $('#disabled').change(e => e.target.value = e.target.checked);
+
+        $('#videoDuration').keyup(e =>
+          $('#videoDuration').val(convertHHmmToSeconds(e.target.value)));
+
+        function deleteMovie() {
+          if (!confirm('Deseja realmente remover o filme?')) return;
+          location.href = '/Movies/Delete/@Model?.MovieDto?.Id';
+        }
+
+    </script>
+
+    <script>
+        initVideoSetting('movie');
+    </script>
 }

@@ -10,6 +10,8 @@ public class UpdateChannelRequestDto
     public string LogoUrl { get; init; } = string.Empty;
     public string VideoUrl { get; init; } = string.Empty;
     public string VideoStreamFormat { get; init; } = string.Empty;
+    public string? MediaDeliveryProfileId { get; init; }
+    public string? MediaRoute { get; init; }
     public bool Disabled { get; init; } = false;
 
     public ChannelEntity ToEntity()
@@ -26,6 +28,8 @@ public class UpdateChannelRequestDto
             Categories = categorieList,
             LogoUrl = LogoUrl,
             Video = new Video(VideoUrl, 0, VideoStreamFormat),
+            MediaDeliveryProfileId = MediaDeliveryProfileId,
+            MediaRoute = MediaRoute,
             Disabled = Disabled
         };
     }
