@@ -4,135 +4,127 @@
 @model IEnumerable<GetChannelResponseDto>;
 
 @{
-  ViewData["Title"] = "Canais";
+    ViewData["Title"] = "Canais";
 
-  ICollection<string[]> filters = [];
-  filters.Add([EChannelSearchFilter.TITLE.ToString().ToLower(), "Titulo"]);
-  filters.Add([EChannelSearchFilter.CATEGORY.ToString().ToLower(), "Categoria"]);
+    ICollection<string[]> filters = [];
+    filters.Add([EChannelSearchFilter.TITLE.ToString().ToLower(), "Titulo"]);
+    filters.Add([EChannelSearchFilter.CATEGORY.ToString().ToLower(), "Categoria"]);
 }
 
 <div class="container">
-  <header>
-    <div class="d-flex align-items-center justify-content-between gap-4">
-      <span class="fs-3 fw-normal">Canais</span>
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4">
+            <span class="fs-3 fw-normal">Canais</span>
 
-      @if (!User.IsInRole("visitor"))
-      {
-        <a class="btn btn-primary" asp-controller="Channels" asp-action="Form">
-          <i class="fa-solid fa-plus"></i> Cadastrar
-        </a>
-      }
-    </div>
-    <hr />
-  </header>
-
-  <div class="row mb-3 justify-content-between">
-    <a class="d-none d-md-block col-1 fs-5" role="button" asp-controller="Channels" asp-action="Index">
-      <i class="fa-solid fa-rotate"></i>
-    </a>
-
-    <div class="col-md-8 col-lg-5">
-      <form 
-        class="input-group input-group-sm" 
-        asp-controller="Channels" 
-        asp-action="Index" 
-        method="get">
-
-        <input 
-          type="hidden" 
-          name="currentPage" 
-          value="@(ViewBag.Filter is not null ? ViewBag.CurrentPage : 1)"/>
-
-        <select class="form-select shadow-none" name="filter">
-          @foreach (var filter in filters)
-          {
-            if (filter[0].Equals(ViewBag.Filter))
-            {
-              <option value="@filter[0]" selected>@filter[1]</option>
-            }
-            else
-            {
-              <option value="@filter[0]">@filter[1]</option>   
-            }
-          }
-        </select>
-
-        <input 
-          type="text" 
-          name="search" 
-          class="form-control shadow-none" 
-          value="@ViewBag.Search"
-          required>
-        <button class="btn btn-success shadow-none" type="submit">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-      </form>
-    </div>
-  </div>
-
-
-  @await Html.PartialAsync("_VideoModal")
-
-  <div class="row gap-3">
-    @foreach (var channel in Model)
-    {
-      <div class="card col-md-4 col-xl-2 pt-1">
-        <div class="w-auto h-100 position-relative">
-          <img
-            src="@channel.LogoUrl"
-            onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
-            class="card-img-top object-fit-cover"
-            alt="@channel.Title"
-            loading="lazy"
-            style="height: 9rem;"/>
-
-          @if (channel.Disabled)
-          {
-            <span
-              class="position-absolute text-danger"
-              style="top: 6px; left: 8px; font-size: 24px;">
-              <i class="fa-solid fa-circle-exclamation"></i>
-            </span>
-          }
-          
-        </div>
-
-        <div class="card-body">
-          <h5 class="card-title text-nowrap overflow-hidden text-truncate">@channel.Title</h5>
-          <p class="card-text">@channel.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
-
-          <div class="d-flex gap-1">
             @if (!User.IsInRole("visitor"))
             {
-              <a
-                class="btn btn-sm btn-primary"
-                asp-controller="Channels"
-                asp-action="Form"
-                asp-route-id="@channel.Id">
-                <i class="fa-solid fa-pen-to-square"></i>
-              </a>
+                <a class="btn btn-primary" asp-controller="Channels" asp-action="Form">
+                    <i class="fa-solid fa-plus"></i> Cadastrar
+                </a>
             }
-
-            <a
-              class="btn btn-sm btn-secondary"
-              data-bs-toggle="modal"
-              data-bs-target="#videoModal"
-              data-bs-title="@channel.Title"
-              data-bs-banner="@channel.LogoUrl"
-              data-bs-video-url="@channel.Video?.Url"
-              data-bs-video-format="@channel.Video?.StreamFormat">
-              <i class="fa-solid fa-play"></i>
-            </a>
-          </div>
         </div>
-      </div>
-    }
+        <hr />
+    </header>
 
-    @if (Model?.Count() <= 0)
-    {
-      <p>Nenhum registro encontrado.</p>
-    }
-  </div>
+    <div class="row mb-3 justify-content-between">
+        <a class="d-none d-md-block col-1 fs-5" role="button" asp-controller="Channels" asp-action="Index">
+            <i class="fa-solid fa-rotate"></i>
+        </a>
+
+        <div class="col-md-8 col-lg-5">
+            <form class="input-group input-group-sm"
+                  asp-controller="Channels"
+                  asp-action="Index"
+                  method="get">
+
+                <input type="hidden"
+                       name="currentPage"
+                       value="@(ViewBag.Filter is not null ? ViewBag.CurrentPage : 1)" />
+
+                <select class="form-select shadow-none" name="filter">
+                    @foreach (var filter in filters)
+                    {
+                        if (filter[0].Equals(ViewBag.Filter))
+                        {
+                            <option value="@filter[0]" selected>@filter[1]</option>
+                        }
+                        else
+                        {
+                            <option value="@filter[0]">@filter[1]</option>
+                        }
+                    }
+                </select>
+
+                <input type="text"
+                       name="search"
+                       class="form-control shadow-none"
+                       value="@ViewBag.Search"
+                       required>
+                <button class="btn btn-success shadow-none" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    @await Html.PartialAsync("_VideoModal")
+
+    <div class="row gap-3">
+        @foreach (var channel in Model)
+        {
+            <div class="card col-md-4 col-xl-2 pt-1">
+                <div class="w-auto h-100 position-relative">
+                    <img src="@channel.LogoUrl"
+                         onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
+                         class="card-img-top object-fit-cover"
+                         alt="@channel.Title"
+                         loading="lazy"
+                         style="height: 9rem;" />
+
+                    @if (channel.Disabled)
+                    {
+                        <span class="position-absolute text-danger"
+                              style="top: 6px; left: 8px; font-size: 24px;">
+                            <i class="fa-solid fa-circle-exclamation"></i>
+                        </span>
+                    }
+
+                </div>
+
+                <div class="card-body">
+                    <h5 class="card-title text-nowrap overflow-hidden text-truncate">@channel.Title</h5>
+                    <p class="card-text">@channel.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
+
+                    <div class="d-flex gap-1">
+                        @if (!User.IsInRole("visitor"))
+                        {
+                            <a class="btn btn-sm btn-primary"
+                               asp-controller="Channels"
+                               asp-action="Form"
+                               asp-route-id="@channel.Id">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                        }
+
+                        <a class="btn btn-sm btn-secondary"
+                           data-bs-toggle="modal"
+                           data-bs-target="#videoModal"
+                           data-bs-title="@channel.Title"
+                           data-bs-banner="@channel.LogoUrl"
+                           data-bs-video-resolver="@channel?.UrlResolverPath">
+                            <i class="fa-solid fa-play"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (Model?.Count() <= 0)
+        {
+            <p>Nenhum registro encontrado.</p>
+        }
+    </div>
 
     @await Html.PartialAsync("_Pagination")
 </div>

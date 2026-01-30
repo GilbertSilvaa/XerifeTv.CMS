@@ -1,6 +1,6 @@
 ﻿namespace XerifeTv.CMS.Modules.Abstractions.Entities;
 
-public abstract class Midia : BaseEntity
+public abstract class MediaContent : BaseEntity
 {
     public string Title { get; set; } = string.Empty;
     public string Synopsis { get; set; } = string.Empty;

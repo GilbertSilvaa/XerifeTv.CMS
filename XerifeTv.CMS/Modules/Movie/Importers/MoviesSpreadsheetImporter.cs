@@ -3,6 +3,7 @@ using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -13,7 +14,8 @@ public class MoviesSpreadsheetImporter(
   IMovieService _service,
   IImdbService _imdbService,
   ICacheService _cacheService,
-  ISpreadsheetReaderService _spreadsheetReaderService) : ISpreadsheetBatchImporter<IMovieService>
+  ISpreadsheetReaderService _spreadsheetReaderService,
+  IMediaDeliveryProfileService _mediaDeliveryProfileService) : ISpreadsheetBatchImporter<IMovieService>
 {
 	public async Task<Result<string>> ImportAsync(IFormFile file)
 	{
@@ -47,8 +49,10 @@ public class MoviesSpreadsheetImporter(
 			[
 				"IMDB ID (REQUIRED)",
 				"PARENTAL RATING (REQUIRED)",
-				"URL VIDEO (REQUIRED)",
-				"STREAM FORMAT (REQUIRED)",
+                "MEDIA DELIVERY PROFILE NAME",
+                "MEDIA PATH",
+                "URL VIDEO FIXED",
+				"STREAM FORMAT",
 				"URL SUBTITLES"
 			];
 
@@ -65,6 +69,7 @@ public class MoviesSpreadsheetImporter(
 			void UpdateProgress()
 			{
 				var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResult.Length) * 100);
+
 				var _dto = new ImportSpreadsheetResponseDto(
 					TotalItemsCount: spreadsheetResult.Length,
 					SuccessCount: successCount,
@@ -93,13 +98,28 @@ public class MoviesSpreadsheetImporter(
 
 			foreach (var movieItem in movieList)
 			{
+				if (!string.IsNullOrWhiteSpace(movieItem.MediaDeliveryProfileName))
+				{
+					var mediaProfileResponse = await _mediaDeliveryProfileService.GetByNameAsync(movieItem.MediaDeliveryProfileName);
+
+					if (mediaProfileResponse.IsFailure)
+					{
+                        failCount++;
+                        errorList.Add($"[{movieItem.ImdbId}] {mediaProfileResponse.Error?.Description ?? string.Empty}");
+                        UpdateProgress();
+                        continue;
+                    }
+
+					movieItem.MediaDeliveryProfileId = mediaProfileResponse.Data!.Id;
+                }
+
 				var movieImdbAPIResponse = await _imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
 
 				if (movieImdbAPIResponse.IsFailure)
 				{
 					failCount++;
-					errorList.Add(movieImdbAPIResponse.Error.Description ?? string.Empty);
-					UpdateProgress();
+                    errorList.Add($"[{movieItem.ImdbId}] {movieImdbAPIResponse.Error?.Description ?? string.Empty}");
+                    UpdateProgress();
 					continue;
 				}
 
@@ -124,8 +144,10 @@ public class MoviesSpreadsheetImporter(
 						VideoUrl = movieItem.Video?.Url ?? string.Empty,
 						VideoDuration = movieByImdbIdResponse.Data!.Video?.Duration ?? 0,
 						VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
-						VideoSubtitle = movieItem.Video?.Subtitle
-					};
+						VideoSubtitle = movieItem.Video?.Subtitle,
+						MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,
+						MediaRoute = movieItem.MediaRoute
+                    };
 
 					responseCreateOrUpdate = await _service.UpdateAsync(updateMovieDto);									
 				}
@@ -145,8 +167,10 @@ public class MoviesSpreadsheetImporter(
 						VideoUrl = movieItem.Video?.Url ?? string.Empty,
 						VideoDuration = movieImdbAPIResponse?.Data?.DurationInSeconds ?? 0,
 						VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
-						VideoSubtitle = movieItem.Video?.Subtitle
-					};
+						VideoSubtitle = movieItem.Video?.Subtitle,
+                        MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,
+                        MediaRoute = movieItem.MediaRoute
+                    };
 
 					responseCreateOrUpdate = await _service.CreateAsync(createMovieDto);
 				}
@@ -158,8 +182,8 @@ public class MoviesSpreadsheetImporter(
 				else
 				{
 					failCount++;
-					errorList.Add(responseCreateOrUpdate.Error?.Description ?? string.Empty);
-				}
+                    errorList.Add($"[{movieItem.ImdbId}] {responseCreateOrUpdate.Error?.Description ?? string.Empty}");
+                }
 
 				UpdateProgress();
 				await Task.Delay(1200);

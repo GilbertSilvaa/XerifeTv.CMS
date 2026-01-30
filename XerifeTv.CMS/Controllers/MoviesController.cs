@@ -8,6 +8,9 @@ using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Shared.Helpers;
+using XerifeTv.CMS.Views.Movies.Models;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
+using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -16,142 +19,147 @@ public class MoviesController(
   IMovieService _service,
   IImdbService _imdbService,
   ILogger<MoviesController> _logger,
-  ISpreadsheetBatchImporter<IMovieService> _spreadsheetBatchImporter) : Controller
+  ISpreadsheetBatchImporter<IMovieService> _spreadsheetBatchImporter,
+  IMediaDeliveryProfileService _mediaDeliveryProfileService) : Controller
 {
-	private const int limitResultsPage = 20;
+    private const int limitResultsPage = 20;
 
-	public async Task<IActionResult> Index(int? currentPage, EMovieSearchFilter? filter, string? search)
-	{
-		Result<PagedList<GetMovieResponseDto>>? result;
+    public async Task<IActionResult> Index(int? currentPage, EMovieSearchFilter? filter, string? search)
+    {
+        Result<PagedList<GetMovieResponseDto>>? result;
 
-		_logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
+        _logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
 
-		if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
-		{
-			result = await _service.GetByFilterAsync(
-				new GetMoviesByFilterRequestDto(
-					filter,
-					EMovieOrderFilter.TITLE,
-					search,
-					limitResultsPage,
-					currentPage,
-					isIncludeDisabled: true));
+        if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
+        {
+            result = await _service.GetByFilterAsync(
+                new GetMoviesByFilterRequestDto(
+                    filter,
+                    EMovieOrderFilter.TITLE,
+                    search,
+                    limitResultsPage,
+                    currentPage,
+                    isIncludeDisabled: true));
 
-			ViewBag.Search = search;
-			ViewBag.Filter = filter.ToString()?.ToLower();
-		}
-		else
-		{
-			result = await _service.GetAsync(currentPage ?? 1, limitResultsPage);
-		}
+            ViewBag.Search = search;
+            ViewBag.Filter = filter.ToString()?.ToLower();
+        }
+        else
+        {
+            result = await _service.GetAsync(currentPage ?? 1, limitResultsPage);
+        }
 
-		if (result.IsSuccess)
-		{
-			ViewBag.CurrentPage = result.Data?.CurrentPage;
-			ViewBag.TotalPages = result.Data?.TotalPageCount ?? 1;
-			ViewBag.HasNextPage = result.Data?.HasNext;
-			ViewBag.HasPrevPage = result.Data?.HasPrevious;
+        if (result.IsSuccess)
+        {
+            ViewBag.CurrentPage = result.Data?.CurrentPage;
+            ViewBag.TotalPages = result.Data?.TotalPageCount ?? 1;
+            ViewBag.HasNextPage = result.Data?.HasNext;
+            ViewBag.HasPrevPage = result.Data?.HasPrevious;
 
-			return View(result.Data?.Items);
-		}
+            return View(result.Data?.Items);
+        }
 
-		return View(Enumerable.Empty<GetMovieResponseDto>());
-	}
+        return View(Enumerable.Empty<GetMovieResponseDto>());
+    }
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Form(string? id)
-	{
-		if (id is not null)
-		{
-			var response = await _service.GetAsync(id);
-			if (response.IsSuccess) return View(response.Data);
-		}
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Form(string? id)
+    {
+        IEnumerable<GetMediaDeliveryProfileResponseDto> mediaDeliveryProfiles = [];
+        var mediaProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
+        if (mediaProfilesResponse.IsSuccess) mediaDeliveryProfiles = mediaProfilesResponse.Data ?? [];
 
-		return View();
-	}
+        if (id is not null)
+        {
+            var response = await _service.GetAsync(id);
+            if (response.IsSuccess) return View(new MovieFormModelView(response.Data, mediaDeliveryProfiles));
+        }
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Create(CreateMovieRequestDto dto)
-	{
-		var response = await _service.CreateAsync(dto);
+        return View(new MovieFormModelView(null, mediaDeliveryProfiles));
+    }
 
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} cadastrado com sucesso");
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Create(CreateMovieRequestDto dto)
+    {
+        var response = await _service.CreateAsync(dto);
 
-		_logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} cadastrado com sucesso");
 
-		return RedirectToAction("Index");
-	}
+        _logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Update(UpdateMovieRequestDto dto)
-	{
-		var response = await _service.UpdateAsync(dto);
+        return RedirectToAction("Index");
+    }
 
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} atualizado com sucesso");
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Update(UpdateMovieRequestDto dto)
+    {
+        var response = await _service.UpdateAsync(dto);
 
-		_logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} atualizado com sucesso");
 
-		return RedirectToAction("Index");
-	}
+        _logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Delete(string? id)
-	{
-		if (id is not null)
-		{
-			var response = await _service.DeleteAsync(id);
+        return RedirectToAction("Index");
+    }
 
-			TempData["Notification"] = response.IsFailure
-			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-			  : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Delete(string? id)
+    {
+        if (id is not null)
+        {
+            var response = await _service.DeleteAsync(id);
 
-			_logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
-		}
+            TempData["Notification"] = response.IsFailure
+              ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+              : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
 
-		return RedirectToAction("Index");
-	}
+            _logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
+        }
 
-	[HttpGet]
-	public async Task<IActionResult> GetByImdbId(string imdbId)
-	{
-		if (string.IsNullOrEmpty(imdbId)) return BadRequest();
+        return RedirectToAction("Index");
+    }
 
-		var response = await _imdbService.GetMovieByImdbIdAsync(imdbId);
+    [HttpGet]
+    public async Task<IActionResult> GetByImdbId(string imdbId)
+    {
+        if (string.IsNullOrEmpty(imdbId)) return BadRequest();
 
-		return response.IsFailure ? BadRequest() : Ok(response.Data);
-	}
+        var response = await _imdbService.GetMovieByImdbIdAsync(imdbId);
 
-	[Authorize(Roles = "admin, common")]
-	[HttpPost]
-	public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
-	{
-		if (file is null || file.Length == 0) return BadRequest();
+        return response.IsFailure ? BadRequest() : Ok(response.Data);
+    }
 
-		var response = await _spreadsheetBatchImporter.ImportAsync(file);
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
+    public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
+    {
+        if (file is null || file.Length == 0) return BadRequest();
 
-		if (response.IsFailure)
-			return BadRequest(response.Error.Description ?? string.Empty);
+        var response = await _spreadsheetBatchImporter.ImportAsync(file);
 
-		return Ok(response.Data);
-	}
+        if (response.IsFailure)
+            return BadRequest(response.Error.Description ?? string.Empty);
 
-	[Authorize(Roles = "admin, common")]
-	[HttpGet]
-	public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
-	{
-		var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+        return Ok(response.Data);
+    }
 
-		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
-			TempData["Notification"] = MessageViewHelper
-			  .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
+    [Authorize(Roles = "admin, common")]
+    [HttpGet]
+    public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
+    {
+        var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
 
-		if (response.IsSuccess)
-			return Ok(response.Data);
+        if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
+            TempData["Notification"] = MessageViewHelper
+              .SuccessJson($"{response.Data.SuccessCount} filmes cadastrados com sucesso");
 
-		return BadRequest(response.Error.Description ?? string.Empty);
-	}
+        if (response.IsSuccess)
+            return Ok(response.Data);
+
+        return BadRequest(response.Error.Description ?? string.Empty);
+    }
 }

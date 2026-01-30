@@ -14,6 +14,8 @@ public class UpdateEpisodeRequestDto
     public long VideoDuration { get; init; }
     public string VideoStreamFormat { get; init; } = string.Empty;
     public string? VideoSubtitle { get; init; }
+    public string? MediaDeliveryProfileId { get; init; }
+    public string? MediaRoute { get; init; }
     public bool Disabled { get; init; } = false;
 
     public Episode ToEntity()
@@ -26,6 +28,8 @@ public class UpdateEpisodeRequestDto
             Number = Number,
             Season = Season,
             Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle),
+            MediaDeliveryProfileId = MediaDeliveryProfileId,
+            MediaRoute = MediaRoute,
             Disabled = Disabled
         };
     }

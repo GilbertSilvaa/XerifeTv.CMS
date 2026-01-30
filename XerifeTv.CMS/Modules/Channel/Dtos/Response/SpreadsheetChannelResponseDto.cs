@@ -10,36 +10,54 @@ public class SpreadsheetChannelResponseDto
 	public string Categories { get; init; } = string.Empty;
 	public string LogoUrl { get; init; } = string.Empty;
 	public Video? Video { get; private set; }
-	
-	public static SpreadsheetChannelResponseDto FromCollunsStr(string[] cols)
+    public string? MediaDeliveryProfileName { get; private set; }
+    public string? MediaRoute { get; private set; }
+    public string? MediaDeliveryProfileId { get; set; }
+
+    public static SpreadsheetChannelResponseDto FromCollunsStr(string[] cols)
 	{
 		string? title = cols[0];
 		string? categories = cols[1];
 		string? logoUrl = cols[2];
-		string? videoUrl = cols[3];
-		string? videoStreamFormat = cols[4];
+        string? mediaDeliveryProfileName = cols[3];
+        string? mediaPath = cols[4];
+        string? videoUrl = cols[5];
+		string? videoStreamFormat = cols[6];
 
 		List<string?> requiredValues = [
-			title, 
-			videoUrl, 
+			title,
 			logoUrl, 
 			categories,
-			videoStreamFormat
 		];
 
-		if (requiredValues.Any(v => string.IsNullOrEmpty(v)))
-			throw new SpreadsheetInvalidException($"[{title.Substring(0, 8)}] algum campo obrigatorio esta vazio");
+		if (requiredValues.Any(string.IsNullOrEmpty))
+			throw new SpreadsheetInvalidException($"[{title[..8]}] algum campo obrigatorio esta vazio");
 		
-		if (!StreamFormatsHelper.Streaming.Contains(videoStreamFormat) 
+		if (!string.IsNullOrWhiteSpace(videoStreamFormat)
+            && !StreamFormatsHelper.Streaming.Contains(videoStreamFormat) 
 		    && !StreamFormatsHelper.Vod.Contains(videoStreamFormat))
-			throw new SpreadsheetInvalidException($"[{title.Substring(0, 8)}] stream format invalido"); 
+			throw new SpreadsheetInvalidException($"[{title[..8]}] stream format invalido");
 
-		return new SpreadsheetChannelResponseDto
+        var hasMediaDeliveryProfile =
+            !string.IsNullOrWhiteSpace(mediaDeliveryProfileName) &&
+            !string.IsNullOrWhiteSpace(mediaPath);
+
+        var hasFixedVideo =
+            !string.IsNullOrWhiteSpace(videoUrl) &&
+            !string.IsNullOrWhiteSpace(videoStreamFormat);
+
+        if (!hasMediaDeliveryProfile && !hasFixedVideo)
+            throw new SpreadsheetInvalidException($"[{title[..8]}] obrigatorio informar Media Delivery Profile/Media Path ou URL Video Fixed/Stream Format");
+
+
+        return new SpreadsheetChannelResponseDto
 		{
 			Title = title,
 			Categories = categories,
 			LogoUrl = logoUrl,
-			Video = new Video(videoUrl, 0, videoStreamFormat)
-		};
+			Video = new Video(videoUrl, 0, videoStreamFormat),
+            MediaDeliveryProfileName = mediaDeliveryProfileName,
+            MediaRoute = mediaPath
+        };
 	}
 }

@@ -9,6 +9,8 @@ public class CreateChannelRequestDto
     public string LogoUrl { get; init; } = string.Empty;
     public string VideoUrl { get; init; } = string.Empty;
     public string VideoStreamFormat { get; init; } = string.Empty;
+    public string? MediaDeliveryProfileId { get; init; }
+    public string? MediaRoute { get; init; }
 
     public ChannelEntity ToEntity()
     {
@@ -22,7 +24,9 @@ public class CreateChannelRequestDto
             Title = Title,
             Categories = categorieList,
             LogoUrl = LogoUrl,
-            Video = new Video(VideoUrl, 0, VideoStreamFormat)
+            Video = new Video(VideoUrl, 0, VideoStreamFormat),
+            MediaDeliveryProfileId = MediaDeliveryProfileId,
+            MediaRoute = MediaRoute
         };
     }
 }
