@@ -45,7 +45,7 @@
                                 </td>
 
                                 <td>
-                                    @user.Email
+                                    @Html.Raw(!string.IsNullOrWhiteSpace(user.Email) ? user.Email : "----------")
                                 </td>
 
                                 <td>
