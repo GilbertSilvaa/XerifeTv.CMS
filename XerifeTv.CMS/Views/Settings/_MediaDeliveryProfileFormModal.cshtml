@@ -76,7 +76,7 @@
                                 name="streamFormat"
                                 required>
                             <option selected value="">Selecione uma opção</option>
-                            @foreach (var format in StreamFormatsHelper.Vod.Concat(StreamFormatsHelper.Streaming))
+                            @foreach (var format in StreamFormatsHelper.Vod.Concat(StreamFormatsHelper.Streaming.Where(s => !StreamFormatsHelper.Vod.Contains(s))))
                             {
                                 if (Model?.StreamFormat == format)
                                 {
