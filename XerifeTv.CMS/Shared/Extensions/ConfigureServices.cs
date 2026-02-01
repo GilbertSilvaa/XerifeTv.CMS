@@ -67,7 +67,7 @@ public static class ConfigureServices
 		services.AddScoped<IUserService, UserService>();
 		services.AddScoped<ITokenService, TokenService>();
 		services.AddScoped<IAuthService, AuthService>();
-		services.AddScoped<ICacheService, CacheService>();
+		services.AddSingleton<ICacheService, CacheService>();
 		services.AddScoped<IStorageFilesService, StorageFilesService>();
 		services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
 		services.AddScoped<IHashPassword, HashPassword>();
