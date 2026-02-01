@@ -1,6 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
-using XerifeTv.CMS.Modules.Channel;
-using XerifeTv.CMS.Modules.Channel.Dtos.Request;
+﻿using XerifeTv.CMS.Modules.Channel.Dtos.Request;
 using XerifeTv.CMS.Modules.Channel.Enums;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
@@ -8,7 +6,6 @@ using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Content.Dtos.Request;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
-using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -22,181 +19,123 @@ namespace XerifeTv.CMS.Modules.Content;
 public sealed class ContentService(
   IMovieRepository _movieRepository,
   ISeriesRepository _seriesRepository,
-  IChannelRepository _channelRepository,
-  ICacheService _cacheService) : IContentService
+  IChannelRepository _channelRepository) : IContentService
 {
-	const int limitTotalResult = 50;
+    const int limitTotalResult = 50;
 
-	public async Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
-	{
-		var cacheKey = $"moviesGroupByCategory-{String.Join("_", dto.Categories)}-{dto.CurrentPage}-{dto.LimitResults}";
-		var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<MovieEntity>>>(cacheKey);
+    public async Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
+    {
+        var response = await _movieRepository.GetGroupByCategoryAsync(dto);
 
-		if (response is null)
-		{
-			response = await _movieRepository.GetGroupByCategoryAsync(dto);
-			_cacheService.SetValue(cacheKey, response);
-		}
+        var result = response.Select(x =>
+          new ItemsByCategory<GetMovieContentResponseDto>(x.Category, x.Items.Select(GetMovieContentResponseDto.FromEntity)))
+          .OrderBy(x => x.Category);
 
-		var result = response.Select(x =>
-		  new ItemsByCategory<GetMovieContentResponseDto>(x.Category, x.Items.Select(GetMovieContentResponseDto.FromEntity)))
-		  .OrderBy(x => x.Category);
+        return Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>
+          .Success(result);
+    }
 
-		return Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>
-		  .Success(result);
-	}
+    public async Task<Result<PagedList<GetMovieContentResponseDto>>> GetMoviesByCategoryAsync(GetContentsRequestDto dto)
+    {
+        var response = await _movieRepository.GetByFilterAsync(
+                new GetMoviesByFilterRequestDto(
+                    filter: EMovieSearchFilter.CATEGORY,
+                    order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
+                    search: dto.Search,
+                    limitResults: dto.Limit ?? limitTotalResult,
+                    currentPage: dto.CurrentPage ?? 1,
+                    isIncludeDisabled: false));
 
-	public async Task<Result<PagedList<GetMovieContentResponseDto>>> GetMoviesByCategoryAsync(GetContentsRequestDto dto)
-	{
-		var cacheKey = $"moviesByCategory-{dto.Search}-{dto.CurrentPage}-{dto.Limit}";
-		var response = _cacheService.GetValue<PagedList<MovieEntity>>(cacheKey);
+        var result = new PagedList<GetMovieContentResponseDto>(
+          response.CurrentPage,
+          response.TotalPageCount,
+          response.Items.Select(GetMovieContentResponseDto.FromEntity));
 
-		if (response is null)
-		{
-			response = await _movieRepository.GetByFilterAsync(
-				new GetMoviesByFilterRequestDto(
-					filter: EMovieSearchFilter.CATEGORY,
-					order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
-					search: dto.Search,
-					limitResults: dto.Limit ?? limitTotalResult,
-					currentPage: dto.CurrentPage ?? 1,
-					isIncludeDisabled: false));
+        return Result<PagedList<GetMovieContentResponseDto>>.Success(result);
+    }
 
-			_cacheService.SetValue(cacheKey, response);
-		}
+    public async Task<Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> GetSeriesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
+    {
+        var response = await _seriesRepository.GetGroupByCategoryAsync(dto);
 
-		var result = new PagedList<GetMovieContentResponseDto>(
-		  response.CurrentPage,
-		  response.TotalPageCount,
-		  response.Items.Select(GetMovieContentResponseDto.FromEntity));
+        var result = response.Select(x =>
+          new ItemsByCategory<GetSeriesContentResponseDto>(
+            x.Category, x.Items.Select(GetSeriesContentResponseDto.FromEntity)))
+          .OrderBy(x => x.Category);
 
-		return Result<PagedList<GetMovieContentResponseDto>>.Success(result);
-	}
+        return Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>
+          .Success(result);
+    }
 
-	public async Task<Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> GetSeriesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
-	{
-		var cacheKey = $"seriesGroupByCategory-{String.Join("_", dto.Categories)}-{dto.CurrentPage}-{dto.LimitResults}";
-		var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<SeriesEntity>>>(cacheKey);
+    public async Task<Result<IEnumerable<GetSeriesContentResponseDto>>> GetSeriesByCategoryAsync(GetContentsRequestDto dto)
+    {
+        var response = await _seriesRepository.GetByFilterAsync(
+            new GetSeriesByFilterRequestDto(
+                filter: ESeriesSearchFilter.CATEGORY,
+                search: dto.Search,
+                limitResults: dto.Limit ?? limitTotalResult,
+                currentPage: dto.CurrentPage,
+                isIncludeDisabled: false));
 
-		if (response is null)
-		{
-			response = await _seriesRepository.GetGroupByCategoryAsync(dto);
-			_cacheService.SetValue(cacheKey, response);
-		}
+        return Result<IEnumerable<GetSeriesContentResponseDto>>
+          .Success(response.Items.Select(GetSeriesContentResponseDto.FromEntity));
+    }
 
-		var result = response.Select(x =>
-		  new ItemsByCategory<GetSeriesContentResponseDto>(
-			x.Category, x.Items.Select(GetSeriesContentResponseDto.FromEntity)))
-		  .OrderBy(x => x.Category);
+    public async Task<Result<IEnumerable<Episode>>> GetEpisodesSeriesBySeasonAsync(string serieId, int season)
+    {
+        var response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled: false);
 
-		return Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>
-		  .Success(result);
-	}
+        return Result<IEnumerable<Episode>>
+          .Success(response?.Episodes ?? Enumerable.Empty<Episode>());
+    }
 
-	public async Task<Result<IEnumerable<GetSeriesContentResponseDto>>> GetSeriesByCategoryAsync(GetContentsRequestDto dto)
-	{
-		var cacheKey = $"seriesByCategory-{dto.Search}-{dto.CurrentPage}-{dto.Limit}";
-		var response = _cacheService.GetValue<PagedList<SeriesEntity>>(cacheKey);
+    public async Task<Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> GetChannelsGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
+    {
+        var response = await _channelRepository.GetGroupByCategoryAsync(dto);
 
-		if (response is not null)
-			return Result<IEnumerable<GetSeriesContentResponseDto>>
-			  .Success(response.Items.Select(GetSeriesContentResponseDto.FromEntity));
+        var result = response.Select(x =>
+          new ItemsByCategory<GetChannelContentResponseDto>(
+            x.Category, x.Items.Select(GetChannelContentResponseDto.FromEntity)))
+          .OrderBy(x => x.Category);
 
-		response = await _seriesRepository.GetByFilterAsync(
-			new GetSeriesByFilterRequestDto(
-				filter: ESeriesSearchFilter.CATEGORY,
-				search: dto.Search,
-				limitResults: dto.Limit ?? limitTotalResult,
-				currentPage: dto.CurrentPage,
-				isIncludeDisabled: false));
+        return Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>
+          .Success(result);
+    }
 
-		_cacheService.SetValue(cacheKey, response);
+    public async Task<Result<GetContentsByNameResponseDto>> GetContentsByTitleAsync(GetContentsRequestDto dto)
+    {
+        var moviesTask = _movieRepository.GetByFilterAsync(
+            new GetMoviesByFilterRequestDto(
+                filter: EMovieSearchFilter.TITLE,
+                order: EMovieOrderFilter.TITLE,
+                search: dto.Search,
+                limitResults: dto.Limit ?? limitTotalResult,
+                currentPage: dto.CurrentPage,
+                isIncludeDisabled: false));
 
-		return Result<IEnumerable<GetSeriesContentResponseDto>>
-		  .Success(response.Items.Select(GetSeriesContentResponseDto.FromEntity));
-	}
+        var seriesTask = _seriesRepository.GetByFilterAsync(
+            new GetSeriesByFilterRequestDto(
+                filter: ESeriesSearchFilter.TITLE,
+                search: dto.Search,
+                limitResults: dto.Limit ?? limitTotalResult,
+                currentPage: dto.CurrentPage,
+                isIncludeDisabled: false));
 
-	public async Task<Result<IEnumerable<Episode>>> GetEpisodesSeriesBySeasonAsync(string serieId, int season)
-	{
-		var cacheKey = $"episodesSeriesBySeason-{serieId}-{season}";
-		var response = _cacheService.GetValue<SeriesEntity>(cacheKey);
+        var channelsTask = _channelRepository.GetByFilterAsync(
+            new GetChannelsByFilterRequestDto(
+                filter: EChannelSearchFilter.TITLE,
+                search: dto.Search,
+                limitResults: dto.Limit ?? limitTotalResult,
+                currentPage: dto.CurrentPage,
+                isIncludeDisabled: false));
 
-		if (response is not null)
-			return Result<IEnumerable<Episode>>
-			  .Success(response?.Episodes ?? Enumerable.Empty<Episode>());
+        await Task.WhenAll(moviesTask, seriesTask, channelsTask);
 
-		response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled: false);
-		_cacheService.SetValue(cacheKey, response);
+        var response = new GetContentsByNameResponseDto(
+            moviesTask.Result.Items.Select(GetMovieContentResponseDto.FromEntity),
+            seriesTask.Result.Items.Select(GetSeriesContentResponseDto.FromEntity),
+            channelsTask.Result.Items.Select(GetChannelContentResponseDto.FromEntity));
 
-		return Result<IEnumerable<Episode>>
-		  .Success(response?.Episodes ?? Enumerable.Empty<Episode>());
-	}
-
-	public async Task<Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> GetChannelsGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
-	{
-		var cacheKey = $"channelsGroupByCategory-{String.Join("_", dto.Categories)}-{dto.CurrentPage}-{dto.LimitResults}";
-		var response = _cacheService.GetValue<IEnumerable<ItemsByCategory<ChannelEntity>>>(cacheKey);
-
-		if (response is null)
-		{
-			response = await _channelRepository.GetGroupByCategoryAsync(dto);
-			_cacheService.SetValue(cacheKey, response);
-		}
-
-		var result = response.Select(x =>
-		  new ItemsByCategory<GetChannelContentResponseDto>(
-			x.Category, x.Items.Select(GetChannelContentResponseDto.FromEntity)))
-		  .OrderBy(x => x.Category);
-
-		return Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>
-		  .Success(result);
-	}
-
-	public async Task<Result<GetContentsByNameResponseDto>> GetContentsByTitleAsync(GetContentsRequestDto dto)
-	{
-		var cacheKey = $"contentsByTitle-{dto.Search}-{dto.CurrentPage}-{dto.Limit}";
-		var response = _cacheService.GetValue<GetContentsByNameResponseDto>(cacheKey);
-
-		if (response is not null) return Result<GetContentsByNameResponseDto>.Success(response);
-
-		var moviesTask = _movieRepository.GetByFilterAsync(
-			new GetMoviesByFilterRequestDto(
-				filter: EMovieSearchFilter.TITLE,
-				order: EMovieOrderFilter.TITLE,
-				search: dto.Search,
-				limitResults: dto.Limit ?? limitTotalResult,
-				currentPage: dto.CurrentPage,
-				isIncludeDisabled: false));
-
-		var seriesTask = _seriesRepository.GetByFilterAsync(
-			new GetSeriesByFilterRequestDto(
-				filter: ESeriesSearchFilter.TITLE,
-				search: dto.Search,
-				limitResults: dto.Limit ?? limitTotalResult,
-				currentPage: dto.CurrentPage,
-				isIncludeDisabled: false));
-
-		var channelsTask = _channelRepository.GetByFilterAsync(
-			new GetChannelsByFilterRequestDto(
-				filter: EChannelSearchFilter.TITLE,
-				search: dto.Search,
-				limitResults: dto.Limit ?? limitTotalResult,
-				currentPage: dto.CurrentPage,
-				isIncludeDisabled: false));
-
-		await Task.WhenAll(moviesTask, seriesTask, channelsTask);
-
-		var movieListResponse = await moviesTask;
-		var seriesListResponse = await seriesTask;
-		var channelListResponse = await channelsTask;
-
-		response = new GetContentsByNameResponseDto(
-			movieListResponse.Items.Select(GetMovieContentResponseDto.FromEntity),
-			seriesListResponse.Items.Select(GetSeriesContentResponseDto.FromEntity),
-			channelListResponse.Items.Select(GetChannelContentResponseDto.FromEntity));
-
-		_cacheService.SetValue(cacheKey, response);
-
-		return Result<GetContentsByNameResponseDto>.Success(response);
-	}
+        return Result<GetContentsByNameResponseDto>.Success(response);
+    }
 }

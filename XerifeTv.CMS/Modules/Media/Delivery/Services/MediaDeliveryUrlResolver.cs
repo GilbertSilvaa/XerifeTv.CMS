@@ -1,5 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
-using XerifeTv.CMS.Modules.Common;
+﻿using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 
@@ -7,20 +6,12 @@ namespace XerifeTv.CMS.Modules.Media.Delivery.Services;
 
 public class MediaDeliveryUrlResolver(
     IEnumerable<IMediaDeliveryTokenStrategy> _mediaTokenStrategies,
-    IMediaDeliveryProfileService _service,
-    ICacheService _cacheService) : IMediaDeliveryUrlResolver
+    IMediaDeliveryProfileService _service) : IMediaDeliveryUrlResolver
 {
     public async Task<Result<GetResolveUrlResponseDto>> ResolveUrlAsync(string mediaPath, string mediaDeliveryProfileId)
     {
         try
         {
-            var normalizedPath = mediaPath.Trim().ToLowerInvariant();
-            var cacheKey = $"resolve-url:{normalizedPath}:{mediaDeliveryProfileId}";
-            var responseCache = _cacheService.GetValue<GetResolveUrlResponseDto>(cacheKey);
-
-            if (responseCache != null)
-                return Result<GetResolveUrlResponseDto>.Success(responseCache);
-
             var response = await _service.GetAsync(mediaDeliveryProfileId);
 
             if (response.IsFailure)
@@ -47,10 +38,7 @@ public class MediaDeliveryUrlResolver(
                 Query = tokenResult.Data
             };
 
-            GetResolveUrlResponseDto resolvedUrl = new(urlBuilder.ToString(), mediaProfile.StreamFormat);
-            _cacheService.SetValue(cacheKey, resolvedUrl);
-
-            return Result<GetResolveUrlResponseDto>.Success(resolvedUrl);
+            return Result<GetResolveUrlResponseDto>.Success(new(urlBuilder.ToString(), mediaProfile.StreamFormat));
         }
         catch (Exception ex)
         {
@@ -61,6 +49,6 @@ public class MediaDeliveryUrlResolver(
 
     public async Task<Result<GetResolveUrlResponseDto>> ResolveUrlFixedAsync(string urlFixed, string streamFormat)
     {
-       return await Task.FromResult(Result<GetResolveUrlResponseDto>.Success(new(urlFixed, streamFormat)));
+        return await Task.FromResult(Result<GetResolveUrlResponseDto>.Success(new(urlFixed, streamFormat)));
     }
 }

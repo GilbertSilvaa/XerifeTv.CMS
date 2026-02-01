@@ -1,6 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Request;
+using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Shared.Helpers;
 
@@ -10,7 +13,8 @@ namespace XerifeTv.CMS.Controllers;
 public class MediaDeliveryProfilesController(
     IMediaDeliveryProfileService _service,
     IMediaDeliveryUrlResolver _urlResolver,
-    ILogger<MediaDeliveryProfilesController> _logger) : Controller
+    ILogger<MediaDeliveryProfilesController> _logger,
+    ICacheService _cacheService) : Controller
 {
     public async Task<IActionResult> Create(CreateMediaDeliveryProfileRequestDto dto)
     {
@@ -56,11 +60,21 @@ public class MediaDeliveryProfilesController(
 
     [AllowAnonymous]
     [HttpGet]
-    public async Task<IActionResult> ResolveUrl(string mediaPath, string mediaDeliveryProfileId)
+    public async Task<IActionResult> ResolveUrl(string mediaPath, string mediaDeliveryProfileId, bool isCached = false)
     {
+        var normalizedPath = mediaPath.Trim().ToLowerInvariant();
+        var cacheKey = $"resolve-url:{normalizedPath}:{mediaDeliveryProfileId}";
+        var responseCache = _cacheService.GetValue<GetResolveUrlResponseDto?>(cacheKey);
+
+        if (responseCache != null && isCached)
+            return Ok(new { responseCache?.Url, responseCache?.StreamFormat });
+
         var response = await _urlResolver.ResolveUrlAsync(mediaPath, mediaDeliveryProfileId);
+
         if (response.IsFailure)
             return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
+        
+        _cacheService.SetValue<GetResolveUrlResponseDto?>(cacheKey, response.Data);
 
         return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
     }
