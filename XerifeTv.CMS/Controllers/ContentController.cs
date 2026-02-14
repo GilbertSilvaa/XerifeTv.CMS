@@ -18,7 +18,10 @@ public class ContentController(
 {
 	[HttpGet]
 	[Route("Movies")]
-	public async Task<IActionResult> Movies(string categories = "", int? currentPage = 1, int? limit = 10)
+	public async Task<ActionResult<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> Movies(
+		string categories = "ação, terror", 
+		int? currentPage = 1,
+		int? limit = 10)
 	{
 		_logger.LogInformation("Request Content API /Movies");
 
@@ -43,7 +46,10 @@ public class ContentController(
 
 	[HttpGet]
 	[Route("Movies/{category}")]
-	public async Task<IActionResult> MoviesCategory(string category, int? currentPage, int? limit)
+	public async Task<ActionResult<PagedList<GetMovieContentResponseDto>>> MoviesCategory(
+		string category, 
+		int? currentPage, 
+		int? limit)
 	{
 		_logger.LogInformation("Request Content API /Movies/{category}", category);
 
@@ -63,7 +69,10 @@ public class ContentController(
 
 	[HttpGet]
 	[Route("Series")]
-	public async Task<IActionResult> Series(string categories = "", int? currentPage = 1, int? limit = 10)
+	public async Task<ActionResult<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> Series(
+		string categories = "ação, terror", 
+		int? currentPage = 1, 
+		int? limit = 10)
 	{
 		_logger.LogInformation("Request Content API /Series");
 
@@ -88,7 +97,10 @@ public class ContentController(
 
 	[HttpGet]
 	[Route("Series/{category}")]
-	public async Task<IActionResult> SeriesCategory(string category, int? currentPage, int? limit)
+	public async Task<ActionResult<IEnumerable<GetSeriesContentResponseDto>>> SeriesCategory(
+		string category, 
+		int? currentPage, 
+		int? limit)
 	{
 		_logger.LogInformation("Request Content API /Series/{category}", category);
 
@@ -108,7 +120,7 @@ public class ContentController(
 
 	[HttpGet]
 	[Route("Series/Episodes/{serieId}/{season}")]
-	public async Task<IActionResult> SeriesEpisodes(string serieId, int season)
+	public async Task<ActionResult<IEnumerable<Episode>>> SeriesEpisodes(string serieId, int season)
 	{
 		_logger.LogInformation("Request Content API /Series/Episodes/{serieId}/{season}", serieId, season);
 
@@ -128,7 +140,10 @@ public class ContentController(
 
 	[HttpGet]
 	[Route("Channels")]
-	public async Task<IActionResult> Channels(string categories = "", int? currentPage = 1, int? limit = 10)
+	public async Task<ActionResult<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> Channels(
+		string categories = "noticias, esporte", 
+		int? currentPage = 1, 
+		int? limit = 10)
 	{
 		_logger.LogInformation("Request Content API /Channels");
 
@@ -153,7 +168,10 @@ public class ContentController(
 
 	[HttpGet]
 	[Route("Search/{title}")]
-	public async Task<IActionResult> ContentsByTitle(string title, int? currentPage, int? limit)
+	public async Task<ActionResult<GetContentsByNameResponseDto>> ContentsByTitle(
+		string title, 
+		int? currentPage, 
+		int? limit)
 	{
 		_logger.LogInformation("Request Content API /Search/{title}", title);
 
