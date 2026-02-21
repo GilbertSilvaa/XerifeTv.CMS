@@ -78,4 +78,15 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
 
         return result;
     }
+
+    public async Task<ICollection<string>> GetAllCategoriesAsync()
+    {
+        var categories = await _collection
+            .DistinctAsync<string>("Categories", FilterDefinition<MovieEntity>.Empty);
+
+        var list = await categories.ToListAsync();
+
+        var rng = new Random(DateTime.UtcNow.DayOfYear);
+        return [.. list.OrderBy(x => rng.Next())];
+    }
 }

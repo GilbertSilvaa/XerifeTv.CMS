@@ -16,10 +16,10 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Content;
 
-public sealed class ContentService(
+public sealed class ContentV1Service(
   IMovieRepository _movieRepository,
   ISeriesRepository _seriesRepository,
-  IChannelRepository _channelRepository) : IContentService
+  IChannelRepository _channelRepository) : IContentV1Service
 {
     const int limitTotalResult = 50;
 

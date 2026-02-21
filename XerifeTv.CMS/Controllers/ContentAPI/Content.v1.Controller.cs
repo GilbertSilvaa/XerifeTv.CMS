@@ -7,13 +7,13 @@ using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
 using XerifeTv.CMS.Modules.Series;
 
-namespace XerifeTv.CMS.Controllers;
+namespace XerifeTv.CMS.Controllers.ContentAPI;
 
 [Route("Api/Content")]
 [ApiController]
-public class ContentController(
-	IContentService _service, 
-	ILogger<ContentController> _logger,
+public class ContentV1Controller(
+	IContentV1Service _service, 
+	ILogger<ContentV1Controller> _logger,
     ICacheService _cacheService) : ControllerBase
 {
 	[HttpGet]
