@@ -63,8 +63,9 @@ public static class ConfigureServices
 		services.AddScoped<ISeriesService, SeriesService>();
 		services.AddScoped<IChannelService, ChannelService>();
 		services.AddScoped<IDashboardService, DashboardService>();
-		services.AddScoped<IContentService, ContentService>();
-		services.AddScoped<IUserService, UserService>();
+		services.AddScoped<IContentV1Service, ContentV1Service>();
+        services.AddScoped<IContentV2Service, ContentV2Service>();
+        services.AddScoped<IUserService, UserService>();
 		services.AddScoped<ITokenService, TokenService>();
 		services.AddScoped<IAuthService, AuthService>();
 		services.AddSingleton<ICacheService, CacheService>();

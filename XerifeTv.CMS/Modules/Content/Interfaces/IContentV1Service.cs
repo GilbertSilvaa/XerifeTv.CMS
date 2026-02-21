@@ -6,7 +6,7 @@ using XerifeTv.CMS.Modules.Series;
 
 namespace XerifeTv.CMS.Modules.Content.Interfaces;
 
-public interface IContentService
+public interface IContentV1Service
 {
   Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto);
   Task<Result<PagedList<GetMovieContentResponseDto>>> GetMoviesByCategoryAsync(GetContentsRequestDto dto);

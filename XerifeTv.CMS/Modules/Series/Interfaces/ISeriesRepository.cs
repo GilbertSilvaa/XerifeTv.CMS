@@ -14,4 +14,5 @@ public interface ISeriesRepository : IBaseRepository<SeriesEntity>
     Task UpdateEpisodeAsync(string serieId, Episode episode);
     Task<bool> DeleteEpisodeAsync(string serieId, string episodeId);
     Task<SeriesEntity?> GetByImdbIdAsync(string imdbId);
+    Task<ICollection<string>> GetAllCategoriesAsync();
 }

@@ -177,4 +177,15 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
         return response.ModifiedCount > 0;
     }
+
+    public async Task<ICollection<string>> GetAllCategoriesAsync()
+    {
+        var categories = await _collection
+            .DistinctAsync<string>("Categories", FilterDefinition<SeriesEntity>.Empty);
+
+        var list = await categories.ToListAsync();
+
+        var rng = new Random(DateTime.UtcNow.DayOfYear);
+        return [.. list.OrderBy(x => rng.Next())];
+    }
 }
