@@ -142,8 +142,8 @@ public class ContentV2Service(
     {
         try
         {
-            var moviesCategoriesResult = await _movieRepository.GetAllCategoriesAsync();
-            return Result<string[]>.Success([.. moviesCategoriesResult.Take(limit)]);
+            var moviesCategoriesResult = await _movieRepository.GetCategoriesWithCountAsync();
+            return Result<string[]>.Success([.. moviesCategoriesResult.Where(c => c.Count >= 10).Take(limit).Select(c => c.Category)]);
         }
         catch (Exception ex)
         {
@@ -155,8 +155,8 @@ public class ContentV2Service(
     {
         try
         {
-            var seriesCategoriesResult = await _seriesRepository.GetAllCategoriesAsync();
-            return Result<string[]>.Success([.. seriesCategoriesResult.Take(limit)]);
+            var seriesCategoriesResult = await _seriesRepository.GetCategoriesWithCountAsync();
+            return Result<string[]>.Success([.. seriesCategoriesResult.Where(c => c.Count >= 10).Take(limit).Select(c => c.Category)]);
         }
         catch (Exception ex)
         {
@@ -234,6 +234,57 @@ public class ContentV2Service(
         catch (Exception ex)
         {
             return Result<IEnumerable<MovieContentV2ResponseDto>>.Failure(new("500", ex.Message));
+        }
+    }
+
+    public async Task<Result<GetHomeContentV2ResponseDto>> GetHomeContentAsync()
+    {
+        try
+        {
+            var random = new Random();
+            int randomValue = random.Next(1, 21);
+
+            bool isMovieFeatured = randomValue % 2 == 0;
+
+            object? featuredContent;
+            EFeaturedContentType featuredType = EFeaturedContentType.MOVIE;
+
+            if (isMovieFeatured)
+            {
+                var moviesResult = await _movieRepository.GetByFilterAsync(new(
+                    filter: EMovieSearchFilter.TITLE,
+                    order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
+                    search: string.Empty,
+                    limitResults: 1,
+                    currentPage: 1,
+                    isIncludeDisabled: false));
+
+                featuredContent = moviesResult.Items.Select(MovieContentV2ResponseDto.FromEntity).FirstOrDefault();
+            }
+            else
+            {
+                var seriesResult = await _seriesRepository.GetByFilterAsync(new(
+                     filter: ESeriesSearchFilter.TITLE,
+                     search: string.Empty,
+                     limitResults: 1,
+                     currentPage: 1,
+                     isIncludeDisabled: false));
+
+                featuredContent = seriesResult.Items.Select(SeriesSummaryContentV2ResponseDto.FromEntity).FirstOrDefault();
+                featuredType = EFeaturedContentType.SERIES;
+            }
+
+            return Result<GetHomeContentV2ResponseDto>.Success(new()
+            {
+                FeaturedContent = featuredContent,
+                FeaturedContentType = featuredType,
+                MovieCategores = (await GetMoviesCategoriesAsync(5)).Data ?? [],
+                SeriesCategores = (await GetSeriesCategoriesAsync(5)).Data ?? []
+            });
+        }
+        catch (Exception ex)
+        {
+            return Result<GetHomeContentV2ResponseDto>.Failure(new("500", ex.Message));
         }
     }
 }

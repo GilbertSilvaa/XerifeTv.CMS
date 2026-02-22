@@ -17,4 +17,5 @@ public interface IContentV2Service
     Task<Result<IEnumerable<MovieContentV2ResponseDto>>> GetMoviesRecommendedAsync(string movieId);
     Task<Result<IEnumerable<MovieContentV2ResponseDto>>> GetMoviesByTermAsync(string searchTerm, int limit = 10);
     Task<Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>> GetSeriesByTermAsync(string searchTerm, int limit = 10);
+    Task<Result<GetHomeContentV2ResponseDto>> GetHomeContentAsync();
 }

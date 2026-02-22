@@ -1,11 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
-using XerifeTv.CMS.Modules.Movie.Enums;
-using XerifeTv.CMS.Modules.Movie.Interfaces;
-using XerifeTv.CMS.Modules.Series.Enums;
-using XerifeTv.CMS.Modules.Series.Interfaces;
 
 namespace XerifeTv.CMS.Controllers.ContentAPI;
 
@@ -13,8 +9,6 @@ namespace XerifeTv.CMS.Controllers.ContentAPI;
 [ApiController]
 public class ContentV2Controller(
     IContentV2Service _service,
-    IMovieService _movieService,
-    ISeriesService _seriesService,
     ILogger<ContentV2Controller> _logger,
     ICacheService _cacheService) : ControllerBase
 {
@@ -28,7 +22,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesAsync(200);
+        var response = await _service.GetMoviesAsync(10);
 
         if (response.IsSuccess)
         {
@@ -49,7 +43,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesAsync(200);
+        var response = await _service.GetSeriesAsync(10);
 
         if (response.IsSuccess)
         {
@@ -279,54 +273,16 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var moviesCategoriesResponse = await _service.GetMoviesCategoriesAsync(5);
-        var seriesCategoriesResponse = await _service.GetSeriesCategoriesAsync(5);
+        var response = await _service.GetHomeContentAsync();
 
-        if (moviesCategoriesResponse.IsSuccess && seriesCategoriesResponse.IsSuccess)
+        if (response.IsSuccess)
         {
-            var random = new Random();
-            int randomValue = random.Next(1, 105);
-
-            string featuredType = "movie";
-            object? featuredContent = new();
-
-            if (randomValue % 2 == 0)
-            {
-                var moviesResponse = await _movieService.GetByFilterAsync(new(
-                    filter: EMovieSearchFilter.TITLE,
-                    order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
-                    search: "",
-                    limitResults: 1,
-                    currentPage: 1,
-                    isIncludeDisabled: false));
-
-                if (moviesResponse.IsSuccess)
-                {
-                    featuredContent = moviesResponse.Data?.Items.FirstOrDefault();
-                }
-            }
-            else
-            {
-                var seriesResponse = await _seriesService.GetByFilterAsync(new(
-                    filter: ESeriesSearchFilter.TITLE,
-                    search: "a",
-                    limitResults: 25,
-                    currentPage: 1,
-                    isIncludeDisabled: false));
-
-                if (seriesResponse.IsSuccess)
-                {
-                    featuredType = "series";
-                    featuredContent = seriesResponse.Data?.Items.ToArray()[Random.Shared.Next(seriesResponse.Data?.Items.Count() ?? 0)];
-                }
-            }
-
             var result = new
             {
-                featured = featuredContent,
-                featuredType,
-                movieCategories = moviesCategoriesResponse.Data,
-                seriesCategories = seriesCategoriesResponse.Data
+                featured = response.Data?.FeaturedContent,
+                featuredType = response.Data?.FeaturedContentType == EFeaturedContentType.MOVIE ? "movie" : "series",
+                movieCategories = response.Data?.MovieCategores,
+                seriesCategories = response.Data?.SeriesCategores
             };
 
             _cacheService.SetValue(cacheKey, result);
