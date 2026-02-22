@@ -1,9 +1,11 @@
 ﻿using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Linq.Expressions;
 using XerifeTv.CMS.Modules.Abstractions.Repositories;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
+using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -178,14 +180,23 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         return response.ModifiedCount > 0;
     }
 
-    public async Task<ICollection<string>> GetAllCategoriesAsync()
+    public async Task<ICollection<CategoryCountDto>> GetCategoriesWithCountAsync()
     {
-        var categories = await _collection
-            .DistinctAsync<string>("Categories", FilterDefinition<SeriesEntity>.Empty);
+        var result = await _collection
+            .Aggregate()
+            .Unwind<SeriesEntity, BsonDocument>(x => x.Categories)
+            .Group(new BsonDocument
+            {
+                { "_id", "$Categories" },
+                { "count", new BsonDocument("$sum", 1) }
+            })
+            .Sort(new BsonDocument("count", -1))
+            .ToListAsync();
 
-        var list = await categories.ToListAsync();
-
-        var rng = new Random(DateTime.UtcNow.DayOfYear);
-        return [.. list.OrderBy(x => rng.Next())];
+        return [.. result.Select(x => new CategoryCountDto
+            {
+                Category = x["_id"].AsString,
+                Count = x["count"].AsInt32
+            })];
     }
 }

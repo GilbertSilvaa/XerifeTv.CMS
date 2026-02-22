@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Linq.Expressions;
 using XerifeTv.CMS.Modules.Abstractions.Repositories;
@@ -79,14 +80,23 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
         return result;
     }
 
-    public async Task<ICollection<string>> GetAllCategoriesAsync()
+    public async Task<ICollection<CategoryCountDto>> GetCategoriesWithCountAsync()
     {
-        var categories = await _collection
-            .DistinctAsync<string>("Categories", FilterDefinition<MovieEntity>.Empty);
+        var result = await _collection
+            .Aggregate()
+            .Unwind<MovieEntity, BsonDocument>(x => x.Categories)
+            .Group(new BsonDocument
+            {
+                { "_id", "$Categories" },
+                { "count", new BsonDocument("$sum", 1) }
+            })
+            .Sort(new BsonDocument("count", -1))
+            .ToListAsync();
 
-        var list = await categories.ToListAsync();
-
-        var rng = new Random(DateTime.UtcNow.DayOfYear);
-        return [.. list.OrderBy(x => rng.Next())];
+        return [.. result.Select(x => new CategoryCountDto
+            {
+                Category = x["_id"].AsString,
+                Count = x["count"].AsInt32
+            })];
     }
 }
