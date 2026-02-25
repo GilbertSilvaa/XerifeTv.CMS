@@ -32,6 +32,7 @@ public static class EWebhookTriggerEventExtensions
         {
             case EWebhookTriggerEvent.MOVIE_PUBLISHED:
                 return [
+                    "{{Id}}",
                     "{{ImdbId}}",
                     "{{Titulo}}",
                     "{{PosterUrl}}",
@@ -43,6 +44,7 @@ public static class EWebhookTriggerEventExtensions
 
             case EWebhookTriggerEvent.SERIES_PUBLISHED:
                 return [
+                    "{{Id}}",
                     "{{ImdbId}}",
                     "{{Titulo}}",
                     "{{PosterUrl}}",
@@ -54,6 +56,7 @@ public static class EWebhookTriggerEventExtensions
 
             case EWebhookTriggerEvent.CHANNEL_PUBLISHED:
                 return [
+                    "{{Id}}",
                     "{{Titulo}}",
                     "{{LogoUrl}}"
                 ];
@@ -67,6 +70,7 @@ public static class EWebhookTriggerEventExtensions
     {
         if (eventType == EWebhookTriggerEvent.MOVIE_PUBLISHED && entity is MovieEntity movieEntity)
         {
+            payloadTemplate = payloadTemplate.Replace("{{Id}}", movieEntity!.Id);
             payloadTemplate = payloadTemplate.Replace("{{ImdbId}}", movieEntity!.ImdbId);
             payloadTemplate = payloadTemplate.Replace("{{Titulo}}", movieEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{PosterUrl}}", movieEntity!.PosterUrl);
@@ -78,6 +82,7 @@ public static class EWebhookTriggerEventExtensions
 
         if (eventType == EWebhookTriggerEvent.SERIES_PUBLISHED && entity is SeriesEntity seriesEntity)
         {
+            payloadTemplate = payloadTemplate.Replace("{{Id}}", seriesEntity!.Id);
             payloadTemplate = payloadTemplate.Replace("{{ImdbId}}", seriesEntity!.ImdbId);
             payloadTemplate = payloadTemplate.Replace("{{Titulo}}", seriesEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{PosterUrl}}", seriesEntity!.PosterUrl);
@@ -89,6 +94,7 @@ public static class EWebhookTriggerEventExtensions
 
         if (eventType == EWebhookTriggerEvent.CHANNEL_PUBLISHED && entity is ChannelEntity channelEntity)
         {
+            payloadTemplate = payloadTemplate.Replace("{{Id}}", channelEntity!.Id);
             payloadTemplate = payloadTemplate.Replace("{{Titulo}}", channelEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{LogoUrl}}", channelEntity!.LogoUrl);
         }
