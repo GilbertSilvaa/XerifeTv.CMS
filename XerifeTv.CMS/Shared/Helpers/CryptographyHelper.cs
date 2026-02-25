@@ -9,7 +9,7 @@ public static class CryptographyHelper
     public static string Encrypt(string text, string key)
     {
         if (string.IsNullOrEmpty(text))
-            throw new ArgumentException("Text cannot be null or empty.");
+            return string.Empty;
 
         byte[] compressedBytes = Compress(text);
 
@@ -43,7 +43,7 @@ public static class CryptographyHelper
     public static string Decrypt(string text, string key)
     {
         if (string.IsNullOrEmpty(text))
-            throw new ArgumentException("Text cannot be null or empty.");
+            return string.Empty;
 
         byte[] fullCipher = Convert.FromBase64String(text);
 
