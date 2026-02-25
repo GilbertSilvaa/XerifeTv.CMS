@@ -8,75 +8,100 @@
     var webhookDtoEmpty = new GetWebhookResponseDto();
 }
 
-<div class="d-flex flex-column gap-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
     @await Html.PartialAsync("_WebhookFormModal", webhookDtoEmpty)
 
-    <div>
-        <a class="btn btn-sm btn-primary shadow-sm"
-           role="button"
-           data-bs-toggle="modal"
-           data-bs-target="#webhookFormModal-@webhookDtoEmpty.Id">
-            <i class="fa-solid fa-plus"></i> Cadastrar
-        </a>
-    </div>
-
-    <div class="d-flex flex-column gap-4" style="padding-right: 1rem;">    
-        @foreach (var webhook in Model)
-        {
-            <div class="card" style="@(webhook.IsDisabled ? "opacity: 72%" : "")">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 style="line-height: 0; margin-bottom: 0;">@webhook.Name</h5>
-                    <h5 style="line-height: 0; margin-bottom: 0;">
-                        <span class="badge rounded-pill text-bg-success">@webhook.TriggerEvent.GetDescription()</span>
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <p class="card-text">@webhook.Description</p>
-
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>                          
-                            <h5 style="line-height: 0; margin-bottom: 0;">
-                                @if (webhook.HttpMethod == EHttpMethod.GET)
-                                {
-                                    <span class="badge text-bg-primary">@webhook.HttpMethod.ToString()</span>
-                                }
-                                @if (webhook.HttpMethod == EHttpMethod.POST)
-                                {
-                                    <span class="badge text-bg-success">@webhook.HttpMethod.ToString()</span>
-                                }
-                                @if (webhook.HttpMethod == EHttpMethod.PUT)
-                                {
-                                    <span class="badge text-bg-warning">@webhook.HttpMethod.ToString()</span>
-                                }
-                                @if (webhook.HttpMethod == EHttpMethod.PATCH)
-                                {
-                                    <span class="badge text-bg-warning">@webhook.HttpMethod.ToString()</span>
-                                }
-                                @if (webhook.HttpMethod == EHttpMethod.DELETE)
-                                {
-                                    <span class="badge text-bg-danger">@webhook.HttpMethod.ToString()</span>
-                                }
-                            </h5>
-                        </div>
-
-                        <a class="btn btn-sm btn-primary shadow-sm float-end"
-                           role="button"
-                           data-bs-toggle="modal"
-                           data-bs-target="#webhookFormModal-@webhook.Id">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </a>
-
-                    </div>
-
-                </div>
-            </div>
-
-            @await Html.PartialAsync("_WebhookFormModal", webhook)
-        }
-
-        @if (Model.Count() <= 0)
-        {
-            <p>Nenhum registro encontrado.</p>
-        }
-    </div>
+    <button class="btn btn-primary btn-sm shadow-sm"
+            role="button"
+            data-bs-toggle="modal"
+            data-bs-target="#webhookFormModal-@webhookDtoEmpty.Id">
+        <i class="fa-solid fa-plus"></i>
+        Novo webhook
+    </button>
 </div>
+
+<table class="table table-striped table-hover align-middle">
+    <thead class="table">
+        <tr>
+            <th>Nome</th>
+            <th>Evento de Envio</th>
+            <th>URL</th>
+            <th>Método</th>
+            <th>Descrição</th>
+            <th class="text-end">...</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (!Model.Any())
+        {
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                    Nenhum registro encontrado.
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var webhook in Model)
+            {
+                <tr style="@(webhook.IsDisabled ? "opacity: 72%" : "")">
+                    <td>@webhook.Name</td>
+
+                    <td>
+                        <span class="badge bg-secondary">
+                            @webhook.TriggerEvent.GetDescription()
+                        </span>
+                    </td>
+
+                    <td class="text-truncate" style="max-width: 250px;">
+                        @webhook.Url
+                    </td>
+
+                    <td>
+                        @if (webhook.HttpMethod == EHttpMethod.GET)
+                        {
+                            <span class="badge text-bg-primary">GET</span>
+                        }
+                        else if (webhook.HttpMethod == EHttpMethod.POST)
+                        {
+                            <span class="badge text-bg-success">POST</span>
+                        }
+                        else if (webhook.HttpMethod == EHttpMethod.PUT)
+                        {
+                            <span class="badge text-bg-warning">PUT</span>
+                        }
+                        else if (webhook.HttpMethod == EHttpMethod.PATCH)
+                        {
+                            <span class="badge text-bg-warning">PATCH</span>
+                        }
+                        else if (webhook.HttpMethod == EHttpMethod.DELETE)
+                        {
+                            <span class="badge text-bg-danger">DELETE</span>
+                        }
+                    </td>
+
+                    <td class="text-truncate" style="max-width: 300px;">
+                        @webhook.Description
+                    </td>
+
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-primary shadow-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#webhookFormModal-@webhook.Id"
+                                title="Editar webhook">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </button>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
+
+@if (Model.Any())
+{
+    foreach (var webhook in Model)
+    {
+        @await Html.PartialAsync("_WebhookFormModal", webhook)
+    }
+}
