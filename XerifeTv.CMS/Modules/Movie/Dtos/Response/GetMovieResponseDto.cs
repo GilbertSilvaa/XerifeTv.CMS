@@ -24,8 +24,8 @@ public sealed class GetMovieResponseDto
 
     public string? UrlResolverPath
         => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
-            ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}"
-            : $"/MediaDeliveryProfiles/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(Video?.Url ?? "")}&streamFormat={Video?.StreamFormat}";
+            ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}&isCached=false"
+            : $"/MediaDeliveryProfiles/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(Video?.Url ?? "")}&streamFormat={Video?.StreamFormat}&isCached=false";
 
     public static GetMovieResponseDto FromEntity(MovieEntity entity)
     {

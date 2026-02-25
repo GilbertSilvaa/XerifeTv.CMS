@@ -19,7 +19,8 @@ namespace XerifeTv.CMS.Modules.Content;
 public sealed class ContentV1Service(
   IMovieRepository _movieRepository,
   ISeriesRepository _seriesRepository,
-  IChannelRepository _channelRepository) : IContentV1Service
+  IChannelRepository _channelRepository,
+  IConfiguration _configuration) : IContentV1Service
 {
     const int limitTotalResult = 50;
 
@@ -28,7 +29,9 @@ public sealed class ContentV1Service(
         var response = await _movieRepository.GetGroupByCategoryAsync(dto);
 
         var result = response.Select(x =>
-          new ItemsByCategory<GetMovieContentResponseDto>(x.Category, x.Items.Select(GetMovieContentResponseDto.FromEntity)))
+          new ItemsByCategory<GetMovieContentResponseDto>(
+              x.Category,
+              x.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!))))
           .OrderBy(x => x.Category);
 
         return Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>
@@ -49,7 +52,7 @@ public sealed class ContentV1Service(
         var result = new PagedList<GetMovieContentResponseDto>(
           response.CurrentPage,
           response.TotalPageCount,
-          response.Items.Select(GetMovieContentResponseDto.FromEntity));
+          response.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
 
         return Result<PagedList<GetMovieContentResponseDto>>.Success(result);
     }
@@ -85,8 +88,15 @@ public sealed class ContentV1Service(
     {
         var response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled: false);
 
-        return Result<IEnumerable<Episode>>
-          .Success(response?.Episodes ?? Enumerable.Empty<Episode>());
+        List<Episode> episodes = [];
+
+        foreach (var episode in response?.Episodes ?? [])
+        {
+            episode.SetUrlResolverPath(_configuration["SecuritySettings:ContentEncryptionKey"]!);
+            episodes.Add(episode);
+        }
+
+        return Result<IEnumerable<Episode>>.Success(episodes);
     }
 
     public async Task<Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> GetChannelsGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
@@ -95,7 +105,7 @@ public sealed class ContentV1Service(
 
         var result = response.Select(x =>
           new ItemsByCategory<GetChannelContentResponseDto>(
-            x.Category, x.Items.Select(GetChannelContentResponseDto.FromEntity)))
+            x.Category, x.Items.Select(i => GetChannelContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!))))
           .OrderBy(x => x.Category);
 
         return Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>
@@ -132,9 +142,9 @@ public sealed class ContentV1Service(
         await Task.WhenAll(moviesTask, seriesTask, channelsTask);
 
         var response = new GetContentsByNameResponseDto(
-            moviesTask.Result.Items.Select(GetMovieContentResponseDto.FromEntity),
+            moviesTask.Result.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)),
             seriesTask.Result.Items.Select(GetSeriesContentResponseDto.FromEntity),
-            channelsTask.Result.Items.Select(GetChannelContentResponseDto.FromEntity));
+            channelsTask.Result.Items.Select(i => GetChannelContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
 
         return Result<GetContentsByNameResponseDto>.Success(response);
     }

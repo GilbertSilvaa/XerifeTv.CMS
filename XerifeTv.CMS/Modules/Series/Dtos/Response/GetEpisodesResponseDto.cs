@@ -17,4 +17,12 @@ public class GetEpisodesResponseDto
             Episodes = entity.Episodes
         };
     }
+
+    public void SetUrlResolverPathEpisodes(string encryptKey)
+    {
+        foreach (var episode in Episodes)
+        {
+            episode.SetUrlResolverPath(encryptKey);
+        }
+    }
 }

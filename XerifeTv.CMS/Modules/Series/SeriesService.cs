@@ -11,7 +11,8 @@ namespace XerifeTv.CMS.Modules.Series;
 
 public class SeriesService(
     ISeriesRepository _repository,
-    IWebhookService _webhookService) : ISeriesService
+    IWebhookService _webhookService, 
+    IConfiguration _configuration) : ISeriesService
 {
     public async Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -175,6 +176,7 @@ public class SeriesService(
                   .Failure(new Error("404", "Conteudo nao encontrado"));
 
             var result = GetEpisodesResponseDto.FromEntity(response);
+            result.SetUrlResolverPathEpisodes(_configuration["SecuritySettings:ContentEncryptionKey"]!);
 
             return Result<GetEpisodesResponseDto>.Success(result);
         }

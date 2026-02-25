@@ -1,4 +1,5 @@
-﻿using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
+﻿using System.Security.Cryptography.Xml;
+using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
 using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Shared.Helpers;
 
@@ -19,13 +20,25 @@ public class GetMovieContentResponseDto
     public string? MediaDeliveryProfileId { get; private set; }
     public string? MediaRoute { get; private set; }
     public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
-    public string? UrlResolverPath
-        => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
-            ? $"/MediaDeliveryProfiles/ResolveUrl?mediaDeliveryProfileId={MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(MediaRoute ?? "")}&isCached=true"
-            : $"/MediaDeliveryProfiles/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(Video?.Url ?? "")}&streamFormat={Video?.StreamFormat}";
+    public string? UrlResolverPath { get; private set; }
 
-    public static GetMovieContentResponseDto FromEntity(MovieEntity entity)
+    public static GetMovieContentResponseDto FromEntity(MovieEntity entity, string encryptKey)
     {
+        string videoResolverPath;
+
+        if (!string.IsNullOrWhiteSpace(entity.MediaDeliveryProfileId))
+        {
+            string mdp = CryptographyHelper.Encrypt(entity.MediaDeliveryProfileId, encryptKey);
+            string mp = CryptographyHelper.Encrypt(entity.MediaRoute ?? string.Empty, encryptKey);
+            videoResolverPath = $"/ResolveUrlMdp?mdp={Uri.EscapeDataString(mdp)}&mp={Uri.EscapeDataString(mp)}";
+        }
+        else
+        {
+            string uf = CryptographyHelper.Encrypt(entity.Video?.Url ?? string.Empty, encryptKey);
+            string sf = CryptographyHelper.Encrypt(entity.Video?.StreamFormat ?? string.Empty, encryptKey);
+            videoResolverPath = $"/ResolveUrlFx?uf={Uri.EscapeDataString(uf)}&sf={Uri.EscapeDataString(sf)}";
+        }
+
         return new GetMovieContentResponseDto
         {
             Id = entity.Id,
@@ -39,7 +52,8 @@ public class GetMovieContentResponseDto
             Review = entity.Review,
             Video = entity.Video,
             MediaDeliveryProfileId = entity.MediaDeliveryProfileId,
-            MediaRoute = entity.MediaRoute
+            MediaRoute = entity.MediaRoute,
+            UrlResolverPath = $"/MediaDeliveryProfiles{videoResolverPath}"
         };
     }
 }

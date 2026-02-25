@@ -1,4 +1,5 @@
-﻿using XerifeTv.CMS.Modules.Movie;
+﻿using System.Security.Cryptography.Xml;
+using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.Content.Dtos.Response;
@@ -19,11 +20,22 @@ public class MovieContentV2ResponseDto
     public string VideoResolverURL { get; private set; } = string.Empty;
     public string? SubtitleURL { get; private set; }
 
-    public static MovieContentV2ResponseDto FromEntity(MovieEntity entity)
+    public static MovieContentV2ResponseDto FromEntity(MovieEntity entity, string encryptKey)
     {
-        string videoResolverPath = !string.IsNullOrWhiteSpace(entity.MediaDeliveryProfileId)
-            ? $"/ResolveUrl?mediaDeliveryProfileId={entity.MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(entity.MediaRoute ?? "")}&isCached=true"
-            : $"/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(entity.Video?.Url ?? "")}&streamFormat={entity.Video?.StreamFormat}&isCached=true";
+        string videoResolverPath;
+
+        if (!string.IsNullOrWhiteSpace(entity.MediaDeliveryProfileId))
+        {
+            string mdp = CryptographyHelper.Encrypt(entity.MediaDeliveryProfileId, encryptKey);
+            string mp = CryptographyHelper.Encrypt(entity.MediaRoute ?? string.Empty, encryptKey);
+            videoResolverPath = $"/ResolveUrlMdp?mdp={Uri.EscapeDataString(mdp)}&mp={Uri.EscapeDataString(mp)}";
+        }
+        else
+        {
+            string uf = CryptographyHelper.Encrypt(entity.Video?.Url ?? string.Empty, encryptKey);
+            string sf = CryptographyHelper.Encrypt(entity.Video?.StreamFormat ?? string.Empty, encryptKey);
+            videoResolverPath = $"/ResolveUrlFx?uf={Uri.EscapeDataString(uf)}&sf={Uri.EscapeDataString(sf)}";
+        }
 
         return new()
         {
