@@ -13,11 +13,22 @@ public class EpisodeContentV2ResponseDto
     public string SubtitleURL { get; private set; } = string.Empty;
     public string VideoResolverURL { get; private set; } = string.Empty;
 
-    public static EpisodeContentV2ResponseDto FromEntity(Episode entity)
+    public static EpisodeContentV2ResponseDto FromEntity(Episode entity, string encryptKey)
     {
-        string videoResolverPath = !string.IsNullOrWhiteSpace(entity.MediaDeliveryProfileId)
-            ? $"/ResolveUrl?mediaDeliveryProfileId={entity.MediaDeliveryProfileId}&mediaPath={Uri.EscapeDataString(entity.MediaRoute ?? "")}&isCached=true"
-            : $"/ResolveUrlFixed?urlFixed={Uri.EscapeDataString(entity.Video?.Url ?? "")}&streamFormat={entity.Video?.StreamFormat}&isCached=true";
+        string videoResolverPath;
+
+        if (!string.IsNullOrWhiteSpace(entity.MediaDeliveryProfileId))
+        {
+            string mdp = CryptographyHelper.Encrypt(entity.MediaDeliveryProfileId, encryptKey);
+            string mp = CryptographyHelper.Encrypt(entity.MediaRoute ?? string.Empty, encryptKey);
+            videoResolverPath = $"/ResolveUrlMdp?mdp={Uri.EscapeDataString(mdp)}&mp={Uri.EscapeDataString(mp)}";
+        }
+        else
+        {
+            string uf = CryptographyHelper.Encrypt(entity.Video?.Url ?? string.Empty, encryptKey);
+            string sf = CryptographyHelper.Encrypt(entity.Video?.StreamFormat ?? string.Empty, encryptKey);
+            videoResolverPath = $"/ResolveUrlFx?uf={Uri.EscapeDataString(uf)}&sf={Uri.EscapeDataString(sf)}";
+        }
         
         return new()
         {

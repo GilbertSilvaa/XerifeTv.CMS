@@ -10,7 +10,8 @@ namespace XerifeTv.CMS.Modules.Content;
 
 public class ContentV2Service(
     IMovieRepository _movieRepository,
-    ISeriesRepository _seriesRepository) : IContentV2Service
+    ISeriesRepository _seriesRepository,
+    IConfiguration _configuration) : IContentV2Service
 {
     public async Task<Result<IEnumerable<MovieContentV2ResponseDto>>> GetMoviesAsync(int limit)
     {
@@ -18,7 +19,9 @@ public class ContentV2Service(
         {
             var movies = await _movieRepository.GetAsync(currentPage: 1, limit);
 
-            return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(movies.Items.Select(MovieContentV2ResponseDto.FromEntity));
+            return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(
+                movies.Items.Select(
+                    i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
         }
         catch (Exception ex)
         {
@@ -49,7 +52,8 @@ public class ContentV2Service(
             if (movie is null)
                 return Result<MovieContentV2ResponseDto?>.Failure(new("404", "Conteudo nao encontrado"));
 
-            return Result<MovieContentV2ResponseDto?>.Success(MovieContentV2ResponseDto.FromEntity(movie));
+            return Result<MovieContentV2ResponseDto?>.Success(
+                MovieContentV2ResponseDto.FromEntity(movie, _configuration["SecuritySettings:ContentEncryptionKey"]!));
         }
         catch (Exception ex)
         {
@@ -91,7 +95,10 @@ public class ContentV2Service(
             return Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>.Success(new(
                 currentPage: movies.CurrentPage,
                 totalPageCount: movies.TotalPageCount,
-                items: [new ItemsByCategory<MovieContentV2ResponseDto>(category, moviesByCategory.Select(MovieContentV2ResponseDto.FromEntity))]));
+                items: [new ItemsByCategory<MovieContentV2ResponseDto>(
+                    category,
+                    moviesByCategory.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)))
+                ]));
         }
         catch (Exception ex)
         {
@@ -130,7 +137,8 @@ public class ContentV2Service(
             var seriesResult = await _seriesRepository.GetEpisodesBySeasonAsync(seriesId, seasonNumber, false);
 
             return Result<IEnumerable<EpisodeContentV2ResponseDto>>.Success(
-                seriesResult?.Episodes.Select(EpisodeContentV2ResponseDto.FromEntity) ?? []);
+                seriesResult?.Episodes.Select(
+                    i =>  EpisodeContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
         }
         catch (Exception ex)
         {
@@ -185,7 +193,8 @@ public class ContentV2Service(
                     currentPage: 1,
                     isIncludeDisabled: false));
 
-                recommededMoviesList.AddRange(moviesByCategoryResult.Items.Select(MovieContentV2ResponseDto.FromEntity));
+                recommededMoviesList.AddRange(
+                    moviesByCategoryResult.Items.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
             }
 
             recommededMoviesList = [.. recommededMoviesList.OrderByDescending(x => x.RatingImdb).Take(15).Where(x => x.Id != movieId)];
@@ -229,7 +238,8 @@ public class ContentV2Service(
                 currentPage: 1,
                 isIncludeDisabled: false));
 
-            return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(moviesResult.Items.Select(MovieContentV2ResponseDto.FromEntity));
+            return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(
+                moviesResult.Items.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
         }
         catch (Exception ex)
         {
@@ -259,7 +269,8 @@ public class ContentV2Service(
                     currentPage: 1,
                     isIncludeDisabled: false));
 
-                featuredContent = moviesResult.Items.Select(MovieContentV2ResponseDto.FromEntity).FirstOrDefault();
+                featuredContent = moviesResult.Items.Select(
+                    i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)).FirstOrDefault();
             }
             else
             {

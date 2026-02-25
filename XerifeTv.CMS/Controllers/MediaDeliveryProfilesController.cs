@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
-using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Request;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
@@ -14,7 +13,8 @@ public class MediaDeliveryProfilesController(
     IMediaDeliveryProfileService _service,
     IMediaDeliveryUrlResolver _urlResolver,
     ILogger<MediaDeliveryProfilesController> _logger,
-    ICacheService _cacheService) : Controller
+    ICacheService _cacheService, 
+    IConfiguration _configuration) : Controller
 {
     public async Task<IActionResult> Create(CreateMediaDeliveryProfileRequestDto dto)
     {
@@ -58,7 +58,7 @@ public class MediaDeliveryProfilesController(
         return Redirect(Url.Action("Index", "Settings") + "#media-delivery");
     }
 
-    [AllowAnonymous]
+    [Authorize(Roles = "admin, common")]
     [HttpGet]
     public async Task<IActionResult> ResolveUrl(string mediaPath, string mediaDeliveryProfileId, bool isCached = false)
     {
@@ -79,10 +79,49 @@ public class MediaDeliveryProfilesController(
         return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
     }
 
-    [AllowAnonymous]
+    [Authorize(Roles = "admin, common")]
     [HttpGet]
     public async Task<IActionResult> ResolveUrlFixed(string urlFixed, string streamFormat)
     {
+        var response = await _urlResolver.ResolveUrlFixedAsync(urlFixed, streamFormat);
+
+        if (response.IsFailure)
+            return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
+
+        return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
+    }
+
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> ResolveUrlMdp(string mp, string mdp)
+    {
+        string mediaDeliveryProfileId = CryptographyHelper.Decrypt(mdp, _configuration["SecuritySettings:ContentEncryptionKey"]!);
+        string mediaPath = CryptographyHelper.Decrypt(mp, _configuration["SecuritySettings:ContentEncryptionKey"]!);
+
+        var normalizedPath = mediaPath.Trim().ToLowerInvariant();
+        var cacheKey = $"resolve-url:{normalizedPath}:{mediaDeliveryProfileId}";
+        var responseCache = _cacheService.GetValue<GetResolveUrlResponseDto?>(cacheKey);
+
+        if (responseCache != null)
+            return Ok(new { responseCache?.Url, responseCache?.StreamFormat });
+
+        var response = await _urlResolver.ResolveUrlAsync(mediaPath, mediaDeliveryProfileId);
+
+        if (response.IsFailure)
+            return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
+        
+        _cacheService.SetValue<GetResolveUrlResponseDto?>(cacheKey, response.Data);
+
+        return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
+    }
+
+    [AllowAnonymous]
+    [HttpGet]
+    public async Task<IActionResult> ResolveUrlFx(string uf, string sf)
+    {
+        string urlFixed = CryptographyHelper.Decrypt(uf, _configuration["SecuritySettings:ContentEncryptionKey"]!);
+        string streamFormat = CryptographyHelper.Decrypt(sf, _configuration["SecuritySettings:ContentEncryptionKey"]!);
+
         var response = await _urlResolver.ResolveUrlFixedAsync(urlFixed, streamFormat);
 
         if (response.IsFailure)
