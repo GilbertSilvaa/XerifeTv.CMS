@@ -66,16 +66,20 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
         {
             var moviesByCategory = await _collection
               .Find(r => r.Categories.Any(x => x.Equals(category)) && (!r.Disabled || dto.IsIncludeDisabled))
-              .SortBy(x => uniqueMovieIds.Contains(x.Id))
-              .ThenByDescending(x => x.CreateAt)
+              .SortByDescending(x => x.CreateAt)
               .Skip(dto.LimitResults * (dto.CurrentPage - 1))
               .Limit(dto.LimitResults)
               .ToListAsync();
 
+            var orderedMovies = moviesByCategory
+                .OrderBy(x => uniqueMovieIds.Contains(x.Id))
+                .ThenByDescending(x => x.CreateAt)
+                .ToList();
+
             uniqueMovieIds.AddRange(moviesByCategory.Select(x => x.Id));
 
             if (moviesByCategory.Any())
-                result.Add(new ItemsByCategory<MovieEntity>(category, moviesByCategory));
+                result.Add(new ItemsByCategory<MovieEntity>(category, orderedMovies));
         }
 
         return result;
