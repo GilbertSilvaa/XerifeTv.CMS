@@ -63,7 +63,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         var count = await _collection.CountDocumentsAsync(filter);
         var items = await _collection.Find(filter)
           .Project<SeriesEntity>(projection)
-          .SortBy(r => r.Title)
+          .SortByDescending(r => r.CreateAt)
           .Skip(dto.LimitResults * (dto.CurrentPage - 1))
           .Limit(dto.LimitResults)
           .ToListAsync();
@@ -89,16 +89,20 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         {
             var seriesByCategory = await _collection
               .Find(r => r.Categories.Any(x => x.Equals(category)) && (!r.Disabled || dto.IsIncludeDisabled))
-              .SortBy(x => uniqueSeriesIds.Contains(x.Id))
-              .ThenByDescending(x => x.CreateAt)
+              .SortByDescending(x => x.CreateAt)
               .Skip(dto.LimitResults * (dto.CurrentPage - 1))
               .Limit(dto.LimitResults)
               .ToListAsync();
 
+            var orderedSeries = seriesByCategory
+                .OrderBy(x => uniqueSeriesIds.Contains(x.Id))
+                .ThenByDescending(x => x.CreateAt)
+                .ToList();
+
             uniqueSeriesIds.AddRange(seriesByCategory.Select(x => x.Id));
 
             if (seriesByCategory.Any())
-                result.Add(new ItemsByCategory<SeriesEntity>(category, seriesByCategory));
+                result.Add(new ItemsByCategory<SeriesEntity>(category, orderedSeries));
         }
 
         return result;
