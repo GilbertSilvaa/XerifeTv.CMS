@@ -138,7 +138,7 @@ public class ContentV2Service(
 
             return Result<IEnumerable<EpisodeContentV2ResponseDto>>.Success(
                 seriesResult?.Episodes.Select(
-                    i =>  EpisodeContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
+                    i => EpisodeContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
         }
         catch (Exception ex)
         {
@@ -296,6 +296,50 @@ public class ContentV2Service(
         catch (Exception ex)
         {
             return Result<GetHomeContentV2ResponseDto>.Failure(new("500", ex.Message));
+        }
+    }
+
+    public async Task<Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>> GetMoviesByCategoriesListAsync(
+        List<string> categories,
+        int page,
+        int pageSize = 1)
+    {
+        try
+        {
+            var moviesByCategories = await _movieRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
+
+            return Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>.Success(new(
+                currentPage: page,
+                totalPageCount: moviesByCategories.Count(),
+                items: moviesByCategories.Select(c => new ItemsByCategory<MovieContentV2ResponseDto>(
+                    c.Category,
+                    c.Items.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!))))));
+        }
+        catch (Exception ex)
+        {
+            return Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>.Failure(new("500", ex.Message));
+        }
+    }
+
+    public async Task<Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>> GetSeriesByCategoriesListAsync(
+        List<string> categories,
+        int page,
+        int pageSize = 1)
+    {
+        try
+        {
+            var seriesByCategories = await _seriesRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
+
+            return Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>.Success(new(
+                currentPage: page,
+                totalPageCount: seriesByCategories.Count(),
+                items: seriesByCategories.Select(c => new ItemsByCategory<SeriesSummaryContentV2ResponseDto>(
+                    c.Category,
+                    c.Items.Select(SeriesSummaryContentV2ResponseDto.FromEntity)))));
+        }
+        catch (Exception ex)
+        {
+            return Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>.Failure(new("500", ex.Message));
         }
     }
 }

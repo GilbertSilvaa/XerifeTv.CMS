@@ -138,7 +138,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesCategoriesAsync();
+        var response = await _service.GetMoviesCategoriesAsync(12);
 
         if (response.IsSuccess)
         {
@@ -159,7 +159,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesCategoriesAsync();
+        var response = await _service.GetSeriesCategoriesAsync(12);
 
         if (response.IsSuccess)
         {
@@ -287,6 +287,50 @@ public class ContentV2Controller(
 
             _cacheService.SetValue(cacheKey, result);
             return Ok(result);
+        }
+
+        return BadRequest();
+    }
+
+    [HttpGet]
+    [Route("movies/categories/groups")]
+    public async Task<IActionResult> MoviesByCategories([FromQuery] List<string> categories, int page = 1, int pageSize = 10)
+    {
+        _logger.LogInformation("Request Content API v2 /movies/categories/groups categories={categories}", string.Join(", ", categories));
+
+        var norm = NormalizeCsv(string.Join('_', categories));
+        var cacheKey = $"content_v2_movies_by_categories-{norm}";
+        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        if (responseCache != null) return Ok(responseCache);
+
+        var response = await _service.GetMoviesByCategoriesListAsync(categories, page, pageSize);
+
+        if (response.IsSuccess)
+        {
+            _cacheService.SetValue(cacheKey, response.Data);
+            return Ok(response.Data);
+        }
+
+        return BadRequest();
+    }
+
+    [HttpGet]
+    [Route("series/categories/groups")]
+    public async Task<IActionResult> SeriesByCategories([FromQuery] List<string> categories, int page = 1, int pageSize = 10)
+    {
+        _logger.LogInformation("Request Content API v2 /series/categories/groups categories={categories}", string.Join(", ", categories));
+
+        var norm = NormalizeCsv(string.Join('_', categories));
+        var cacheKey = $"content_v2_series_by_categories-{norm}";
+        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        if (responseCache != null) return Ok(responseCache);
+
+        var response = await _service.GetSeriesByCategoriesListAsync(categories, page, pageSize);
+
+        if (response.IsSuccess)
+        {
+            _cacheService.SetValue(cacheKey, response.Data);
+            return Ok(response.Data);
         }
 
         return BadRequest();
