@@ -19,6 +19,7 @@ public class CreateMovieRequestDto
     public string? VideoSubtitle { get; init; }
     public string? MediaDeliveryProfileId { get; set; }
     public string? MediaRoute { get; set; }
+    public string? TrailerVideoYoutubeId { get; init; }
 
     public MovieEntity ToEntity()
     {
@@ -40,7 +41,8 @@ public class CreateMovieRequestDto
             Review = Review,
             Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle),
             MediaRoute = MediaRoute,
-            MediaDeliveryProfileId = MediaDeliveryProfileId
+            MediaDeliveryProfileId = MediaDeliveryProfileId,
+            TrailerVideoYoutubeId = TrailerVideoYoutubeId
         };
     }
 }

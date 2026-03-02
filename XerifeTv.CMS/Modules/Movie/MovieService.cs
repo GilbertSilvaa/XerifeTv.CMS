@@ -8,7 +8,7 @@ using XerifeTv.CMS.Modules.Movie.Specifications;
 
 namespace XerifeTv.CMS.Modules.Movie;
 
-public sealed class MovieSevice(
+public sealed class MovieService(
     IMovieRepository _repository,
     IWebhookService _webhookService) : IMovieService
 {
