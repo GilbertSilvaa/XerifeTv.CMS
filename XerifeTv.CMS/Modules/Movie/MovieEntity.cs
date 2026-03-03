@@ -11,5 +11,6 @@ public class MovieEntity : MediaContent
     public Video? Video { get; set; }
     public string? MediaDeliveryProfileId { get; set; }
     public string? MediaRoute { get; set; }
+    public string? TrailerVideoYoutubeId { get; set; }
     public bool Disabled { get; set; } = false;
 }

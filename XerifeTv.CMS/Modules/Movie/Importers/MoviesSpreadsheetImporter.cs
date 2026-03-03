@@ -53,7 +53,8 @@ public class MoviesSpreadsheetImporter(
                 "MEDIA PATH",
                 "URL VIDEO FIXED",
 				"STREAM FORMAT",
-				"URL SUBTITLES"
+				"URL SUBTITLES",
+				"TRAILER YOUTUBE VIDEO ID"
 			];
 
 			using var stream = new MemoryStream();
@@ -146,7 +147,8 @@ public class MoviesSpreadsheetImporter(
 						VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
 						VideoSubtitle = movieItem.Video?.Subtitle,
 						MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,
-						MediaRoute = movieItem.MediaRoute
+						MediaRoute = movieItem.MediaRoute,
+						TrailerVideoYoutubeId = movieItem.TrailerVideoYoutubeId
                     };
 
 					responseCreateOrUpdate = await _service.UpdateAsync(updateMovieDto);									
@@ -169,7 +171,8 @@ public class MoviesSpreadsheetImporter(
 						VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
 						VideoSubtitle = movieItem.Video?.Subtitle,
                         MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,
-                        MediaRoute = movieItem.MediaRoute
+                        MediaRoute = movieItem.MediaRoute,
+						TrailerVideoYoutubeId = movieItem.TrailerVideoYoutubeId
                     };
 
 					responseCreateOrUpdate = await _service.CreateAsync(createMovieDto);
