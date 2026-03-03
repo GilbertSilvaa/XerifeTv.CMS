@@ -19,6 +19,7 @@ public class MovieContentV2ResponseDto
     public long DurationSeconds { get; private set; }
     public string VideoResolverURL { get; private set; } = string.Empty;
     public string? SubtitleURL { get; private set; }
+    public string? TrailerVideoYoutubeId { get; private set; }
 
     public static MovieContentV2ResponseDto FromEntity(MovieEntity entity, string encryptKey)
     {
@@ -51,7 +52,8 @@ public class MovieContentV2ResponseDto
             Duration = DateTimeHelper.ConvertSecondsToHHmm(entity.Video?.Duration ?? 0),
             DurationSeconds = entity.Video?.Duration ?? 0,
             VideoResolverURL = $"/MediaDeliveryProfiles{videoResolverPath}",
-            SubtitleURL = entity.Video?.Subtitle
+            SubtitleURL = entity.Video?.Subtitle,
+            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId
         };
     }
 }

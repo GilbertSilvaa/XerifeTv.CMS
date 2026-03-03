@@ -19,6 +19,7 @@ public sealed class GetMovieResponseDto
     public Video? Video { get; private set; }
     public string? MediaDeliveryProfileId { get; private set; }
     public string? MediaRoute { get; private set; }
+    public string? TrailerVideoYoutubeId { get; private set; }
     public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
     public bool Disabled { get; private set; } = false;
 
@@ -45,7 +46,8 @@ public sealed class GetMovieResponseDto
             Video = entity.Video,
             Disabled = entity.Disabled,
             MediaRoute = entity.MediaRoute,
-            MediaDeliveryProfileId = entity.MediaDeliveryProfileId
+            MediaDeliveryProfileId = entity.MediaDeliveryProfileId,
+            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId
         };
     }
 }
