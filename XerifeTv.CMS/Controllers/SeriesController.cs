@@ -154,7 +154,7 @@ public class SeriesController(
 
 		_logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
-		return RedirectToAction("Episodes", new { id = dto.SerieId });
+		return RedirectToAction("Episodes", new { id = dto.SerieId, seasonFilter = dto.Season });
 	}
 
 	[Authorize(Roles = "admin, common")]
@@ -168,7 +168,7 @@ public class SeriesController(
 
 		_logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
-		return RedirectToAction("Episodes", new { id = dto.SerieId });
+		return RedirectToAction("Episodes", new { id = dto.SerieId, seasonFilter = dto.Season });
 	}
 
 	[Authorize(Roles = "admin, common")]
