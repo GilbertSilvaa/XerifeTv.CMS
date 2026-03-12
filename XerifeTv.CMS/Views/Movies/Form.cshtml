@@ -209,14 +209,26 @@
             @await Html.PartialAsync("_VideoSetting", new VideoSettingViewModel
             {
                 IdPrefix = "movie",
-                VideoUrl = Model?.MovieDto?.Video?.Url,
-                VideoStreamFormat = Model?.MovieDto?.Video?.StreamFormat,
-                VideoSubtitle = Model?.MovieDto?.Video?.Subtitle,
-                MediaDeliveryProfileId = Model?.MovieDto?.MediaDeliveryProfileId,
-                MediaRoute = Model?.MovieDto?.MediaRoute,
-                MediaDeliveryProfiles = Model?.MediaDeliveryProfiles ?? [],
-                StreamFormats = StreamFormatsHelper.Vod           
-            })
+                        VideoUrl = Model?.MovieDto?.Video?.Url,
+                        VideoStreamFormat = Model?.MovieDto?.Video?.StreamFormat,
+                        VideoSubtitle = Model?.MovieDto?.Video?.Subtitle,
+                        MediaDeliveryProfileId = Model?.MovieDto?.MediaDeliveryProfileId,
+                        MediaRoute = Model?.MovieDto?.MediaRoute,
+                        MediaDeliveryProfiles = Model?.MediaDeliveryProfiles ?? [],
+                        StreamFormats = StreamFormatsHelper.Vod
+                        })
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <label for="trailerVideoYoutubeId" class="form-label">Trailer (YouTube Video ID)</label>
+                    <input type="text"
+                           class="form-control"
+                           id="trailerVideoYoutubeId"
+                           name="trailerVideoYoutubeId"
+                           placeholder="Cole o link ou o ID do vídeo..."
+                           value="@Model?.MovieDto?.TrailerVideoYoutubeId">
+                </div>
+            </div>
 
             @if (Model?.MovieDto is GetMovieResponseDto movie)
             {
@@ -290,6 +302,12 @@
           }
         });
 
+        $('#trailerVideoYoutubeId').blur(function() {
+            const url = $(this).val();
+            const youtubeId = extractYouTubeVideoId(url);
+            $(this).val(youtubeId);
+        });
+
         $('#disabled').change(e => e.target.value = e.target.checked);
 
         $('#videoDuration').keyup(e =>
@@ -298,6 +316,19 @@
         function deleteMovie() {
           if (!confirm('Deseja realmente remover o filme?')) return;
           location.href = '/Movies/Delete/@Model?.MovieDto?.Id';
+        }
+
+        function extractYouTubeVideoId(input) {
+          const trimmedInput = input.trim();
+
+          if (trimmedInput.length === 11 && !trimmedInput.includes('/') && !trimmedInput.includes('.')) {
+            return trimmedInput;
+          }
+
+          const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+          const match = trimmedInput.match(regExp);
+
+          return (match && match[2].length === 11) ? match[2] : null;
         }
 
     </script>

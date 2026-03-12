@@ -20,6 +20,7 @@ public class UpdateMovieRequestDto
     public string? VideoSubtitle { get; init; }
     public string? MediaDeliveryProfileId { get; init; }
     public string? MediaRoute { get; init; }
+    public string? TrailerVideoYoutubeId { get; init; }
     public bool Disabled { get; init; } = false;
 
     public MovieEntity ToEntity()
@@ -44,7 +45,8 @@ public class UpdateMovieRequestDto
             Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle),
             Disabled = Disabled,
             MediaRoute = MediaRoute,
-            MediaDeliveryProfileId = MediaDeliveryProfileId
+            MediaDeliveryProfileId = MediaDeliveryProfileId,
+            TrailerVideoYoutubeId = TrailerVideoYoutubeId
         };
     }
 }
