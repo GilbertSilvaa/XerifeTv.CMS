@@ -49,7 +49,7 @@ public class ContentV2Service(
         {
             var movie = await _movieRepository.GetAsync(id);
 
-            if (movie is null)
+            if (movie is null || movie.Disabled)
                 return Result<MovieContentV2ResponseDto?>.Failure(new("404", "Conteudo nao encontrado"));
 
             return Result<MovieContentV2ResponseDto?>.Success(
@@ -67,7 +67,7 @@ public class ContentV2Service(
         {
             var series = await _seriesRepository.GetAsync(id);
 
-            if (series is null)
+            if (series is null || series.Disabled)
                 return Result<SeriesSummaryContentV2ResponseDto?>.Failure(new("404", "Conteudo nao encontrado"));
 
             return Result<SeriesSummaryContentV2ResponseDto?>.Success(SeriesSummaryContentV2ResponseDto.FromEntity(series));
