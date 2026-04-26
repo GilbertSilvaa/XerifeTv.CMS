@@ -37,9 +37,9 @@
                   asp-action="Index"
                   method="get">
 
-                <input type="hidden"
+                @* <input type="hidden"
                        name="currentPage"
-                       value="@(ViewBag.Filter is not null ? ViewBag.CurrentPage : 1)" />
+                       value="@(ViewBag.Filter is not null ? ViewBag.CurrentPage : 1)" /> *@
 
                 <select class="form-select shadow-none" name="filter">
                     @foreach (var filter in filters)
