@@ -12,4 +12,5 @@ public interface IMovieRepository : IBaseRepository<MovieEntity>
     Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto);
     Task<MovieEntity?> GetByImdbIdAsync(string imdbId);
     Task<ICollection<CategoryCountDto>> GetCategoriesWithCountAsync();
+    Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit);
 }

@@ -176,34 +176,29 @@ public class ContentV2Service(
     {
         try
         {
-            var movieResult = await _movieRepository.GetAsync(movieId);
+            var recommendedMovies = await _movieRepository.GetMoviesRecommendedByMovieIdAsync(movieId, 15);
 
-            if (movieResult is null)
-                return Result<IEnumerable<MovieContentV2ResponseDto>>.Failure(new("404", "Conteudo nao encontrado"));
-
-            List<MovieContentV2ResponseDto> recommededMoviesList = [];
-
-            foreach (var category in movieResult.Categories.Take(3))
-            {
-                var moviesByCategoryResult = await _movieRepository.GetByFilterAsync(new(
-                    filter: EMovieSearchFilter.CATEGORY,
-                    order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
-                    search: category,
-                    limitResults: 15,
-                    currentPage: 1,
-                    isIncludeDisabled: false));
-
-                recommededMoviesList.AddRange(
-                    moviesByCategoryResult.Items.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
-            }
-
-            recommededMoviesList = [.. recommededMoviesList.OrderByDescending(x => x.RatingImdb).Take(15).Where(x => x.Id != movieId)];
-
-            return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(recommededMoviesList.DistinctBy(x => x.Id));
+            return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(
+                recommendedMovies?.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
         }
         catch (Exception ex)
         {
             return Result<IEnumerable<MovieContentV2ResponseDto>>.Failure(new("500", ex.Message));
+        }
+    }
+
+    public async Task<Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>> GetSeriesRecommendedAsync(string seriesId)
+    {
+        try
+        {
+            var recommendedSeries = await _seriesRepository.GetSeriesRecommendedBySeriesIdAsync(seriesId, 15);
+
+            return Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>.Success(
+                recommendedSeries?.Select(SeriesSummaryContentV2ResponseDto.FromEntity) ?? []);
+        }
+        catch (Exception ex)
+        {
+            return Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>.Failure(new("500", ex.Message));
         }
     }
 

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
@@ -74,6 +75,9 @@ public class ContentV2Controller(
             return Ok(response.Data);
         }
 
+        if (response.IsFailure && response.Error.Code == "404")
+            return NotFound();
+
         return BadRequest();
     }
 
@@ -96,6 +100,9 @@ public class ContentV2Controller(
             _cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
+
+        if (response.IsFailure && response.Error.Code == "404")
+            return NotFound();
 
         return BadRequest();
     }
@@ -226,6 +233,26 @@ public class ContentV2Controller(
 
         var response = await _service.GetMoviesRecommendedAsync(movieId);
 
+        if (response.IsSuccess)
+        {
+            _cacheService.SetValue(cacheKey, response.Data);
+            return Ok(response.Data);
+        }
+
+        return BadRequest();
+    }
+
+    [HttpGet]
+    [Route("series/{seriesId}/recommended")]
+    public async Task<IActionResult> SeriesRecommended(string seriesId)
+    {
+        _logger.LogInformation("Request Content API v2 /series/{seriesId}/recommended", seriesId);
+
+        var cacheKey = $"content_v2_series_recommended_{seriesId}";
+        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        if (responseCache != null) return Ok(responseCache);
+
+        var response = await _service.GetSeriesRecommendedAsync(seriesId);
         if (response.IsSuccess)
         {
             _cacheService.SetValue(cacheKey, response.Data);
