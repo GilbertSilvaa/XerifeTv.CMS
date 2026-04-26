@@ -27,7 +27,12 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
                 x.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase)) && (!r.Disabled || dto.IsIncludeDisabled),
 
             EMovieSearchFilter.RELEASE_YEAR => r =>
-              r.ReleaseYear.Equals(int.Parse(dto.Search)) && (!r.Disabled || dto.IsIncludeDisabled),
+              r.ReleaseYear.ToString() == dto.Search && (!r.Disabled || dto.IsIncludeDisabled),
+
+            EMovieSearchFilter.PARENTAL_RATING => r =>
+              r.ParentalRating.ToString() == dto.Search && (!r.Disabled || dto.IsIncludeDisabled),
+
+            EMovieSearchFilter.ONLY_DISABLED => r => r.Disabled,
 
             _ => r =>
               r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)

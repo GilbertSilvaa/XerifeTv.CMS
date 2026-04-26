@@ -4,5 +4,7 @@ public enum EMovieSearchFilter
 {
     TITLE,
     CATEGORY,
-    RELEASE_YEAR
+    RELEASE_YEAR,
+    PARENTAL_RATING,
+    ONLY_DISABLED
 }
