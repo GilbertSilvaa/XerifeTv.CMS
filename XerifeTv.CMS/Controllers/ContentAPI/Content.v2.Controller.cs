@@ -243,6 +243,26 @@ public class ContentV2Controller(
     }
 
     [HttpGet]
+    [Route("series/{seriesId}/recommended")]
+    public async Task<IActionResult> SeriesRecommended(string seriesId)
+    {
+        _logger.LogInformation("Request Content API v2 /series/{seriesId}/recommended", seriesId);
+
+        var cacheKey = $"content_v2_series_recommended_{seriesId}";
+        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        if (responseCache != null) return Ok(responseCache);
+
+        var response = await _service.GetSeriesRecommendedAsync(seriesId);
+        if (response.IsSuccess)
+        {
+            _cacheService.SetValue(cacheKey, response.Data);
+            return Ok(response.Data);
+        }
+
+        return BadRequest();
+    }
+
+    [HttpGet]
     [Route("search")]
     public async Task<IActionResult> Search(string term)
     {

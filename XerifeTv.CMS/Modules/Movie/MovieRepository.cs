@@ -109,4 +109,60 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
                 Count = x["count"].AsInt32
             })];
     }
+
+    public async Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit)
+    {
+        var movie = await _collection.Find(r => r.Id == movieId).FirstOrDefaultAsync();
+        if (movie == null) return Array.Empty<MovieEntity>();
+
+        var baseCategories = movie.Categories;
+
+        var pipeline = new[]
+        {
+            new BsonDocument("$match", new BsonDocument
+            {
+                { "_id", new BsonDocument("$ne", movie.Id) }
+            }),
+
+            new BsonDocument("$addFields", new BsonDocument
+            {
+                { "MatchingCount", new BsonDocument
+                    {
+                        { "$size", new BsonDocument
+                            {
+                                { "$setIntersection", new BsonArray
+                                    {
+                                        "$Categories", new BsonArray(baseCategories)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }),
+
+            new BsonDocument("$match", new BsonDocument
+            {
+                { "MatchingCount", new BsonDocument("$gt", 0) },
+                { "Disabled", false }
+            }),
+
+            new BsonDocument("$sort", new BsonDocument
+            {
+                { "MatchingCount", -1 },
+                { "Review", -1 }
+            }),
+
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "MatchingCount", 0 }
+            }),
+
+            new BsonDocument("$limit", limit)
+        };
+
+        var recommendedMovies = await _collection.Aggregate<MovieEntity>(pipeline).ToListAsync();
+
+        return recommendedMovies;
+    }
 }

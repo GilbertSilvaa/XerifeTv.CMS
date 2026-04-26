@@ -5,7 +5,6 @@ using System.Linq.Expressions;
 using XerifeTv.CMS.Modules.Abstractions.Repositories;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
-using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -211,5 +210,61 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
                 Category = x["_id"].AsString,
                 Count = x["count"].AsInt32
             })];
+    }
+
+    public async Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit)
+    {
+        var series = await _collection.Find(r => r.Id == seriesId).FirstOrDefaultAsync();
+        if (series == null) return Array.Empty<SeriesEntity>();
+
+        var baseCategories = series.Categories;
+
+        var pipeline = new[]
+        {
+            new BsonDocument("$match", new BsonDocument
+            {
+                { "_id", new BsonDocument("$ne", series.Id) }
+            }),
+
+            new BsonDocument("$addFields", new BsonDocument
+            {
+                { "MatchingCount", new BsonDocument
+                    {
+                        { "$size", new BsonDocument
+                            {
+                                { "$setIntersection", new BsonArray
+                                    {
+                                        "$Categories", new BsonArray(baseCategories)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }),
+
+            new BsonDocument("$match", new BsonDocument
+            {
+                { "MatchingCount", new BsonDocument("$gt", 0) },
+                { "Disabled", false }
+            }),
+
+            new BsonDocument("$sort", new BsonDocument
+            {
+                { "MatchingCount", -1 },
+                { "Review", -1 }
+            }),
+
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "MatchingCount", 0 }
+            }),
+
+            new BsonDocument("$limit", limit)
+        };
+
+        var recommendedSeries = await _collection.Aggregate<SeriesEntity>(pipeline).ToListAsync();
+
+        return recommendedSeries;
     }
 }
