@@ -142,11 +142,12 @@
                         <div class="col-6">
                             <div class="form-check">
                                 <input name="disabled"
+                                       id="episode_@(Model?.Episode?.Id)_disabled"
                                        class="form-check-input disabled"
                                        type="checkbox"
                                        value="@(Model?.Episode?.Disabled == true ? "true" : "false")"
                                        @(Model?.Episode?.Disabled == true ? "checked" : "")>
-                                <label class="form-check-label">
+                                <label for="episode_@(Model?.Episode?.Id)_disabled" class="form-check-label">
                                     Desativar
                                 </label>
                             </div>

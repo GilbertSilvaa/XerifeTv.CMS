@@ -3,5 +3,8 @@
 public enum ESeriesSearchFilter
 {
     TITLE,
-    CATEGORY
+    CATEGORY,
+    RELEASE_YEAR,
+    PARENTAL_RATING,
+    ONLY_DISABLED
 }

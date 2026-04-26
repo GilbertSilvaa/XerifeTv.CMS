@@ -53,6 +53,14 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
               r.Categories.Any(x =>
                 x.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase)) && (!r.Disabled || dto.IsIncludeDisabled),
 
+            ESeriesSearchFilter.RELEASE_YEAR => r =>
+              r.ReleaseYear.ToString() == dto.Search && (!r.Disabled || dto.IsIncludeDisabled),
+
+            ESeriesSearchFilter.PARENTAL_RATING => r =>
+              r.ParentalRating.ToString() == dto.Search && (!r.Disabled || dto.IsIncludeDisabled),
+
+            ESeriesSearchFilter.ONLY_DISABLED => r => r.Disabled,
+
             _ => r =>
               r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
         };

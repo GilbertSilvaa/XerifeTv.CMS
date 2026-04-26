@@ -10,6 +10,8 @@
     filters.Add([EMovieSearchFilter.TITLE.ToString().ToLower(), "Titulo"]);
     filters.Add([EMovieSearchFilter.CATEGORY.ToString().ToLower(), "Categoria"]);
     filters.Add([EMovieSearchFilter.RELEASE_YEAR.ToString().ToLower(), "Ano de Lançamento"]);
+    filters.Add([EMovieSearchFilter.PARENTAL_RATING.ToString().ToLower(), "Classificação Indicativa"]);
+    filters.Add([EMovieSearchFilter.ONLY_DISABLED.ToString().ToLower(), "Somente Desativados"]);
 }
 
 <div class="container">
@@ -111,20 +113,20 @@
                         @if (!User.IsInRole("visitor"))
                         {
                             <a class="btn btn-sm btn-primary"
-                               asp-controller="Movies"
-                               asp-action="Form"
-                               asp-route-id="@movie?.Id">
+                                   asp-controller="Movies"
+                                   asp-action="Form"
+                                   asp-route-id="@movie?.Id">
                                 <i class="fa-solid fa-pen-to-square"></i>
                             </a>
                         }
 
                         <a class="btn btn-sm btn-secondary"
-                           data-bs-toggle="modal"
-                           data-bs-target="#videoModal"
-                           data-bs-title="@movie?.Title"
-                           data-bs-banner="@movie?.BannerUrl"
-                           data-bs-video-subtitle="@movie?.Video?.Subtitle"
-                           data-bs-video-resolver="@movie?.UrlResolverPath">
+                               data-bs-toggle="modal"
+                               data-bs-target="#videoModal"
+                               data-bs-title="@movie?.Title"
+                               data-bs-banner="@movie?.BannerUrl"
+                               data-bs-video-subtitle="@movie?.Video?.Subtitle"
+                               data-bs-video-resolver="@movie?.UrlResolverPath">
                             <i class="fa-solid fa-play"></i>
                         </a>
                     </div>
