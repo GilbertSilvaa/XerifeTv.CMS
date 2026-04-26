@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using System.Net;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
@@ -74,6 +75,9 @@ public class ContentV2Controller(
             return Ok(response.Data);
         }
 
+        if (response.IsFailure && response.Error.Code == "404")
+            return NotFound();
+
         return BadRequest();
     }
 
@@ -96,6 +100,9 @@ public class ContentV2Controller(
             _cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
+
+        if (response.IsFailure && response.Error.Code == "404")
+            return NotFound();
 
         return BadRequest();
     }
