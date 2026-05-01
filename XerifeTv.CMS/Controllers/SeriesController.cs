@@ -222,7 +222,7 @@ public class SeriesController(
 
 		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
 			TempData["Notification"] = MessageViewHelper
-			  .SuccessJson($"{response.Data.SuccessCount} series cadastradas com sucesso");
+			  .SuccessJson($"{response.Data.SuccessCount} series/episodios cadastrados/atualizados com sucesso");
 
 		if (response.IsSuccess)
 			return Ok(response.Data);

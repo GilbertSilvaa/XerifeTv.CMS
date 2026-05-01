@@ -91,7 +91,7 @@ public class SeriesSpreadsheetImporter(
                 var progressCount = (int)(((float)(failCount + successCount) / totalCount) * 100);
                 var _dto = new ImportSpreadsheetResponseDto(
                     TotalItemsCount: totalCount,
-                    SuccessCount: seriesSuccessCount,
+                    SuccessCount: successCount,
                     FailCount: failCount,
                     ProcessedCount: failCount + successCount,
                     ErrorList: [.. errorList],
