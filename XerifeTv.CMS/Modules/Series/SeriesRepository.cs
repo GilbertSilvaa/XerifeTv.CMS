@@ -145,6 +145,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
         var update = Builders<SeriesEntity>.Update
           .Set(r => r.ImdbId, entity.ImdbId)
+          .Set(r => r.FranchiseId, entity.FranchiseId)
           .Set(r => r.Title, entity.Title)
           .Set(r => r.Categories, entity.Categories)
           .Set(r => r.Categories, entity.Categories)
@@ -266,5 +267,10 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         var recommendedSeries = await _collection.Aggregate<SeriesEntity>(pipeline).ToListAsync();
 
         return recommendedSeries;
+    }
+
+    public async Task<long> CountByFranchiseIdAsync(string franchiseId)
+    {
+        return await _collection.CountDocumentsAsync(r => r.FranchiseId == franchiseId);
     }
 }

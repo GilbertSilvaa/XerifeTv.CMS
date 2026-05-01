@@ -128,7 +128,7 @@
                                        name="parentalRating"
                                        id="parentalRating-@year"
                                        value="@year"
-                                       @(Model?.MovieDto?.ParentalRating == year ? "checked" : "")
+                                @(Model?.MovieDto?.ParentalRating == year ? "checked" : "")
                                        required>
 
                                 <label class="form-check-label" for="parentalRating-@year">
@@ -175,6 +175,12 @@
                 </div>
             </div>
 
+            @await Html.PartialAsync("_FranchiseField", new FranchiseFieldViewModel(
+                "movie",
+                Model?.MovieDto?.FranchiseId,
+                Model?.SelectedFranchiseName,
+                Model?.Franchises ?? []))
+
             <div class="row mb-4">
                 <div class="col-6">
                     <label for="videoDuration" class="form-label">Duração(segundos)</label>
@@ -209,14 +215,14 @@
             @await Html.PartialAsync("_VideoSetting", new VideoSettingViewModel
             {
                 IdPrefix = "movie",
-                        VideoUrl = Model?.MovieDto?.Video?.Url,
-                        VideoStreamFormat = Model?.MovieDto?.Video?.StreamFormat,
-                        VideoSubtitle = Model?.MovieDto?.Video?.Subtitle,
-                        MediaDeliveryProfileId = Model?.MovieDto?.MediaDeliveryProfileId,
-                        MediaRoute = Model?.MovieDto?.MediaRoute,
-                        MediaDeliveryProfiles = Model?.MediaDeliveryProfiles ?? [],
-                        StreamFormats = StreamFormatsHelper.Vod
-                        })
+                VideoUrl = Model?.MovieDto?.Video?.Url,
+                VideoStreamFormat = Model?.MovieDto?.Video?.StreamFormat,
+                VideoSubtitle = Model?.MovieDto?.Video?.Subtitle,
+                MediaDeliveryProfileId = Model?.MovieDto?.MediaDeliveryProfileId,
+                MediaRoute = Model?.MovieDto?.MediaRoute,
+                MediaDeliveryProfiles = Model?.MediaDeliveryProfiles ?? [],
+                StreamFormats = StreamFormatsHelper.Vod
+            })
 
             <div class="row mb-4">
                 <div class="col-12">
@@ -240,7 +246,7 @@
                                    class="form-check-input"
                                    type="checkbox"
                                    value="@(movie.Disabled ? "true" : "false")"
-                                   @(movie.Disabled ? "checked" : "")>
+                            @(movie.Disabled ? "checked" : "")>
                             <label class="form-check-label" for="disabled">
                                 Desativar
                             </label>

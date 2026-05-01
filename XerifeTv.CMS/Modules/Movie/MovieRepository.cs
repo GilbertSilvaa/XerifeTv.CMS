@@ -165,4 +165,9 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
 
         return recommendedMovies;
     }
+
+    public async Task<long> CountByFranchiseIdAsync(string franchiseId)
+    {
+        return await _collection.CountDocumentsAsync(r => r.FranchiseId == franchiseId);
+    }
 }

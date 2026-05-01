@@ -1,7 +1,9 @@
-﻿@using XerifeTv.CMS.Modules.Series.Dtos.Response
+@using XerifeTv.CMS.Modules.Series.Dtos.Response
 @using XerifeTv.CMS.Shared.Helpers
+@using XerifeTv.CMS.Views.Series.Models
+@using XerifeTv.CMS.Views.Shared.Models
 
-@model GetSeriesResponseDto?
+@model SeriesFormModelView
 
 @{
   ViewData["Title"] = "Séries";
@@ -17,28 +19,28 @@
           <i class="fa fa-undo" aria-hidden="true"></i>
         </a>
         <span class="fs-3 fw-normal">
-        @(Model is GetSeriesResponseDto ? "Editar" : "Cadastrar") Série
+        @(Model?.SeriesDto is GetSeriesResponseDto ? "Editar" : "Cadastrar") Série
         </span>
       </div>
 
-        @if (Model is null)
+        @if (Model?.SeriesDto is null)
         {
             <div class="d-none d-lg-flex align-items-center gap-3">
-                <button 
+                <button
                     class="btn btn-sm btn-success d-flex justify-content-center align-items-center gap-2 shadow-none"
-                    data-bs-toggle="modal" 
+                    data-bs-toggle="modal"
                     data-bs-target="#importFromExcelModal">
                     <i class="fa-regular fa-file-excel"></i> Importar
                 </button>
-            </div>  
+            </div>
         }
     </div>
     <hr />
   </header>
-  
+
   <main>
-    <form asp-controller="Series" asp-action="@(Model is null ? "Create" : "Update")">
-      <input type="hidden" name="id" value="@Model?.Id">
+    <form asp-controller="Series" asp-action="@(Model?.SeriesDto is null ? "Create" : "Update")">
+      <input type="hidden" name="id" value="@Model?.SeriesDto?.Id">
 
       <div class="row mb-3">
         <div class="col-12 col-md-3">
@@ -50,7 +52,7 @@
               id="imdbId"
               class="form-control"
               placeholder="tt999999"
-              value="@Model?.ImdbId"
+              value="@Model?.SeriesDto?.ImdbId"
               required>
 
             <button
@@ -61,7 +63,7 @@
             </button>
           </div>
         </div>
-        
+
         <div class="col-12 col-md-5">
           <label for="title" class="form-label">Titulo</label>
           <input
@@ -70,7 +72,7 @@
             id="title"
             name="title"
             placeholder="Digite aqui..."
-            value="@Model?.Title"
+            value="@Model?.SeriesDto?.Title"
             required>
         </div>
 
@@ -83,7 +85,7 @@
               id="categories"
               class="form-control input-tags"
               placeholder="ação, aventura, comédia..."
-              value="@Model?.Categories">
+              value="@Model?.SeriesDto?.Categories">
 
             <input
               type="hidden"
@@ -99,25 +101,31 @@
 
       <div class="mb-3">
         <label for="synopsis" class="form-label">Sinopse</label>
-        <textarea 
-          id="synopsis" 
-          name="synopsis" 
-          class="form-control" 
-          placeholder="Digite aqui..." 
+        <textarea
+          id="synopsis"
+          name="synopsis"
+          class="form-control"
+          placeholder="Digite aqui..."
           style="height: 100px"
-          required>@Model?.Synopsis</textarea>
+          required>@Model?.SeriesDto?.Synopsis</textarea>
       </div>
+
+      @await Html.PartialAsync("_FranchiseField", new FranchiseFieldViewModel(
+          "series",
+          Model?.SeriesDto?.FranchiseId,
+          Model?.SelectedFranchiseName,
+          Model?.Franchises ?? []))
 
       <div class="row mb-3">
         <div class="col-12 col-md-4">
           <label for="releaseYear" class="form-label">Ano de Lançamento</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="releaseYear" 
-            name="releaseYear" 
-            placeholder="2020" 
-            value="@Model?.ReleaseYear"
+          <input
+            type="text"
+            class="form-control"
+            id="releaseYear"
+            name="releaseYear"
+            placeholder="2020"
+            value="@Model?.SeriesDto?.ReleaseYear"
             required>
         </div>
 
@@ -127,10 +135,9 @@
             @foreach (var year in ParentalRatingHelper.ParentalRatingList)
             {
               <div class="form-check form-check-inline">
-                @{
-                  if (Model?.ParentalRating == year)
-                  {
-                    <input 
+                @if (Model?.SeriesDto?.ParentalRating == year)
+                {
+                    <input
                       class="form-check-input"
                       type="radio"
                       name="parentalRating"
@@ -138,17 +145,16 @@
                       value="@year"
                       checked
                       required>
-                  }
-                  else
-                  {
-                    <input 
+                }
+                else
+                {
+                    <input
                       class="form-check-input"
                       type="radio"
                       name="parentalRating"
                       id="parentalRating-@year"
                       value="@year"
                       required>
-                  }
                 }
 
                 <label class="form-check-label" for="parentalRating-@year">
@@ -161,39 +167,39 @@
 
         <div class="col-12 col-md-3">
           <label for="review" class="form-label">Review</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="review" 
-            name="review" 
+          <input
+            type="text"
+            class="form-control"
+            id="review"
+            name="review"
             placeholder="7,9"
-            value="@Model?.Review" 
+            value="@Model?.SeriesDto?.Review"
             required>
         </div>
-      </div>  
+      </div>
 
       <div class="row mb-3">
         <div class="col-6">
           <label for="posterUrl" class="form-label">Poster (URL)</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="posterUrl" 
-            name="posterUrl" 
-            placeholder="http://imagem.com/image.jpg" 
-            value="@Model?.PosterUrl"
+          <input
+            type="text"
+            class="form-control"
+            id="posterUrl"
+            name="posterUrl"
+            placeholder="http://imagem.com/image.jpg"
+            value="@Model?.SeriesDto?.PosterUrl"
             required>
         </div>
 
         <div class="col-6">
           <label for="bannerUrl" class="form-label">Banner (URL)</label>
-          <input 
-            type="text" 
-            class="form-control" 
-            id="bannerUrl" 
-            name="bannerUrl" 
-            placeholder="http://imagem.com/image.jpg" 
-            value="@Model?.BannerUrl"
+          <input
+            type="text"
+            class="form-control"
+            id="bannerUrl"
+            name="bannerUrl"
+            placeholder="http://imagem.com/image.jpg"
+            value="@Model?.SeriesDto?.BannerUrl"
             required>
         </div>
       </div>
@@ -201,18 +207,18 @@
       <div class="mb-4">
         <div class="col-12 col-md-6">
           <label for="numberSeasons" class="form-label">Qtde Temporadas</label>
-          <input 
-            type="number" 
-            class="form-control" 
-            id="numberSeasons" 
-            name="numberSeasons" 
-            placeholder="15" 
-            value="@Model?.NumberSeasons"
+          <input
+            type="number"
+            class="form-control"
+            id="numberSeasons"
+            name="numberSeasons"
+            placeholder="15"
+            value="@Model?.SeriesDto?.NumberSeasons"
             required>
         </div>
       </div>
 
-      @if (Model is GetSeriesResponseDto)
+      @if (Model?.SeriesDto is GetSeriesResponseDto)
       {
         <div class="row mb-4">
           <div class="col-6">
@@ -222,8 +228,8 @@
                 name="disabled"
                 class="form-check-input"
                 type="checkbox"
-                value="@(Model.Disabled ? "true" : "false")"
-                @(Model.Disabled ? "checked" : "")>
+                value="@(Model.SeriesDto!.Disabled ? "true" : "false")"
+                @(Model.SeriesDto!.Disabled ? "checked" : "")>
               <label class="form-check-label" for="disabled">
                 Desativar
               </label>
@@ -231,14 +237,14 @@
           </div>
         </div>
       }
-      
+
       <hr />
       <div class="d-flex align-items-center justify-content-between">
         <button type="submit" class="btn btn-primary mt-2">
-          @(Model is GetSeriesResponseDto ? "Editar" : "Cadastrar")
+          @(Model?.SeriesDto is GetSeriesResponseDto ? "Editar" : "Cadastrar")
         </button>
 
-        @if (Model is GetSeriesResponseDto)
+        @if (Model?.SeriesDto is GetSeriesResponseDto)
         {
           <button type="button" class="btn btn-danger" onclick="deleteSeries()">
             <i class="fa fa-trash" aria-hidden="true"></i> Remover
@@ -283,15 +289,15 @@
       finally {
         $('.loading-global').hide();
       }
-      
+
     });
 
     $('#disabled').change(e => e.target.value = e.target.checked);
-    
+
     function deleteSeries() {
       if (!confirm('Deseja realmente remover a série?')) return;
 
-      location.href = '/Series/Delete/@Model?.Id'
+      location.href = '/Series/Delete/@Model?.SeriesDto?.Id'
     }
   </script>
 }

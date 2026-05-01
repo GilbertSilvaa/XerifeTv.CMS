@@ -7,6 +7,7 @@ public sealed class GetMovieResponseDto
 {
     public string Id { get; private set; } = string.Empty;
     public string ImdbId { get; private set; } = string.Empty;
+    public string? FranchiseId { get; private set; }
     public string Title { get; private set; } = string.Empty;
     public string Synopsis { get; private set; } = string.Empty;
     public string Categories { get; private set; } = string.Empty;
@@ -34,6 +35,7 @@ public sealed class GetMovieResponseDto
         {
             Id = entity.Id,
             ImdbId = entity.ImdbId,
+            FranchiseId = entity.FranchiseId,
             Title = entity.Title,
             Synopsis = entity.Synopsis,
             Categories = string.Join(", ", entity.Categories),

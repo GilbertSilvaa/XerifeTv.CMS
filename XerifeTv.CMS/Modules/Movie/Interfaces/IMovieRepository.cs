@@ -13,4 +13,5 @@ public interface IMovieRepository : IBaseRepository<MovieEntity>
     Task<MovieEntity?> GetByImdbIdAsync(string imdbId);
     Task<ICollection<CategoryCountDto>> GetCategoriesWithCountAsync();
     Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit);
+    Task<long> CountByFranchiseIdAsync(string franchiseId);
 }
