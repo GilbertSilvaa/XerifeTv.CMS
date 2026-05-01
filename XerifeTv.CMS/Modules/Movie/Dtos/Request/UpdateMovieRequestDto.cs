@@ -9,6 +9,7 @@ public class UpdateMovieRequestDto
     public string Title { get; init; } = string.Empty;
     public string Synopsis { get; init; } = string.Empty;
     public string Categories { get; init; } = string.Empty;
+    public string? FranchiseId { get; init; }
     public string PosterUrl { get; init; } = string.Empty;
     public string BannerUrl { get; init; } = string.Empty;
     public int ReleaseYear { get; init; }
@@ -35,6 +36,7 @@ public class UpdateMovieRequestDto
             Id = Id,
             Title = Title,
             ImdbId = ImdbId,
+            FranchiseId = string.IsNullOrWhiteSpace(FranchiseId) ? null : FranchiseId,
             Synopsis = Synopsis,
             Categories = categorieList,
             PosterUrl = PosterUrl,

@@ -1,4 +1,5 @@
 ﻿using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
@@ -10,7 +11,8 @@ namespace XerifeTv.CMS.Modules.Movie;
 
 public sealed class MovieService(
     IMovieRepository _repository,
-    IWebhookService _webhookService) : IMovieService
+    IWebhookService _webhookService,
+    IFranchiseService _franchiseService) : IMovieService
 {
     public async Task<Result<PagedList<GetMovieResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -146,6 +148,16 @@ public sealed class MovieService(
     {
         try
         {
+            if (dto.Filter == Enums.EMovieSearchFilter.FRANCHISE)
+            {
+                var franchiseResult = await _franchiseService.GetByNameAsync(dto.Search);
+
+                if (franchiseResult.IsFailure)
+                    return Result<PagedList<GetMovieResponseDto>>.Success(new PagedList<GetMovieResponseDto>(0, 0, []));
+
+                dto.Search = franchiseResult.Data!.Id;
+            }
+
             var response = await _repository.GetByFilterAsync(dto);
 
             var result = new PagedList<GetMovieResponseDto>(

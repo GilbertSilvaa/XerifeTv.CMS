@@ -60,6 +60,9 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
             ESeriesSearchFilter.ONLY_DISABLED => r => r.Disabled,
 
+            ESeriesSearchFilter.FRANCHISE => r =>
+              r.FranchiseId != null && r.FranchiseId.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+
             _ => r =>
               r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
         };
@@ -145,6 +148,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
         var update = Builders<SeriesEntity>.Update
           .Set(r => r.ImdbId, entity.ImdbId)
+          .Set(r => r.FranchiseId, entity.FranchiseId)
           .Set(r => r.Title, entity.Title)
           .Set(r => r.Categories, entity.Categories)
           .Set(r => r.Categories, entity.Categories)
@@ -218,12 +222,32 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         if (series == null) return Array.Empty<SeriesEntity>();
 
         var baseCategories = series.Categories;
+        List<SeriesEntity> recommendedSeries = [];
+
+        if (!string.IsNullOrEmpty(series.FranchiseId))
+        {
+            var franchiseSeries = await GetSeriesByFranchiseIdAsync(series.FranchiseId, limit, series.Id);
+            int baseYear = series.ReleaseYear;
+
+            var franchiseSeriesOrdered = franchiseSeries?
+                .OrderBy(x => x.ReleaseYear >= baseYear ? 0 : 1)
+                .ThenBy(x => Math.Abs(x.ReleaseYear - baseYear))
+                .ToList() ?? [];
+
+            recommendedSeries.AddRange(franchiseSeriesOrdered);
+        }
+
+        if (recommendedSeries.Count >= limit)
+            return [.. recommendedSeries.Take(limit)];
+
+        var idsToIgnore = new List<string> { series.Id };
+        idsToIgnore.AddRange(recommendedSeries.Select(x => x.Id));
 
         var pipeline = new[]
         {
             new BsonDocument("$match", new BsonDocument
             {
-                { "_id", new BsonDocument("$ne", series.Id) }
+                { "_id", new BsonDocument("$nin", new BsonArray(idsToIgnore)) }
             }),
 
             new BsonDocument("$addFields", new BsonDocument
@@ -260,11 +284,25 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
                 { "MatchingCount", 0 }
             }),
 
-            new BsonDocument("$limit", limit)
+            new BsonDocument("$limit", limit - recommendedSeries.Count)
         };
 
-        var recommendedSeries = await _collection.Aggregate<SeriesEntity>(pipeline).ToListAsync();
+        recommendedSeries.AddRange(await _collection.Aggregate<SeriesEntity>(pipeline).ToListAsync());
 
         return recommendedSeries;
+    }
+
+    public async Task<IEnumerable<SeriesEntity>> GetSeriesByFranchiseIdAsync(string franchiseId, int limit, string? seriesIdIgnore = null)
+    {
+        return await _collection
+            .Find(r => r.FranchiseId == franchiseId && !r.Disabled && (seriesIdIgnore == null || r.Id != seriesIdIgnore))
+            .SortBy(x => x.ReleaseYear)
+            .Limit(limit)
+            .ToListAsync();
+    }
+
+    public async Task<long> CountByFranchiseIdAsync(string franchiseId)
+    {
+        return await _collection.CountDocumentsAsync(r => r.FranchiseId == franchiseId);
     }
 }

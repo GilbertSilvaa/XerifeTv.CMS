@@ -5,6 +5,7 @@ public enum ECollection
     MOVIES,
     SERIES,
     CHANNELS,
+    FRANCHISES,
     USERS,
     BACKGROUND_JOB_QUEUE,
     WEBHOOKS,

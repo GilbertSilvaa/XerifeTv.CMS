@@ -2,6 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
+using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
@@ -21,7 +23,8 @@ public class SeriesController(
   ILogger<SeriesController> _logger,
   IEpisodesImporter _episodesImporter,
   ISpreadsheetBatchImporter<ISeriesService> _spreadsheetBatchImporter,
-  IMediaDeliveryProfileService _mediaDeliveryProfileService) : Controller
+  IMediaDeliveryProfileService _mediaDeliveryProfileService,
+  IFranchiseService _franchiseService) : Controller
 {
 	private const int limitResultsPage = 20;
 
@@ -65,13 +68,28 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> Form(string? id)
 	{
+        IEnumerable<GetFranchiseResponseDto> franchises = [];
+        string? selectedFranchiseName = null;
+
+        var franchisesResponse = await _franchiseService.GetAllAsync();
+        if (franchisesResponse.IsSuccess) franchises = franchisesResponse.Data ?? [];
+
 		if (id is not null)
 		{
 			var response = await _service.GetAsync(id);
-			if (response.IsSuccess) return View(response.Data);
+			if (response.IsSuccess)
+            {
+                if (!string.IsNullOrWhiteSpace(response.Data?.FranchiseId))
+                {
+                    var franchiseResponse = await _franchiseService.GetAsync(response.Data.FranchiseId);
+                    if (franchiseResponse.IsSuccess) selectedFranchiseName = franchiseResponse.Data?.Name;
+                }
+
+                return View(new SeriesFormModelView(response.Data, franchises, selectedFranchiseName));
+            }
 		}
 
-		return View();
+		return View(new SeriesFormModelView(null, franchises, selectedFranchiseName));
 	}
 
 	[Authorize(Roles = "admin, common")]
