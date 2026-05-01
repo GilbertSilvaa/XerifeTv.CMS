@@ -1,0 +1,305 @@
+@using XerifeTv.CMS.Views.Shared.Models
+
+@model FranchiseFieldViewModel
+
+<div class="row mb-3">
+    <div class="col-12">
+        <label for="@($"{Model.IdPrefix}_franchiseName")" class="form-label">Franquia</label>
+
+        <div class="input-group">
+            <input type="text"
+                   class="form-control franchise-name-input"
+                   id="@($"{Model.IdPrefix}_franchiseName")"
+                   placeholder="Pesquise ou informe uma franquia..."
+                   value="@Model.FranchiseName"
+                   list="@($"{Model.IdPrefix}_franchiseList")"
+                   autocomplete="off" />
+
+            <input type="hidden"
+                   name="franchiseId"
+                   id="@($"{Model.IdPrefix}_franchiseId")"
+                   value="@Model.FranchiseId" />
+
+            <button class="btn btn-outline-primary shadow-none"
+                    type="button"
+                    id="@($"{Model.IdPrefix}_franchiseOpenModalButton")"
+                    data-bs-toggle="modal"
+                    data-bs-target="#@($"{Model.IdPrefix}_franchiseModal")">
+                <i class="fa-solid fa-plus" id="@($"{Model.IdPrefix}_franchiseOpenModalIcon")"></i>
+            </button>
+        </div>
+
+        <datalist id="@($"{Model.IdPrefix}_franchiseList")">
+            @foreach (var franchise in Model.Franchises)
+            {
+                <option value="@franchise.Name" data-id="@franchise.Id"></option>
+            }
+        </datalist>
+    </div>
+</div>
+
+<div class="modal fade"
+     id="@($"{Model.IdPrefix}_franchiseModal")"
+     data-bs-backdrop="static"
+     data-bs-keyboard="false"
+     tabindex="-1"
+     aria-labelledby="@($"{Model.IdPrefix}_franchiseModalLabel")"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" id="franchiseForm">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="@($"{Model.IdPrefix}_franchiseModalLabel")">
+                    Cadastrar Franquia
+                </h1>
+
+                <button type="button"
+                        class="btn-close"
+                        data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="@($"{Model.IdPrefix}_franchiseEditingId")" />
+
+                <div class="row">
+                    <div class="col-12">
+                        <label for="@($"{Model.IdPrefix}_franchiseNewName")" class="form-label">
+                            Nome da franquia
+                        </label>
+
+                        <input type="text"
+                               class="form-control shadow-sm"
+                               id="@($"{Model.IdPrefix}_franchiseNewName")"
+                               name="name"
+                               placeholder="Ex: Universo Marvel"
+                               form="franchiseForm" />
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button"
+                        class="btn btn-outline-danger me-auto d-none"
+                        id="@($"{Model.IdPrefix}_franchiseDeleteButton")">
+                    Excluir
+                </button>
+
+                <button type="button"
+                        class="btn btn-primary"
+                        id="@($"{Model.IdPrefix}_franchiseSaveButton")">
+                    Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const prefix = '@Model.IdPrefix';
+        const franchiseNameInput = document.getElementById(`${prefix}_franchiseName`);
+        const franchiseIdInput = document.getElementById(`${prefix}_franchiseId`);
+        const franchiseList = document.getElementById(`${prefix}_franchiseList`);
+        const franchiseNewNameInput = document.getElementById(`${prefix}_franchiseNewName`);
+        const franchiseEditingIdInput = document.getElementById(`${prefix}_franchiseEditingId`);
+        const franchiseSaveButton = document.getElementById(`${prefix}_franchiseSaveButton`);
+        const franchiseDeleteButton = document.getElementById(`${prefix}_franchiseDeleteButton`);
+        const franchiseOpenModalButton = document.getElementById(`${prefix}_franchiseOpenModalButton`);
+        const franchiseOpenModalIcon = document.getElementById(`${prefix}_franchiseOpenModalIcon`);
+        const franchiseModalElement = document.getElementById(`${prefix}_franchiseModal`);
+        const franchiseModalLabel = document.getElementById(`${prefix}_franchiseModalLabel`);
+
+        function findOptionByName(name) {
+            return Array.from(franchiseList.options)
+                .find(item => item.value.trim().toLowerCase() === name.trim().toLowerCase()) || null;
+        }
+
+        function findOptionById(id) {
+            return Array.from(franchiseList.options)
+                .find(item => item.dataset.id === id) || null;
+        }
+
+        function selectFranchise(franchise) {
+            if (!franchise) {
+                franchiseIdInput.value = '';
+                updateOpenModalButtonIcon();
+                return;
+            }
+
+            franchiseIdInput.value = franchise.id;
+            franchiseNameInput.value = franchise.name;
+            updateOpenModalButtonIcon();
+        }
+
+        function syncSelectedFranchise() {
+            const typedName = franchiseNameInput.value.trim();
+
+            if (!typedName) {
+                franchiseIdInput.value = '';
+                updateOpenModalButtonIcon();
+                return null;
+            }
+
+            const option = findOptionByName(typedName);
+            franchiseIdInput.value = option?.dataset.id || '';
+            updateOpenModalButtonIcon();
+
+            if (!option?.dataset.id) return null;
+
+            return {
+                id: option.dataset.id,
+                name: option.value
+            };
+        }
+
+        function updateOpenModalButtonIcon() {
+            const hasSelectedFranchise = !!franchiseIdInput.value.trim();
+
+            franchiseOpenModalButton.classList.remove('btn-outline-primary', 'btn-outline-secondary');
+            franchiseOpenModalIcon.classList.remove('fa-plus', 'fa-pen-to-square');
+
+            if (hasSelectedFranchise) {
+                franchiseOpenModalButton.classList.add('btn-outline-secondary');
+                franchiseOpenModalIcon.classList.add('fa-pen-to-square');
+                franchiseOpenModalButton.setAttribute('title', 'Editar franquia');
+                return;
+            }
+
+            franchiseOpenModalButton.classList.add('btn-outline-primary');
+            franchiseOpenModalIcon.classList.add('fa-plus');
+            franchiseOpenModalButton.setAttribute('title', 'Cadastrar franquia');
+        }
+
+        function resetModalToCreateMode() {
+            franchiseEditingIdInput.value = '';
+            franchiseNewNameInput.value = '';
+            franchiseModalLabel.textContent = 'Cadastrar Franquia';
+            franchiseDeleteButton.classList.add('d-none');
+        }
+
+        function setModalToEditMode(franchiseId, franchiseName) {
+            franchiseEditingIdInput.value = franchiseId;
+            franchiseNewNameInput.value = franchiseName;
+            franchiseModalLabel.textContent = 'Editar Franquia';
+            franchiseDeleteButton.classList.remove('d-none');
+        }
+
+        function upsertOption(franchise) {
+            const existingOptionById = findOptionById(franchise.id);
+            const optionMarkup = `<option value="${franchise.name}" data-id="${franchise.id}"></option>`;
+
+            if (existingOptionById) {
+                existingOptionById.value = franchise.name;
+                existingOptionById.dataset.id = franchise.id;
+                return;
+            }
+
+            franchiseList.insertAdjacentHTML('beforeend', optionMarkup);
+        }
+
+        function removeOption(franchiseId) {
+            const existingOption = findOptionById(franchiseId);
+            existingOption?.remove();
+        }
+
+        async function loadFranchises(search) {
+            try {
+                const response = await $.ajax({
+                    url: '/Franchises/Search',
+                    method: 'GET',
+                    data: { term: search }
+                });
+
+                franchiseList.innerHTML = (response || []).map(franchise =>
+                    `<option value="${franchise.name}" data-id="${franchise.id}"></option>`
+                ).join('');
+
+                syncSelectedFranchise();
+            }
+            catch {
+            }
+        }
+
+        updateOpenModalButtonIcon();
+
+        franchiseNameInput.addEventListener('input', function () {
+            loadFranchises(this.value);
+        });
+
+        franchiseNameInput.addEventListener('blur', syncSelectedFranchise);
+        franchiseNameInput.addEventListener('change', syncSelectedFranchise);
+
+        franchiseOpenModalButton.addEventListener('click', function () {
+            syncSelectedFranchise();
+        });
+
+        franchiseModalElement.addEventListener('show.bs.modal', function () {
+            const selectedFranchise = syncSelectedFranchise();
+
+            if (selectedFranchise) {
+                setModalToEditMode(selectedFranchise.id, selectedFranchise.name);
+                return;
+            }
+
+            resetModalToCreateMode();
+        });
+
+        franchiseModalElement.addEventListener('hidden.bs.modal', function () {
+            resetModalToCreateMode();
+        });
+
+        franchiseSaveButton.addEventListener('click', async function () {
+            const franchiseName = franchiseNewNameInput.value.trim();
+            if (!franchiseName) {
+                franchiseNewNameInput.focus();
+                return;
+            }
+
+            try {
+                const editingId = franchiseEditingIdInput.value.trim();
+                const response = await $.ajax({
+                    url: editingId ? '/Franchises/Update' : '/Franchises/Create',
+                    method: 'POST',
+                    data: editingId
+                        ? { id: editingId, name: franchiseName }
+                        : { name: franchiseName }
+                });
+
+                upsertOption(response);
+                selectFranchise(response);
+                franchiseNewNameInput.value = '';
+                bootstrap.Modal.getOrCreateInstance(franchiseModalElement).hide();
+            }
+            catch (xhr) {
+                alert(xhr?.responseText || 'Nao foi possivel cadastrar a franquia.');
+            }
+        });
+
+        franchiseDeleteButton.addEventListener('click', async function () {
+            const editingId = franchiseEditingIdInput.value.trim();
+            if (!editingId) return;
+
+            if (!confirm('Deseja realmente excluir esta franquia?')) return;
+
+            try {
+                await $.ajax({
+                    url: '/Franchises/Delete',
+                    method: 'POST',
+                    data: { id: editingId }
+                });
+
+                removeOption(editingId);
+                franchiseEditingIdInput.value = '';
+                franchiseIdInput.value = '';
+                franchiseNameInput.value = '';
+                franchiseNewNameInput.value = '';
+                bootstrap.Modal.getOrCreateInstance(franchiseModalElement).hide();
+                await loadFranchises('');
+            }
+            catch (xhr) {
+                alert(xhr?.responseText || 'Nao foi possivel excluir a franquia.');
+            }
+        });
+    })();
+</script>

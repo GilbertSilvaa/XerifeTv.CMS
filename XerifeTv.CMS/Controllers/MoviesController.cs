@@ -6,6 +6,8 @@ using XerifeTv.CMS.Modules.Movie.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
+using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.Movies.Models;
@@ -20,7 +22,8 @@ public class MoviesController(
   IImdbService _imdbService,
   ILogger<MoviesController> _logger,
   ISpreadsheetBatchImporter<IMovieService> _spreadsheetBatchImporter,
-  IMediaDeliveryProfileService _mediaDeliveryProfileService) : Controller
+  IMediaDeliveryProfileService _mediaDeliveryProfileService,
+  IFranchiseService _franchiseService) : Controller
 {
     private const int limitResultsPage = 20;
 
@@ -66,16 +69,31 @@ public class MoviesController(
     public async Task<IActionResult> Form(string? id)
     {
         IEnumerable<GetMediaDeliveryProfileResponseDto> mediaDeliveryProfiles = [];
+        IEnumerable<GetFranchiseResponseDto> franchises = [];
+        string? selectedFranchiseName = null;
+
         var mediaProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
         if (mediaProfilesResponse.IsSuccess) mediaDeliveryProfiles = mediaProfilesResponse.Data ?? [];
+
+        var franchisesResponse = await _franchiseService.GetAllAsync();
+        if (franchisesResponse.IsSuccess) franchises = franchisesResponse.Data ?? [];
 
         if (id is not null)
         {
             var response = await _service.GetAsync(id);
-            if (response.IsSuccess) return View(new MovieFormModelView(response.Data, mediaDeliveryProfiles));
+            if (response.IsSuccess)
+            {
+                if (!string.IsNullOrWhiteSpace(response.Data?.FranchiseId))
+                {
+                    var franchiseResponse = await _franchiseService.GetAsync(response.Data.FranchiseId);
+                    if (franchiseResponse.IsSuccess) selectedFranchiseName = franchiseResponse.Data?.Name;
+                }
+
+                return View(new MovieFormModelView(response.Data, mediaDeliveryProfiles, franchises, selectedFranchiseName));
+            }
         }
 
-        return View(new MovieFormModelView(null, mediaDeliveryProfiles));
+        return View(new MovieFormModelView(null, mediaDeliveryProfiles, franchises, selectedFranchiseName));
     }
 
     [Authorize(Roles = "admin, common")]

@@ -16,4 +16,6 @@ public interface ISeriesRepository : IBaseRepository<SeriesEntity>
     Task<SeriesEntity?> GetByImdbIdAsync(string imdbId);
     Task<ICollection<CategoryCountDto>> GetCategoriesWithCountAsync();
     Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit);
+    Task<IEnumerable<SeriesEntity>> GetSeriesByFranchiseIdAsync(string franchiseId, int limit, string? seriesIdIgnore = null);
+    Task<long> CountByFranchiseIdAsync(string franchiseId);
 }

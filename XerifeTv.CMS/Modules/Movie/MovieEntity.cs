@@ -6,6 +6,7 @@ namespace XerifeTv.CMS.Modules.Movie;
 public class MovieEntity : MediaContent
 {
     public string ImdbId { get; set; } = string.Empty;
+    public string? FranchiseId { get; set; }
     public ICollection<string> Categories { get; set; } = [];
     public float Review { get; set; } = 0;
     public Video? Video { get; set; }

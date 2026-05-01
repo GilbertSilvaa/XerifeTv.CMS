@@ -1,7 +1,9 @@
 ﻿using MongoDB.Driver.Linq;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
+using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -11,7 +13,8 @@ namespace XerifeTv.CMS.Modules.Series;
 
 public class SeriesService(
     ISeriesRepository _repository,
-    IWebhookService _webhookService, 
+    IWebhookService _webhookService,
+    IFranchiseService _franchiseService,
     IConfiguration _configuration) : ISeriesService
 {
     public async Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit)
@@ -54,27 +57,27 @@ public class SeriesService(
         }
     }
 
-	public async Task<Result<GetSeriesResponseDto?>> GetByImdbIdAsync(string imdbId)
-	{
-		try
-		{
-			var response = await _repository.GetByImdbIdAsync(imdbId);
+    public async Task<Result<GetSeriesResponseDto?>> GetByImdbIdAsync(string imdbId)
+    {
+        try
+        {
+            var response = await _repository.GetByImdbIdAsync(imdbId);
 
-			if (response is null)
-				return Result<GetSeriesResponseDto?>
-				  .Failure(new Error("404", "Conteudo nao encontrado"));
+            if (response is null)
+                return Result<GetSeriesResponseDto?>
+                  .Failure(new Error("404", "Conteudo nao encontrado"));
 
-			return Result<GetSeriesResponseDto?>
-			  .Success(GetSeriesResponseDto.FromEntity(response));
-		}
-		catch (Exception ex)
-		{
-			var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
-			return Result<GetSeriesResponseDto?>.Failure(error);
-		}
-	}
+            return Result<GetSeriesResponseDto?>
+              .Success(GetSeriesResponseDto.FromEntity(response));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<GetSeriesResponseDto?>.Failure(error);
+        }
+    }
 
-	public async Task<Result<string>> CreateAsync(CreateSeriesRequestDto dto)
+    public async Task<Result<string>> CreateAsync(CreateSeriesRequestDto dto)
     {
         try
         {
@@ -148,6 +151,16 @@ public class SeriesService(
     {
         try
         {
+            if (dto.Filter == Enums.ESeriesSearchFilter.FRANCHISE)
+            {
+                var franchiseResult = await _franchiseService.GetByNameAsync(dto.Search);
+
+                if (franchiseResult.IsFailure)
+                    return Result<PagedList<GetSeriesResponseDto>>.Success(new PagedList<GetSeriesResponseDto>(0, 0, []));
+
+                dto.Search = franchiseResult.Data!.Id;
+            }
+
             var response = await _repository.GetByFilterAsync(dto);
 
             var result = new PagedList<GetSeriesResponseDto>(
@@ -197,16 +210,16 @@ public class SeriesService(
                 return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
 
             var episodesResult = await GetEpisodesBySeasonAsync(dto.SerieId, dto.Season, includeDisabled: true);
-            if (episodesResult.IsFailure) 
+            if (episodesResult.IsFailure)
                 return Result<string>.Failure(episodesResult.Error);
 
             var existingEpisode = episodesResult.Data?.Episodes?
                 .Any(e => e.Season == dto.Season && e.Number == dto.Number) ?? false;
 
-            if (existingEpisode)         
+            if (existingEpisode)
                 return Result<string>.Failure(
                     new Error("409", $"Episodio nao cadastrado. [{seriesResponse.ImdbId}|T{dto.Season}:EP{dto.Number}] duplicado"));
-            
+
             await _repository.CreateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
 
             return Result<string>.Success(dto.ToEntity().Id);

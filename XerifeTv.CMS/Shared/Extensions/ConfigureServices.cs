@@ -13,6 +13,8 @@ using XerifeTv.CMS.Modules.Content;
 using XerifeTv.CMS.Modules.Content.Interfaces;
 using XerifeTv.CMS.Modules.Dashboard;
 using XerifeTv.CMS.Modules.Dashboard.Interfaces;
+using XerifeTv.CMS.Modules.Franchise;
+using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Integrations.Webhook;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
@@ -51,6 +53,7 @@ public static class ConfigureServices
 		services.AddScoped<IMovieRepository, MovieRepository>();
 		services.AddScoped<ISeriesRepository, SeriesRepository>();
 		services.AddScoped<IChannelRepository, ChannelRepository>();
+		services.AddScoped<IFranchiseRepository, FranchiseRepository>();
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IWebhookRepository, WebhookRepository>();
 		services.AddScoped<IMediaDeliveryProfileRepository, MediaDeliveryProfileRepository>();
@@ -62,6 +65,7 @@ public static class ConfigureServices
 		services.AddScoped<IMovieService, MovieService>();
 		services.AddScoped<ISeriesService, SeriesService>();
 		services.AddScoped<IChannelService, ChannelService>();
+		services.AddScoped<IFranchiseService, FranchiseService>();
 		services.AddScoped<IDashboardService, DashboardService>();
 		services.AddScoped<IContentV1Service, ContentV1Service>();
         services.AddScoped<IContentV2Service, ContentV2Service>();

@@ -34,6 +34,9 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
 
             EMovieSearchFilter.ONLY_DISABLED => r => r.Disabled,
 
+            EMovieSearchFilter.FRANCHISE => r =>
+              r.FranchiseId != null && r.FranchiseId.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+
             _ => r =>
               r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
         };
@@ -116,12 +119,32 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
         if (movie == null) return Array.Empty<MovieEntity>();
 
         var baseCategories = movie.Categories;
+        List<MovieEntity> recommendedMovies = [];
+
+        if (!string.IsNullOrEmpty(movie.FranchiseId))
+        {
+            var franchiseMovies = await GetMoviesByFranchiseIdAsync(movie.FranchiseId, limit, movie.Id);
+            int baseYear = movie.ReleaseYear;
+
+            var franchiseMoviesOrdered = franchiseMovies?
+                .OrderBy(x => x.ReleaseYear >= baseYear ? 0 : 1)
+                .ThenBy(x => Math.Abs(x.ReleaseYear - baseYear))
+                .ToList() ?? [];
+
+            recommendedMovies.AddRange(franchiseMoviesOrdered);
+        }
+
+        if (recommendedMovies.Count >= limit)
+            return [.. recommendedMovies.Take(limit)];
+
+        var idsToIgnore = new List<string> { movie.Id };
+        idsToIgnore.AddRange(recommendedMovies.Select(x => x.Id));
 
         var pipeline = new[]
         {
             new BsonDocument("$match", new BsonDocument
             {
-                { "_id", new BsonDocument("$ne", movie.Id) }
+                { "_id", new BsonDocument("$nin", new BsonArray(idsToIgnore)) }
             }),
 
             new BsonDocument("$addFields", new BsonDocument
@@ -158,11 +181,25 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
                 { "MatchingCount", 0 }
             }),
 
-            new BsonDocument("$limit", limit)
+            new BsonDocument("$limit", limit - recommendedMovies.Count)
         };
 
-        var recommendedMovies = await _collection.Aggregate<MovieEntity>(pipeline).ToListAsync();
+        recommendedMovies.AddRange(await _collection.Aggregate<MovieEntity>(pipeline).ToListAsync());
 
         return recommendedMovies;
+    }
+
+    public async Task<IEnumerable<MovieEntity>> GetMoviesByFranchiseIdAsync(string franchiseId, int limit, string? movieIdIgnore = null)
+    {
+        return await _collection
+            .Find(r => r.FranchiseId == franchiseId && !r.Disabled && (movieIdIgnore == null || r.Id != movieIdIgnore))
+            .SortBy(x => x.ReleaseYear)
+            .Limit(limit)
+            .ToListAsync();
+    }
+
+    public async Task<long> CountByFranchiseIdAsync(string franchiseId)
+    {
+        return await _collection.CountDocumentsAsync(r => r.FranchiseId == franchiseId);
     }
 }

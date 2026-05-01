@@ -5,6 +5,7 @@ namespace XerifeTv.CMS.Modules.Series;
 public sealed class SeriesEntity : MediaContent
 {
     public string ImdbId { get; set; } = string.Empty;
+    public string? FranchiseId { get; set; }
     public ICollection<string> Categories { get; set; } = [];
     public float Review { get; set; }
     public int NumberSeasons { get; set; } = 1;

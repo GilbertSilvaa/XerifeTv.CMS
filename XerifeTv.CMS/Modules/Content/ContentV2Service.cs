@@ -1,8 +1,10 @@
 ﻿using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
+using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Modules.Series;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
 
