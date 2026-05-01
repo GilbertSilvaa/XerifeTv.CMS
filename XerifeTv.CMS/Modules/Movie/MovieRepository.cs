@@ -113,16 +113,32 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
             })];
     }
 
-    public async Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit, string[]? ignoreMovieIds = null)
+    public async Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit)
     {
         var movie = await _collection.Find(r => r.Id == movieId).FirstOrDefaultAsync();
         if (movie == null) return Array.Empty<MovieEntity>();
 
         var baseCategories = movie.Categories;
-        var idsToIgnore = new List<string> { movie.Id };
+        List<MovieEntity> recommendedMovies = [];
 
-        if (ignoreMovieIds != null && ignoreMovieIds.Length > 0)
-            idsToIgnore.AddRange(ignoreMovieIds);
+        if (!string.IsNullOrEmpty(movie.FranchiseId))
+        {
+            var franchiseMovies = await GetMoviesByFranchiseIdAsync(movie.FranchiseId, limit, movie.Id);
+            int baseYear = movie.ReleaseYear;
+
+            var franchiseMoviesOrdered = franchiseMovies?
+                .OrderBy(x => x.ReleaseYear >= baseYear ? 0 : 1)
+                .ThenBy(x => Math.Abs(x.ReleaseYear - baseYear))
+                .ToList() ?? [];
+
+            recommendedMovies.AddRange(franchiseMoviesOrdered);
+        }
+
+        if (recommendedMovies.Count >= limit)
+            return [.. recommendedMovies.Take(limit)];
+
+        var idsToIgnore = new List<string> { movie.Id };
+        idsToIgnore.AddRange(recommendedMovies.Select(x => x.Id));
 
         var pipeline = new[]
         {
@@ -165,10 +181,10 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
                 { "MatchingCount", 0 }
             }),
 
-            new BsonDocument("$limit", limit)
+            new BsonDocument("$limit", limit - recommendedMovies.Count)
         };
 
-        var recommendedMovies = await _collection.Aggregate<MovieEntity>(pipeline).ToListAsync();
+        recommendedMovies.AddRange(await _collection.Aggregate<MovieEntity>(pipeline).ToListAsync());
 
         return recommendedMovies;
     }

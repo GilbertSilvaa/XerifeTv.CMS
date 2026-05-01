@@ -216,17 +216,32 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
             })];
     }
 
-    public async Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit, string[]? ignoreSeriesIds = null)
+    public async Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit)
     {
         var series = await _collection.Find(r => r.Id == seriesId).FirstOrDefaultAsync();
         if (series == null) return Array.Empty<SeriesEntity>();
 
         var baseCategories = series.Categories;
+        List<SeriesEntity> recommendedSeries = [];
+
+        if (!string.IsNullOrEmpty(series.FranchiseId))
+        {
+            var franchiseSeries = await GetSeriesByFranchiseIdAsync(series.FranchiseId, limit, series.Id);
+            int baseYear = series.ReleaseYear;
+
+            var franchiseSeriesOrdered = franchiseSeries?
+                .OrderBy(x => x.ReleaseYear >= baseYear ? 0 : 1)
+                .ThenBy(x => Math.Abs(x.ReleaseYear - baseYear))
+                .ToList() ?? [];
+
+            recommendedSeries.AddRange(franchiseSeriesOrdered);
+        }
+
+        if (recommendedSeries.Count >= limit)
+            return [.. recommendedSeries.Take(limit)];
 
         var idsToIgnore = new List<string> { series.Id };
-
-        if (ignoreSeriesIds != null && ignoreSeriesIds.Length > 0)
-            idsToIgnore.AddRange(ignoreSeriesIds);
+        idsToIgnore.AddRange(recommendedSeries.Select(x => x.Id));
 
         var pipeline = new[]
         {
@@ -269,10 +284,10 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
                 { "MatchingCount", 0 }
             }),
 
-            new BsonDocument("$limit", limit)
+            new BsonDocument("$limit", limit - recommendedSeries.Count)
         };
 
-        var recommendedSeries = await _collection.Aggregate<SeriesEntity>(pipeline).ToListAsync();
+        recommendedSeries.AddRange(await _collection.Aggregate<SeriesEntity>(pipeline).ToListAsync());
 
         return recommendedSeries;
     }

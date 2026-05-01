@@ -15,7 +15,7 @@ public interface ISeriesRepository : IBaseRepository<SeriesEntity>
     Task<bool> DeleteEpisodeAsync(string serieId, string episodeId);
     Task<SeriesEntity?> GetByImdbIdAsync(string imdbId);
     Task<ICollection<CategoryCountDto>> GetCategoriesWithCountAsync();
-    Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit, string[]? ignoreSeriesIds = null);
+    Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit);
     Task<IEnumerable<SeriesEntity>> GetSeriesByFranchiseIdAsync(string franchiseId, int limit, string? seriesIdIgnore = null);
     Task<long> CountByFranchiseIdAsync(string franchiseId);
 }
