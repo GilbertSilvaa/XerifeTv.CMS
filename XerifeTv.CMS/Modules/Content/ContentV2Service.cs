@@ -1,8 +1,10 @@
 ﻿using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
+using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Modules.Series;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
 
@@ -176,7 +178,35 @@ public class ContentV2Service(
     {
         try
         {
-            var recommendedMovies = await _movieRepository.GetMoviesRecommendedByMovieIdAsync(movieId, 15);
+            var movie = await _movieRepository.GetAsync(movieId);
+
+            if (movie is null || movie.Disabled)
+                return Result<IEnumerable<MovieContentV2ResponseDto>>.Failure(new("404", "Conteudo nao encontrado"));
+
+            List<MovieEntity> recommendedMovies = [];
+
+            if (!string.IsNullOrEmpty(movie.FranchiseId))
+            {
+                var franchiseMovies = await _movieRepository.GetMoviesByFranchiseIdAsync(movie.FranchiseId, 15, movieId);
+                int baseYear = movie.ReleaseYear;
+
+                var franchiseMoviesOrdered = franchiseMovies?
+                    .OrderBy(x => x.ReleaseYear >= baseYear ? 0 : 1)
+                    .ThenBy(x => Math.Abs(x.ReleaseYear - baseYear))
+                    .ToList() ?? [];
+
+                recommendedMovies.AddRange(franchiseMoviesOrdered);
+            }
+
+            if (recommendedMovies.Count < 15)
+            {
+                var recommendedByCategoriesMovies = await _movieRepository.GetMoviesRecommendedByMovieIdAsync(
+                    movieId,
+                    limit: 15 - recommendedMovies.Count,
+                    ignoreMovieIds: [.. recommendedMovies.Select(m => m.Id)]);
+
+                recommendedMovies.AddRange(recommendedByCategoriesMovies);
+            }
 
             return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(
                 recommendedMovies?.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
@@ -191,7 +221,34 @@ public class ContentV2Service(
     {
         try
         {
-            var recommendedSeries = await _seriesRepository.GetSeriesRecommendedBySeriesIdAsync(seriesId, 15);
+            var series = await _seriesRepository.GetAsync(seriesId);
+            if (series is null || series.Disabled)
+                return Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>.Failure(new("404", "Conteudo nao encontrado"));
+
+            List<SeriesEntity> recommendedSeries = [];
+
+            if (!string.IsNullOrEmpty(series.FranchiseId))
+            {
+                var franchiseSeries = await _seriesRepository.GetSeriesByFranchiseIdAsync(series.FranchiseId, 15, seriesId);
+                int baseYear = series.ReleaseYear;
+
+                var franchiseSeriesOrdered = franchiseSeries?
+                    .OrderBy(x => x.ReleaseYear >= baseYear ? 0 : 1)
+                    .ThenBy(x => Math.Abs(x.ReleaseYear - baseYear))
+                    .ToList() ?? [];
+
+                recommendedSeries.AddRange(franchiseSeriesOrdered);
+            }
+
+            if (recommendedSeries.Count < 15)
+            {
+                var recommendedSeriesByCategories = await _seriesRepository.GetSeriesRecommendedBySeriesIdAsync(
+                    seriesId,
+                    limit: 15 - recommendedSeries.Count,
+                    ignoreSeriesIds: [.. recommendedSeries.Select(s => s.Id)]);
+
+                recommendedSeries.AddRange(recommendedSeriesByCategories);
+            }
 
             return Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>.Success(
                 recommendedSeries?.Select(SeriesSummaryContentV2ResponseDto.FromEntity) ?? []);

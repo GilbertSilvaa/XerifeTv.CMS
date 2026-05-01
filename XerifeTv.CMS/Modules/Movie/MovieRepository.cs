@@ -113,18 +113,22 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
             })];
     }
 
-    public async Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit)
+    public async Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit, string[]? ignoreMovieIds = null)
     {
         var movie = await _collection.Find(r => r.Id == movieId).FirstOrDefaultAsync();
         if (movie == null) return Array.Empty<MovieEntity>();
 
         var baseCategories = movie.Categories;
+        var idsToIgnore = new List<string> { movie.Id };
+
+        if (ignoreMovieIds != null && ignoreMovieIds.Length > 0)
+            idsToIgnore.AddRange(ignoreMovieIds);
 
         var pipeline = new[]
         {
             new BsonDocument("$match", new BsonDocument
             {
-                { "_id", new BsonDocument("$ne", movie.Id) }
+                { "_id", new BsonDocument("$nin", new BsonArray(idsToIgnore)) }
             }),
 
             new BsonDocument("$addFields", new BsonDocument
@@ -167,6 +171,15 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
         var recommendedMovies = await _collection.Aggregate<MovieEntity>(pipeline).ToListAsync();
 
         return recommendedMovies;
+    }
+
+    public async Task<IEnumerable<MovieEntity>> GetMoviesByFranchiseIdAsync(string franchiseId, int limit, string? movieIdIgnore = null)
+    {
+        return await _collection
+            .Find(r => r.FranchiseId == franchiseId && !r.Disabled && (movieIdIgnore == null || r.Id != movieIdIgnore))
+            .SortBy(x => x.ReleaseYear)
+            .Limit(limit)
+            .ToListAsync();
     }
 
     public async Task<long> CountByFranchiseIdAsync(string franchiseId)

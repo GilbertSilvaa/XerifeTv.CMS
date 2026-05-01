@@ -216,18 +216,23 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
             })];
     }
 
-    public async Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit)
+    public async Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit, string[]? ignoreSeriesIds = null)
     {
         var series = await _collection.Find(r => r.Id == seriesId).FirstOrDefaultAsync();
         if (series == null) return Array.Empty<SeriesEntity>();
 
         var baseCategories = series.Categories;
 
+        var idsToIgnore = new List<string> { series.Id };
+
+        if (ignoreSeriesIds != null && ignoreSeriesIds.Length > 0)
+            idsToIgnore.AddRange(ignoreSeriesIds);
+
         var pipeline = new[]
         {
             new BsonDocument("$match", new BsonDocument
             {
-                { "_id", new BsonDocument("$ne", series.Id) }
+                { "_id", new BsonDocument("$nin", new BsonArray(idsToIgnore)) }
             }),
 
             new BsonDocument("$addFields", new BsonDocument
@@ -270,6 +275,15 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         var recommendedSeries = await _collection.Aggregate<SeriesEntity>(pipeline).ToListAsync();
 
         return recommendedSeries;
+    }
+
+    public async Task<IEnumerable<SeriesEntity>> GetSeriesByFranchiseIdAsync(string franchiseId, int limit, string? seriesIdIgnore = null)
+    {
+        return await _collection
+            .Find(r => r.FranchiseId == franchiseId && !r.Disabled && (seriesIdIgnore == null || r.Id != seriesIdIgnore))
+            .SortBy(x => x.ReleaseYear)
+            .Limit(limit)
+            .ToListAsync();
     }
 
     public async Task<long> CountByFranchiseIdAsync(string franchiseId)

@@ -1,7 +1,6 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
-using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 
 namespace XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -12,6 +11,7 @@ public interface IMovieRepository : IBaseRepository<MovieEntity>
     Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto);
     Task<MovieEntity?> GetByImdbIdAsync(string imdbId);
     Task<ICollection<CategoryCountDto>> GetCategoriesWithCountAsync();
-    Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit);
+    Task<ICollection<MovieEntity>> GetMoviesRecommendedByMovieIdAsync(string movieId, int limit, string[]? ignoreMovieIds = null);
+    Task<IEnumerable<MovieEntity>> GetMoviesByFranchiseIdAsync(string franchiseId, int limit, string? movieIdIgnore = null);
     Task<long> CountByFranchiseIdAsync(string franchiseId);
 }
