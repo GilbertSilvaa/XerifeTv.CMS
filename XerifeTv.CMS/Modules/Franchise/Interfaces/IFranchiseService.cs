@@ -8,6 +8,7 @@ public interface IFranchiseService
 {
     Task<Result<IEnumerable<GetFranchiseResponseDto>>> GetAllAsync();
     Task<Result<IEnumerable<GetFranchiseResponseDto>>> SearchByNameAsync(string search);
+    Task<Result<GetFranchiseResponseDto?>> GetByNameAsync(string name);
     Task<Result<GetFranchiseResponseDto?>> GetAsync(string id);
     Task<Result<GetFranchiseResponseDto>> CreateAsync(CreateFranchiseRequestDto dto);
     Task<Result<GetFranchiseResponseDto>> UpdateAsync(UpdateFranchiseRequestDto dto);

@@ -60,6 +60,9 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
             ESeriesSearchFilter.ONLY_DISABLED => r => r.Disabled,
 
+            ESeriesSearchFilter.FRANCHISE => r =>
+              r.FranchiseId != null && r.FranchiseId.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+
             _ => r =>
               r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
         };

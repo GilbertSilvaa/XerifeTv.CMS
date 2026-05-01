@@ -6,5 +6,6 @@ public enum EMovieSearchFilter
     CATEGORY,
     RELEASE_YEAR,
     PARENTAL_RATING,
-    ONLY_DISABLED
+    ONLY_DISABLED,
+    FRANCHISE
 }

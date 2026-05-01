@@ -34,6 +34,9 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
 
             EMovieSearchFilter.ONLY_DISABLED => r => r.Disabled,
 
+            EMovieSearchFilter.FRANCHISE => r =>
+              r.FranchiseId != null && r.FranchiseId.Equals(dto.Search.Trim(), StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled),
+
             _ => r =>
               r.Title.Contains(dto.Search, StringComparison.CurrentCultureIgnoreCase) && (!r.Disabled || dto.IsIncludeDisabled)
         };

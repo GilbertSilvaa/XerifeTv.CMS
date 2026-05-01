@@ -44,6 +44,25 @@ public class FranchiseService(
         }
     }
 
+    public async Task<Result<GetFranchiseResponseDto?>> GetByNameAsync(string name)
+    {
+        try
+        {
+            var response = await _repository.GetByNameAsync(name);
+
+            if (response == null)
+                return Result<GetFranchiseResponseDto?>.Failure(
+                    new Error("404", "Franquia nao encontrada"));
+
+            return Result<GetFranchiseResponseDto?>.Success(GetFranchiseResponseDto.FromEntity(response));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<GetFranchiseResponseDto?>.Failure(error);
+        }
+    }
+
     public async Task<Result<GetFranchiseResponseDto?>> GetAsync(string id)
     {
         try
