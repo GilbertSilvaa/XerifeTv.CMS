@@ -226,7 +226,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
         if (!string.IsNullOrEmpty(series.FranchiseId))
         {
-            var franchiseSeries = await GetSeriesByFranchiseIdAsync(series.FranchiseId, limit, series.Id);
+            var franchiseSeries = await GetSeriesByFranchiseIdAsync(series.FranchiseId, limit: 0, series.Id);
             int baseYear = series.ReleaseYear;
 
             var franchiseSeriesOrdered = franchiseSeries?
@@ -297,7 +297,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
         return await _collection
             .Find(r => r.FranchiseId == franchiseId && !r.Disabled && (seriesIdIgnore == null || r.Id != seriesIdIgnore))
             .SortBy(x => x.ReleaseYear)
-            .Limit(limit)
+            .Limit(limit > 0 ? limit : null)
             .ToListAsync();
     }
 
