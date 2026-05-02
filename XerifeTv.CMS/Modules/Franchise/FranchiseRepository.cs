@@ -20,10 +20,14 @@ public sealed class FranchiseRepository(IOptions<DBSettings> options)
     public async Task<IEnumerable<Franchise>> SearchByNameAsync(string search)
     {
         if (string.IsNullOrWhiteSpace(search))
-            return await GetAllAsync();
+            return [];
+
+        var normalizedSearch = search.Trim();
+        if (normalizedSearch.Length < 2)
+            return [];
 
         return await _collection
-            .Find(r => r.Name.Contains(search, StringComparison.CurrentCultureIgnoreCase))
+            .Find(r => r.Name.Contains(normalizedSearch, StringComparison.CurrentCultureIgnoreCase))
             .SortBy(r => r.Name)
             .Limit(20)
             .ToListAsync();

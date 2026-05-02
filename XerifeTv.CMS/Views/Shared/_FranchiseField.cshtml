@@ -109,6 +109,10 @@
         const franchiseOpenModalIcon = document.getElementById(`${prefix}_franchiseOpenModalIcon`);
         const franchiseModalElement = document.getElementById(`${prefix}_franchiseModal`);
         const franchiseModalLabel = document.getElementById(`${prefix}_franchiseModalLabel`);
+        const minSearchLength = 2;
+        const searchDebounceInMs = 250;
+        let searchTimeoutId = null;
+        let latestSearchRequest = 0;
 
         function findOptionByName(name) {
             return Array.from(franchiseList.options)
@@ -203,13 +207,29 @@
             existingOption?.remove();
         }
 
+        function clearSearchResults() {
+            franchiseList.innerHTML = '';
+        }
+
         async function loadFranchises(search) {
+            const normalizedSearch = (search || '').trim();
+            if (normalizedSearch.length < minSearchLength) {
+                latestSearchRequest += 1;
+                clearSearchResults();
+                syncSelectedFranchise();
+                return;
+            }
+
+            const requestId = ++latestSearchRequest;
+
             try {
                 const response = await $.ajax({
                     url: '/Franchises/Search',
                     method: 'GET',
-                    data: { term: search }
+                    data: { term: normalizedSearch }
                 });
+
+                if (requestId !== latestSearchRequest) return;
 
                 franchiseList.innerHTML = (response || []).map(franchise =>
                     `<option value="${franchise.name}" data-id="${franchise.id}"></option>`
@@ -224,7 +244,15 @@
         updateOpenModalButtonIcon();
 
         franchiseNameInput.addEventListener('input', function () {
-            loadFranchises(this.value);
+            const search = this.value;
+
+            if (searchTimeoutId) {
+                window.clearTimeout(searchTimeoutId);
+            }
+
+            searchTimeoutId = window.setTimeout(function () {
+                loadFranchises(search);
+            }, searchDebounceInMs);
         });
 
         franchiseNameInput.addEventListener('blur', syncSelectedFranchise);

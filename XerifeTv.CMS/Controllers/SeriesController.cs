@@ -71,9 +71,6 @@ public class SeriesController(
         IEnumerable<GetFranchiseResponseDto> franchises = [];
         string? selectedFranchiseName = null;
 
-        var franchisesResponse = await _franchiseService.GetAllAsync();
-        if (franchisesResponse.IsSuccess) franchises = franchisesResponse.Data ?? [];
-
 		if (id is not null)
 		{
 			var response = await _service.GetAsync(id);
@@ -82,7 +79,11 @@ public class SeriesController(
                 if (!string.IsNullOrWhiteSpace(response.Data?.FranchiseId))
                 {
                     var franchiseResponse = await _franchiseService.GetAsync(response.Data.FranchiseId);
-                    if (franchiseResponse.IsSuccess) selectedFranchiseName = franchiseResponse.Data?.Name;
+                    if (franchiseResponse.IsSuccess && franchiseResponse.Data is not null)
+                    {
+                        selectedFranchiseName = franchiseResponse.Data.Name;
+                        franchises = [franchiseResponse.Data];
+                    }
                 }
 
                 return View(new SeriesFormModelView(response.Data, franchises, selectedFranchiseName));

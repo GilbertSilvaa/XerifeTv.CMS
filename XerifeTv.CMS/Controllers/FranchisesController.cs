@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
 using XerifeTv.CMS.Modules.Franchise.Dtos.Request;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 
@@ -13,6 +14,9 @@ public class FranchisesController(
     [HttpGet]
     public async Task<IActionResult> Search(string? term)
     {
+        if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
+            return Ok(Enumerable.Empty<GetFranchiseResponseDto>());
+
         var response = await _service.SearchByNameAsync(term ?? string.Empty);
 
         if (response.IsFailure)
