@@ -123,7 +123,7 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
 
         if (!string.IsNullOrEmpty(movie.FranchiseId))
         {
-            var franchiseMovies = await GetMoviesByFranchiseIdAsync(movie.FranchiseId, limit, movie.Id);
+            var franchiseMovies = await GetMoviesByFranchiseIdAsync(movie.FranchiseId, limit: 0, movie.Id);
             int baseYear = movie.ReleaseYear;
 
             var franchiseMoviesOrdered = franchiseMovies?
@@ -194,7 +194,7 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
         return await _collection
             .Find(r => r.FranchiseId == franchiseId && !r.Disabled && (movieIdIgnore == null || r.Id != movieIdIgnore))
             .SortBy(x => x.ReleaseYear)
-            .Limit(limit)
+            .Limit(limit > 0 ? limit : null)
             .ToListAsync();
     }
 
