@@ -286,8 +286,8 @@ public class ContentV2Service(
             {
                 FeaturedContent = featuredContent,
                 FeaturedContentType = featuredType,
-                MovieCategores = (await GetMoviesCategoriesAsync(5)).Data ?? [],
-                SeriesCategores = (await GetSeriesCategoriesAsync(5)).Data ?? []
+                MovieCategores = (await GetMoviesCategoriesAsync(6)).Data ?? [],
+                SeriesCategores = (await GetSeriesCategoriesAsync(6)).Data ?? []
             });
         }
         catch (Exception ex)
@@ -304,6 +304,7 @@ public class ContentV2Service(
         try
         {
             var moviesByCategories = await _movieRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
+            moviesByCategories = CategoryDistributor.SpreadCategories(moviesByCategories);
 
             return Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>.Success(new(
                 currentPage: page,
@@ -326,6 +327,7 @@ public class ContentV2Service(
         try
         {
             var seriesByCategories = await _seriesRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
+            seriesByCategories = CategoryDistributor.SpreadCategories(seriesByCategories);
 
             return Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>.Success(new(
                 currentPage: page,
