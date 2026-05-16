@@ -145,7 +145,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesCategoriesAsync(12);
+        var response = await _service.GetMoviesCategoriesAsync(15);
 
         if (response.IsSuccess)
         {
@@ -166,7 +166,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesCategoriesAsync(12);
+        var response = await _service.GetSeriesCategoriesAsync(15);
 
         if (response.IsSuccess)
         {
