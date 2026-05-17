@@ -1,6 +1,5 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.Entities;
 using XerifeTv.CMS.Modules.Common;
-using XerifeTv.CMS.Modules.Movie;
 
 namespace XerifeTv.CMS.Modules.Content;
 
@@ -8,59 +7,51 @@ public static class CategoryDistributor
 {
     public static IEnumerable<ItemsByCategory<T>> SpreadCategories<T>(IEnumerable<ItemsByCategory<T>> categories) where T : BaseEntity
     {
-        if (categories.Count() <= 1)
-            return [.. categories];
+        var categoryList = categories.ToList();
 
-        var categoryItemSets = categories.ToDictionary(
-            c => c.Category,
-            c => c.Items
-                .Select(x => x.Id)
-                .ToHashSet());
+        if (categoryList.Count <= 2)
+            return categoryList;
 
-        var similarityMatrix = new Dictionary<string, Dictionary<string, int>>();
+        int count = categoryList.Count;
 
-        foreach (var categoryA in categories)
+        var itemSets = categoryList
+            .Select(x => x.Items.Select(i => i.Id).ToHashSet())
+            .ToArray();
+
+        var similarity = new int[count, count];
+
+        Parallel.For(0, count, i =>
         {
-            similarityMatrix[categoryA.Category] = [];
-
-            foreach (var categoryB in categories)
+            for (int j = i + 1; j < count; j++)
             {
-                if (categoryA.Category == categoryB.Category)
-                    continue;
-
-                var setA = categoryItemSets[categoryA.Category];
-                var setB = categoryItemSets[categoryB.Category];
+                var setA = itemSets[i];
+                var setB = itemSets[j];
 
                 var smaller = setA.Count < setB.Count ? setA : setB;
                 var larger = setA.Count < setB.Count ? setB : setA;
 
-                int commonCount = 0;
+                int common = 0;
 
                 foreach (var item in smaller)
                 {
                     if (larger.Contains(item))
-                        commonCount++;
+                        common++;
                 }
 
-                similarityMatrix[categoryA.Category][categoryB.Category] = commonCount;
+                similarity[i, j] = common;
+                similarity[j, i] = common;
             }
-        }
+        });
 
-        var remaining = categories.ToList();
-        var result = new List<ItemsByCategory<T>>();
+        var result = new List<int>(count);
+        var remaining = new HashSet<int>(Enumerable.Range(0, count));
 
-        var start = categories
-            .OrderByDescending(c =>
-                similarityMatrix[c.Category].Values.Sum())
-            .First();
-
-        result.Add(start);
-        remaining.Remove(start);
+        result.Add(0);
+        remaining.Remove(0);
 
         while (remaining.Count > 0)
         {
-            ItemsByCategory<T>? bestCandidate = null;
-
+            int bestCandidate = -1;
             int bestScore = int.MaxValue;
 
             foreach (var candidate in remaining)
@@ -69,8 +60,7 @@ public static class CategoryDistributor
 
                 foreach (var selected in result)
                 {
-                    score += similarityMatrix[candidate.Category]
-                        .GetValueOrDefault(selected.Category);
+                    score += similarity[candidate, selected];
                 }
 
                 if (score < bestScore)
@@ -80,10 +70,10 @@ public static class CategoryDistributor
                 }
             }
 
-            result.Add(bestCandidate!);
-            remaining.Remove(bestCandidate!);
+            result.Add(bestCandidate);
+            remaining.Remove(bestCandidate);
         }
 
-        return result;
+        return result.Select(i => categoryList[i]);
     }
 }
