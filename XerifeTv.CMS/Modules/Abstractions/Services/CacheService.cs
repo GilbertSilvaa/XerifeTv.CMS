@@ -6,8 +6,8 @@ namespace XerifeTv.CMS.Modules.Abstractions.Services;
 public sealed class CacheService(IMemoryCache _cache) : ICacheService
 {
     private readonly MemoryCacheEntryOptions _cacheOptions = new MemoryCacheEntryOptions()
-      .SetSlidingExpiration(TimeSpan.FromSeconds(300))
-      .SetAbsoluteExpiration(TimeSpan.FromSeconds(900))
+      .SetSlidingExpiration(TimeSpan.FromMinutes(10))
+      .SetAbsoluteExpiration(TimeSpan.FromMinutes(30))
       .SetPriority(CacheItemPriority.Normal);
 
     public T? GetValue<T>(string key)
