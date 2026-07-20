@@ -121,7 +121,7 @@
                 <div>
                     @if (!string.IsNullOrEmpty(Model?.Id) && User.IsInRole("admin"))
                     {
-                        <button type="button" class="btn btn-danger" onclick="deleteUser('@Model?.Id')">
+                        <button type="button" class="btn btn-outline-danger" onclick="deleteUser('@Model?.Id')">
                             Remover
                         </button>
                     }

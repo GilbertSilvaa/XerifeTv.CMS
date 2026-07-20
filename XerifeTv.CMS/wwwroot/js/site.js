@@ -130,7 +130,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const positionTagIndex = tagsValue.split(',').length;
 
             $(this).siblings('.container-tags ').append(`
-                <div class="rounded-1 bg-secondary text-light py-0 px-2 d-flex justify-content-between align-items-center gap-2">
+                <div class="rounded-0 bg-secondary text-light py-0 px-2 d-flex justify-content-between align-items-center gap-2">
                   <span class="fw-normal text-nowrap">${tag.substring(0, 30)}</span>
                   <button
                     type="button"

@@ -31,12 +31,12 @@
             onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
             alt="poster" 
             class="d-none d-md-block w-25 h-100 top-50 position-absolute" 
-            style="left: 1rem; border: 3px solid #FFF; border-radius: 1rem;" />
+            style="left: 1rem; border: 1.5px solid #FFF;" />
 
           @if (!string.IsNullOrEmpty(Model.Video?.Subtitle))
           {
             <span
-              class="badge text-bg-secondary bg-info position-absolute"
+              class="badge text-bg-secondary bg-warning position-absolute"
               style="top: 0.5rem; left: 0.5rem;">
               CC
             </span>
