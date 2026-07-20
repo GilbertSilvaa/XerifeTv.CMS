@@ -74,8 +74,8 @@
     <div class="row gap-3">
         @foreach (var serie in Model)
         {
-            <div class="card col-md-4 col-xl-2 pt-1">
-                <div class="w-auto h-100 position-relative">
+            <div class="card col-md-4 col-xl-2 pt-2">
+                <div class="w-auto h-100 position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#seriesDetailsModal-@serie.Id">
                     <img src="@serie.PosterUrl"
                          onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
                          class="card-img-top object-fit-cover"
@@ -92,31 +92,27 @@
                     }
                 </div>
 
-                <div class="card-body">
-                    <h5 class="card-title text-nowrap overflow-hidden text-truncate">@serie.Title</h5>
-                    <p class="card-text">@serie.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
+                <div class="card-body" style="padding: 1rem 0.25rem;">
+                    <h5 class="card-title text-nowrap overflow-hidden text-truncate text-center">@serie.Title</h5>
 
-                    <div class="d-flex gap-1">
-                        <a class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#seriesDetailsModal-@serie.Id">
-                            <i class="fa-solid fa-eye"></i>
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <a class="btn btn-sm btn-info"
+                           asp-controller="Series"
+                           asp-action="Episodes"
+                           asp-route-id="@serie.Id">
+                            <i class="fa-solid fa-list"></i> Episódios
                         </a>
 
                         @if (!User.IsInRole("visitor"))
                         {
                             <a class="btn btn-sm btn-primary"
-                                   asp-controller="Series"
-                                   asp-action="Form"
-                                   asp-route-id="@serie.Id">
-                                <i class="fa-solid fa-pen-to-square"></i>
+                               asp-controller="Series"
+                               asp-action="Form"
+                               asp-route-id="@serie.Id">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar
                             </a>
                         }
 
-                        <a class="btn btn-sm btn-info"
-                               asp-controller="Series"
-                               asp-action="Episodes"
-                               asp-route-id="@serie.Id">
-                            <i class="fa-solid fa-list"></i>
-                        </a>
                     </div>
                 </div>
             </div>
