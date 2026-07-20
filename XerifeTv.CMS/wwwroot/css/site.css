@@ -32,7 +32,6 @@ html {
 }
 
 .card-dashboard {
-  border-radius: 4px;
   height: 10rem;
   display: flex;
   flex-direction: column;
