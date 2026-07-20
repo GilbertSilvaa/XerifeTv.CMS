@@ -93,7 +93,7 @@
                 </div>
 
                 <div class="row mb-4">
-                   
+
                     <div class="col-6">
                         <label for="videoDuration" class="form-label">Duração(segundos)</label>
                         <input type="text"
@@ -146,7 +146,7 @@
                                        class="form-check-input disabled"
                                        type="checkbox"
                                        value="@(Model?.Episode?.Disabled == true ? "true" : "false")"
-                                       @(Model?.Episode?.Disabled == true ? "checked" : "")>
+                                @(Model?.Episode?.Disabled == true ? "checked" : "")>
                                 <label for="episode_@(Model?.Episode?.Id)_disabled" class="form-check-label">
                                     Desativar
                                 </label>
@@ -157,16 +157,18 @@
             </div>
 
             <div class="modal-footer d-flex justify-content-between">
+                <div>
+                    @if (!string.IsNullOrEmpty(Model?.Episode?.Id))
+                    {
+                        <button type="button" class="btn btn-danger" onclick="remove('@Model?.Episode?.Id')">
+                            Remover
+                        </button>
+                    }
+                </div>
+
                 <button type="submit" class="btn btn-primary">
                     @(string.IsNullOrEmpty(Model?.Episode?.Id) ? "Cadastrar" : "Editar")
                 </button>
-
-                @if (!string.IsNullOrEmpty(Model?.Episode?.Id))
-                {
-                    <button type="button" class="btn btn-danger" onclick="remove('@Model?.Episode?.Id')">
-                        Excluir
-                    </button>
-                }
             </div>
         </form>
     </div>

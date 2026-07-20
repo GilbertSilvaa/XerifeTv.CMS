@@ -128,7 +128,7 @@
                                    class="form-check-input"
                                    type="checkbox"
                                    value="@(channel.Disabled ? "true" : "false")"
-                                   @(channel.Disabled ? "checked" : "")>
+                            @(channel.Disabled ? "checked" : "")>
                             <label class="form-check-label" for="disabled">
                                 Desativar
                             </label>
@@ -139,16 +139,18 @@
 
             <hr />
             <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    @if (Model?.ChannelDto is GetChannelResponseDto)
+                    {
+                        <button type="button" class="btn btn-danger" onclick="deleteChannel()">
+                            <i class="fa fa-trash" aria-hidden="true"></i> Remover
+                        </button>
+                    }
+                </div>
+
                 <button type="submit" class="btn btn-primary mt-2">
                     @(Model?.ChannelDto is GetChannelResponseDto ? "Editar" : "Cadastrar")
                 </button>
-
-                @if (Model?.ChannelDto is GetChannelResponseDto)
-                {
-                    <button type="button" class="btn btn-danger" onclick="deleteChannel()">
-                        <i class="fa fa-trash" aria-hidden="true"></i> Remover
-                    </button>
-                }
             </div>
         </form>
     </main>
@@ -157,8 +159,8 @@
 @section scripts {
     <script defer>
         function deleteChannel() {
-          if (!confirm('Deseja realmente remover o canal?')) return;
-          location.href = '/Channels/Delete/@Model?.ChannelDto?.Id'
+            if (!confirm('Deseja realmente remover o canal?')) return;
+            location.href = '/Channels/Delete/@Model?.ChannelDto?.Id'
         }
 
         $('#disabled').change(e => e.target.value = e.target.checked);

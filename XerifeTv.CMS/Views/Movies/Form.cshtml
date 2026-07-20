@@ -257,16 +257,18 @@
 
             <hr />
             <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    @if (Model?.MovieDto is GetMovieResponseDto)
+                    {
+                        <button type="button" class="btn btn-danger" onclick="deleteMovie()">
+                            <i class="fa fa-trash" aria-hidden="true"></i> Remover
+                        </button>
+                    }
+                </div>
+
                 <button type="submit" class="btn btn-primary mt-2">
                     @(Model?.MovieDto is GetMovieResponseDto ? "Editar" : "Cadastrar")
                 </button>
-
-                @if (Model?.MovieDto is GetMovieResponseDto)
-                {
-                    <button type="button" class="btn btn-danger" onclick="deleteMovie()">
-                        <i class="fa fa-trash" aria-hidden="true"></i> Remover
-                    </button>
-                }
             </div>
         </form>
     </main>
@@ -275,37 +277,37 @@
 @section scripts {
     <script>
         async function getMovieByTmdb(imdbId) {
-          const response = await fetch(`/Movies/GetByImdbId?imdbId=${imdbId}`);
-          return await response.json();
+            const response = await fetch(`/Movies/GetByImdbId?imdbId=${imdbId}`);
+            return await response.json();
         }
 
         $('#btn-get-imdb').click(async (e) => {
-          e.preventDefault();
+            e.preventDefault();
 
-          try {
-            $('.loading-global .label').text('Importando os dados, por favor aguarde...');
-            $('.loading-global').show();
+            try {
+                $('.loading-global .label').text('Importando os dados, por favor aguarde...');
+                $('.loading-global').show();
 
-            const imdbId = $('#imdbId').val();
-            if (!imdbId) return;
+                const imdbId = $('#imdbId').val();
+                if (!imdbId) return;
 
-            const response = await getMovieByTmdb(imdbId);
-            if (!response) return;
+                const response = await getMovieByTmdb(imdbId);
+                if (!response) return;
 
-            $('#title').val(response.title);
-            $('#categories').val(response.genres.map(g => g.name.toLowerCase()).join(', '));
-            $('#categories').blur();
+                $('#title').val(response.title);
+                $('#categories').val(response.genres.map(g => g.name.toLowerCase()).join(', '));
+                $('#categories').blur();
 
-            $('#synopsis').val(response.overview);
-            $('#releaseYear').val(response.releaseYear);
-            $('#review').val(String(response.voteAverage).replace(',', '.'));
-            $('#posterUrl').val(response.posterUrl);
-            $('#bannerUrl').val(response.bannerUrl);
-            $('#videoDuration').val(response.durationInSeconds);
-          }
-          finally {
-            $('.loading-global').hide();
-          }
+                $('#synopsis').val(response.overview);
+                $('#releaseYear').val(response.releaseYear);
+                $('#review').val(String(response.voteAverage).replace(',', '.'));
+                $('#posterUrl').val(response.posterUrl);
+                $('#bannerUrl').val(response.bannerUrl);
+                $('#videoDuration').val(response.durationInSeconds);
+            }
+            finally {
+                $('.loading-global').hide();
+            }
         });
 
         $('#trailerVideoYoutubeId').blur(function() {
@@ -317,24 +319,24 @@
         $('#disabled').change(e => e.target.value = e.target.checked);
 
         $('#videoDuration').keyup(e =>
-          $('#videoDuration').val(convertHHmmToSeconds(e.target.value)));
+            $('#videoDuration').val(convertHHmmToSeconds(e.target.value)));
 
         function deleteMovie() {
-          if (!confirm('Deseja realmente remover o filme?')) return;
-          location.href = '/Movies/Delete/@Model?.MovieDto?.Id';
+            if (!confirm('Deseja realmente remover o filme?')) return;
+            location.href = '/Movies/Delete/@Model?.MovieDto?.Id';
         }
 
         function extractYouTubeVideoId(input) {
-          const trimmedInput = input.trim();
+            const trimmedInput = input.trim();
 
-          if (trimmedInput.length === 11 && !trimmedInput.includes('/') && !trimmedInput.includes('.')) {
-            return trimmedInput;
-          }
+            if (trimmedInput.length === 11 && !trimmedInput.includes('/') && !trimmedInput.includes('.')) {
+                return trimmedInput;
+            }
 
-          const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
-          const match = trimmedInput.match(regExp);
+            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = trimmedInput.match(regExp);
 
-          return (match && match[2].length === 11) ? match[2] : null;
+            return (match && match[2].length === 11) ? match[2] : null;
         }
 
     </script>
