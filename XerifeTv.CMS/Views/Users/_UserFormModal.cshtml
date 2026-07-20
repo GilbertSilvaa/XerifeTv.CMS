@@ -105,7 +105,7 @@
                                            class="form-check-input"
                                            type="checkbox"
                                            value="@((Model?.Blocked ?? false) ? "true" : "false")"
-                                           @((Model?.Blocked ?? false) ? "checked" : "")>
+                                    @((Model?.Blocked ?? false) ? "checked" : "")>
 
                                     <label class="form-check-label" for="blocked-@Model?.Id">
                                         Bloquear
@@ -118,16 +118,19 @@
 
             </div>
             <div class="modal-footer d-flex justify-content-between">
+                <div>
+                    @if (!string.IsNullOrEmpty(Model?.Id) && User.IsInRole("admin"))
+                    {
+                        <button type="button" class="btn btn-danger" onclick="deleteUser('@Model?.Id')">
+                            Remover
+                        </button>
+                    }
+                </div>
+
                 <button type="submit" class="btn btn-primary">
                     @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
                 </button>
 
-                @if (!string.IsNullOrEmpty(Model?.Id) && User.IsInRole("admin"))
-                {
-                    <button type="button" class="btn btn-danger" onclick="deleteUser('@Model?.Id')">
-                        Excluir
-                    </button>
-                }
             </div>
         </form>
     </div>
@@ -136,7 +139,7 @@
 @if (!string.IsNullOrEmpty(Model?.Id))
 {
     <script>
-        document.querySelector(`#blocked-@Model?.Id`).addEventListener('change', function (e) {
+        document.querySelector(`#blocked-@Model?.Id`).addEventListener('change', function(e) {
             e.target.value = e.target.checked;
         });
     </script>

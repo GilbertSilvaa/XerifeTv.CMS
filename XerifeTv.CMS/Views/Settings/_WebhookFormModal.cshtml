@@ -191,7 +191,7 @@
                                        class="form-check-input"
                                        type="checkbox"
                                        value="@(Model!.IsDisabled ? "true" : "false")"
-                                       @(Model!.IsDisabled ? "checked" : "")>
+                                @(Model!.IsDisabled ? "checked" : "")>
                                 <label class="form-check-label" for="isDisabled-@Model?.Id">
                                     Desativar
                                 </label>
@@ -201,16 +201,18 @@
                 }
             </div>
             <div class="modal-footer d-flex justify-content-between">
+                <div>
+                    @if (!string.IsNullOrEmpty(Model?.Id))
+                    {
+                        <a role="button" class="btn btn-danger btn-delete-webhook-@Model?.Id">
+                            Remover
+                        </a>
+                    }
+                </div>
+
                 <button type="submit" class="btn btn-primary">
                     @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
                 </button>
-
-                @if (!string.IsNullOrEmpty(Model?.Id))
-                {
-                    <a role="button" class="btn btn-danger btn-delete-webhook-@Model?.Id">
-                        <i class="fa fa-trash" aria-hidden="true"></i> Remover
-                    </a>
-                }
             </div>
         </form>
     </div>
@@ -248,7 +250,7 @@
         textarea.selectionStart = textarea.selectionEnd = start + value.length;
     }
 
-    document.getElementById('triggerEvent-@Model?.Id').addEventListener('change', function () {
+    document.getElementById('triggerEvent-@Model?.Id').addEventListener('change', function() {
         document.querySelector('div[data-target="payloadTemplate-@Model?.Id"]').innerHTML = '';
 
         const selectedOption = this.options[this.selectedIndex];
@@ -258,17 +260,17 @@
 
         for (keyword of keywords) {
             document.querySelector('div[data-target="payloadTemplate-@Model?.Id"]').insertAdjacentHTML('beforeend', `
-                <button type="button"
-                        class="btn btn-sm btn-outline-secondary text-secondary-emphasis text-start shadow-sm template-var-@Model?.Id"
-                        data-value="${keyword}"
-                        onclick="addKeywordInPaylodTemplate(this)">
-                    ${keyword}
-                </button>
-            `);
+                    <button type="button"
+                            class="btn btn-sm btn-outline-secondary text-secondary-emphasis text-start shadow-sm template-var-@Model?.Id"
+                            data-value="${keyword}"
+                            onclick="addKeywordInPaylodTemplate(this)">
+                        ${keyword}
+                    </button>
+                `);
         }
     });
 
-    document.getElementById('httpMethod-@Model?.Id').addEventListener('change', function () {
+    document.getElementById('httpMethod-@Model?.Id').addEventListener('change', function() {
         if (this.value.toUpperCase() == 'GET' || this.value.toUpperCase() == 'DELETE') {
             document.querySelector('.payload-template-container-@Model?.Id').style.display = 'none';
         }
@@ -277,11 +279,11 @@
         }
     });
 
-    document.getElementById('isDisabled-@Model?.Id')?.addEventListener('change', function () {
+    document.getElementById('isDisabled-@Model?.Id')?.addEventListener('change', function() {
         this.value = this.checked;
     });
 
-    document.querySelector('.btn-delete-webhook-@Model?.Id')?.addEventListener('click', function () {
+    document.querySelector('.btn-delete-webhook-@Model?.Id')?.addEventListener('click', function() {
         if (!confirm('Deseja realmente remover o webhook?')) return;
         location.href = '@Url.Action("DeleteWebhook", new { id = Model?.Id })';
     });
