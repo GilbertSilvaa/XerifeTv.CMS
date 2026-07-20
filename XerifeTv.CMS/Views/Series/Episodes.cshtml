@@ -109,22 +109,25 @@
                                 </small>
                             </p>
 
-                            @if (!User.IsInRole("visitor"))
-                            {
-                                <a class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episode.Id">
-                                    <i class="fa-solid fa-pen-to-square"></i>
+                            <div class="d-flex gap-2">
+                                <a class="btn btn-sm btn-info"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#videoModal"
+                                   data-bs-title="@episode.Title"
+                                   data-bs-banner="@episode.BannerUrl"
+                                   data-bs-video-subtitle="@episode.Video?.Subtitle"
+                                   data-bs-video-resolver="@episode.UrlResolverPath">
+                                    <i class="fa-solid fa-play"></i> Play
                                 </a>
-                            }
 
-                            <a class="btn btn-sm btn-secondary"
-                               data-bs-toggle="modal"
-                               data-bs-target="#videoModal"
-                               data-bs-title="@episode.Title"
-                               data-bs-banner="@episode.BannerUrl"
-                               data-bs-video-subtitle="@episode.Video?.Subtitle"
-                               data-bs-video-resolver="@episode.UrlResolverPath">
-                                <i class="fa-solid fa-play"></i>
-                            </a>
+                                @if (!User.IsInRole("visitor"))
+                                {
+                                    <a class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episode.Id">
+                                        <i class="fa-solid fa-pen-to-square"></i> Editar
+                                    </a>
+                                }
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -147,52 +150,52 @@
         $('#seasonFilter').change(e => {
             $('.loading-global .label').text('Carregando, por favor aguarde...');
             $('.loading-global').show();
-                location.href = `/Series/Episodes/@Model?.EpisodesDto?.SerieId?seasonFilter=${e.target.value}`;
+            location.href = `/Series/Episodes/@Model?.EpisodesDto?.SerieId?seasonFilter=${e.target.value}`;
         });
 
         $('.duration').keyup(e =>
-          $(e.target).val(convertHHmmToSeconds(e.target.value)))
+            $(e.target).val(convertHHmmToSeconds(e.target.value)))
 
         $('.disabled').change(e => e.target.value = e.target.checked);
 
         function remove(id) {
-          if (!confirm('Deseja realmento excluir o episódio?')) return;
-              location.href = `/Series/DeleteEpisode?serieId=@Model?.EpisodesDto?.SerieId&id=${id}`;
+            if (!confirm('Deseja realmento excluir o episódio?')) return;
+            location.href = `/Series/DeleteEpisode?serieId=@Model?.EpisodesDto?.SerieId&id=${id}`;
         }
 
         function uploadSubtitleFile() {
-          const fileInput = $('#subtitle-file')[0];
-          const file = fileInput.files[0];
+            const fileInput = $('#subtitle-file')[0];
+            const file = fileInput.files[0];
 
-          if (!file) return;
+            if (!file) return;
 
-          const formData = new FormData();
-          formData.append('file', file);
+            const formData = new FormData();
+            formData.append('file', file);
 
-          $('.btn-subtitle-file').attr('disabled', 'true');
-          $('.loading-global .label').text('Processando upload, por favor aguarde...');
-          $('.loading-global').show();
+            $('.btn-subtitle-file').attr('disabled', 'true');
+            $('.loading-global .label').text('Processando upload, por favor aguarde...');
+            $('.loading-global').show();
 
-          fetch('/StorageFiles/UploadFile', {
-            method: 'POST',
-            body: formData
-          })
-            .then(response => response.json())
-            .then(({ isSuccess, data }) => {
-              if (isSuccess) $('.videoSubtitle:visible').val(data);
+            fetch('/StorageFiles/UploadFile', {
+                method: 'POST',
+                body: formData
             })
-            .finally(() => {
-              $('.btn-subtitle-file').removeAttr('disabled');
-              $('.loading-global').hide();
-            })
+                .then(response => response.json())
+                .then(({ isSuccess, data }) => {
+                    if (isSuccess) $('.videoSubtitle:visible').val(data);
+                })
+                .finally(() => {
+                    $('.btn-subtitle-file').removeAttr('disabled');
+                    $('.loading-global').hide();
+                })
         }
 
         $('#btn-import-episodes').click(async () => {
-            if(!confirm('Confirmar ação?')) return;
+            if (!confirm('Confirmar ação?')) return;
 
             if (confirm('Deseja executar o processamento em segundo plano?')) {
                 const formDataBackgroundJob = new FormData();
-                    formDataBackgroundJob.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                formDataBackgroundJob.append('seriesId', '@Model?.EpisodesDto?.SerieId');
 
                 await fetch(`/BackgroundJobQueue/AddJobInQueueImportEpisodesSeries`, {
                     method: 'POST',
@@ -209,7 +212,7 @@
 
             try {
                 const formData = new FormData();
-                    formData.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                formData.append('seriesId', '@Model?.EpisodesDto?.SerieId');
 
                 var response = await fetch('/Series/ImportEpisodesByImdbId', {
                     method: 'POST',
@@ -249,7 +252,7 @@
 
                 }, 2500);
             }
-            catch(error) {
+            catch (error) {
                 console.error(error);
 
                 clearInterval(monitorProgressInterval);

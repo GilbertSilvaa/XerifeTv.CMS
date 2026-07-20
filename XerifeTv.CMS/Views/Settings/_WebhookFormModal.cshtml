@@ -167,7 +167,7 @@
                                     foreach (var keyword in Model.TriggerEvent.GetKeywords())
                                     {
                                         <button type="button"
-                                                class="btn btn-sm btn-outline-secondary text-start shadow-sm template-var-@Model?.Id"
+                                                class="btn btn-sm btn-outline-secondary text-secondary-emphasis text-start shadow-sm template-var-@Model?.Id"
                                                 data-value="@keyword"
                                                 onclick="addKeywordInPaylodTemplate(this)">
                                             @keyword
@@ -259,7 +259,7 @@
         for (keyword of keywords) {
             document.querySelector('div[data-target="payloadTemplate-@Model?.Id"]').insertAdjacentHTML('beforeend', `
                 <button type="button"
-                        class="btn btn-sm btn-outline-secondary text-start shadow-sm template-var-@Model?.Id"
+                        class="btn btn-sm btn-outline-secondary text-secondary-emphasis text-start shadow-sm template-var-@Model?.Id"
                         data-value="${keyword}"
                         onclick="addKeywordInPaylodTemplate(this)">
                     ${keyword}

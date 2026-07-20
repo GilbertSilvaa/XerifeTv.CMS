@@ -77,8 +77,8 @@
     <div class="row gap-3">
         @foreach (var movie in Model)
         {
-            <div class="card col-md-4 col-xl-2 pt-1">
-                <div class="w-auto h-100 position-relative">
+            <div class="card col-md-4 col-xl-2 pt-2">
+                <div class="w-auto h-100 position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#movielDetailsModal-@movie?.Id">
                     <img src="@movie.PosterUrl"
                          onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
                          class="card-img-top object-fit-cover"
@@ -102,34 +102,32 @@
                     }
                 </div>
 
-                <div class="card-body">
-                    <h5 class="card-title text-nowrap overflow-hidden text-truncate">@movie?.Title</h5>
-                    <p class="card-text">@movie?.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
+                <div class="card-body" style="padding: 1rem 0.25rem;">
+                    <h5 class="card-title text-nowrap overflow-hidden text-truncate text-center">@movie?.Title</h5>
 
-                    <div class="d-flex gap-1">
-                        <a class="btn btn-sm btn-success" data-bs-toggle="modal" data-bs-target="#movielDetailsModal-@movie?.Id">
-                            <i class="fa-solid fa-eye"></i>
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+
+                        <a class="btn btn-sm btn-info"
+                           data-bs-toggle="modal"
+                           data-bs-target="#videoModal"
+                           data-bs-title="@movie?.Title"
+                           data-bs-banner="@movie?.BannerUrl"
+                           data-bs-video-subtitle="@movie?.Video?.Subtitle"
+                           data-bs-video-resolver="@movie?.UrlResolverPath">
+                            <i class="fa-solid fa-play"></i> Play
                         </a>
 
                         @if (!User.IsInRole("visitor"))
                         {
                             <a class="btn btn-sm btn-primary"
-                                   asp-controller="Movies"
-                                   asp-action="Form"
-                                   asp-route-id="@movie?.Id">
-                                <i class="fa-solid fa-pen-to-square"></i>
+                               asp-controller="Movies"
+                               asp-action="Form"
+                               asp-route-id="@movie?.Id">
+                                <i class="fa-solid fa-pen-to-square"></i> Editar
                             </a>
                         }
 
-                        <a class="btn btn-sm btn-secondary"
-                               data-bs-toggle="modal"
-                               data-bs-target="#videoModal"
-                               data-bs-title="@movie?.Title"
-                               data-bs-banner="@movie?.BannerUrl"
-                               data-bs-video-subtitle="@movie?.Video?.Subtitle"
-                               data-bs-video-resolver="@movie?.UrlResolverPath">
-                            <i class="fa-solid fa-play"></i>
-                        </a>
+                        
                     </div>
                 </div>
             </div>

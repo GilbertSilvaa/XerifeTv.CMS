@@ -73,7 +73,7 @@
     <div class="row gap-3">
         @foreach (var channel in Model)
         {
-            <div class="card col-md-4 col-xl-2 pt-1">
+            <div class="card col-md-4 col-xl-2 pt-2">
                 <div class="w-auto h-100 position-relative">
                     <img src="@channel.LogoUrl"
                          onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
@@ -92,29 +92,29 @@
 
                 </div>
 
-                <div class="card-body">
-                    <h5 class="card-title text-nowrap overflow-hidden text-truncate">@channel.Title</h5>
-                    <p class="card-text">@channel.Categories.Split(",").Select(x => x.Trim()).FirstOrDefault()</p>
+                <div class="card-body" style="padding: 1rem 0.25rem;">
+                    <h5 class="card-title text-nowrap overflow-hidden text-truncate text-center">@channel.Title</h5>
 
-                    <div class="d-flex gap-1">
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <a class="btn btn-sm btn-info"
+                           data-bs-toggle="modal"
+                           data-bs-target="#videoModal"
+                           data-bs-title="@channel.Title"
+                           data-bs-banner="@channel.LogoUrl"
+                           data-bs-video-resolver="@channel?.UrlResolverPath">
+                            <i class="fa-solid fa-play"></i> Play
+                        </a>
+
                         @if (!User.IsInRole("visitor"))
                         {
                             <a class="btn btn-sm btn-primary"
                                asp-controller="Channels"
                                asp-action="Form"
                                asp-route-id="@channel.Id">
-                                <i class="fa-solid fa-pen-to-square"></i>
+                                <i class="fa-solid fa-pen-to-square"></i> Editar
                             </a>
                         }
 
-                        <a class="btn btn-sm btn-secondary"
-                           data-bs-toggle="modal"
-                           data-bs-target="#videoModal"
-                           data-bs-title="@channel.Title"
-                           data-bs-banner="@channel.LogoUrl"
-                           data-bs-video-resolver="@channel?.UrlResolverPath">
-                            <i class="fa-solid fa-play"></i>
-                        </a>
                     </div>
                 </div>
             </div>
