@@ -15,6 +15,7 @@ public class GetSeriesResponseDto
     public float Review { get; private set; }
     public DateTime RegistrationDate { get; private set; }
     public int NumberSeasons { get; private set; }
+    public string? TrailerVideoYoutubeId { get; private set; }
     public bool Disabled { get; private set; } = false;
 
     public static GetSeriesResponseDto FromEntity(SeriesEntity entity)
@@ -34,7 +35,8 @@ public class GetSeriesResponseDto
             Review = entity.Review,
             RegistrationDate = entity.CreateAt,
             NumberSeasons = entity.NumberSeasons,
-            Disabled = entity.Disabled
+            Disabled = entity.Disabled,
+            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId
         };
     }
 }

@@ -17,6 +17,7 @@ public class UpdateSeriesRequestDto
     public float Review { get; init; }
     public int NumberSeasons { get; init; }
     public bool Disabled { get; init; } = false;
+    public string? TrailerVideoYoutubeId { get; init; }
 
     public SeriesEntity ToEntity()
     {
@@ -39,7 +40,8 @@ public class UpdateSeriesRequestDto
             ParentalRating = ParentalRating,
             NumberSeasons = NumberSeasons,
             Review = Review,
-            Disabled = Disabled
+            Disabled = Disabled,
+            TrailerVideoYoutubeId = TrailerVideoYoutubeId
         };
     }
 }

@@ -14,6 +14,7 @@ public class GetSeriesContentResponseDto
     public int ParentalRating { get; private set; }
     public float Review { get; private set; }
     public int NumberSeasons { get; private set; }
+    public string? TrailerVideoYoutubeId { get; private set; }
 
     public static GetSeriesContentResponseDto FromEntity(SeriesEntity entity)
     {
@@ -28,7 +29,8 @@ public class GetSeriesContentResponseDto
             ReleaseYear = entity.ReleaseYear,
             ParentalRating = entity.ParentalRating,
             Review = entity.Review,
-            NumberSeasons = entity.NumberSeasons
+            NumberSeasons = entity.NumberSeasons,
+            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId
         };
     }
 }
