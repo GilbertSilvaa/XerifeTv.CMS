@@ -10,5 +10,6 @@ public sealed class SeriesEntity : MediaContent
     public float Review { get; set; }
     public int NumberSeasons { get; set; } = 1;
     public ICollection<Episode> Episodes { get; set; } = [];
+    public string? TrailerVideoYoutubeId { get; set; }
     public bool Disabled { get; set; } = false;
 }

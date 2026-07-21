@@ -15,6 +15,7 @@ public class CreateSeriesRequestDto
     public int ParentalRating { get; init; }
     public float Review { get; init; }
     public int NumberSeasons { get; init; }
+    public string? TrailerVideoYoutubeId { get; init; }
 
     public SeriesEntity ToEntity()
     {
@@ -35,7 +36,8 @@ public class CreateSeriesRequestDto
             ReleaseYear = ReleaseYear,
             ParentalRating = ParentalRating,
             NumberSeasons = NumberSeasons,
-            Review = Review
+            Review = Review,
+            TrailerVideoYoutubeId = TrailerVideoYoutubeId
         };
     }
 }

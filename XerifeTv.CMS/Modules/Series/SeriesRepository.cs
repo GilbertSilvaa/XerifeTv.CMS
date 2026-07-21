@@ -160,6 +160,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
           .Set(r => r.ReleaseYear, entity.ReleaseYear)
           .Set(r => r.ParentalRating, entity.ParentalRating)
           .Set(r => r.UpdateAt, DateTime.UtcNow)
+          .Set(r => r.TrailerVideoYoutubeId, entity.TrailerVideoYoutubeId)
           .Set(r => r.Disabled, entity.Disabled);
 
         await _collection.UpdateOneAsync(filter, update);

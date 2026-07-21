@@ -14,6 +14,7 @@ public class SeriesSummaryContentV2ResponseDto
     public double RatingImdb { get; private set; }
     public string Synopsis { get; private set; } = string.Empty;
     public int TotalSeasons { get; private set; }
+    public string? TrailerVideoYoutubeId { get; private set; }
     public bool HasSubtitles { get; private set; }
 
     public static SeriesSummaryContentV2ResponseDto FromEntity(SeriesEntity entity)
@@ -30,6 +31,7 @@ public class SeriesSummaryContentV2ResponseDto
             RatingImdb = entity.Review,
             Synopsis = entity.Synopsis,
             TotalSeasons = entity.NumberSeasons,
+            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId,
             HasSubtitles = false
         };
     }

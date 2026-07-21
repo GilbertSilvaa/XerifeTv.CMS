@@ -191,16 +191,26 @@
                 </div>
             </div>
 
-            <div class="mb-4">
-                <div class="col-12 col-md-6">
-                    <label for="numberSeasons" class="form-label">Qtde Temporadas</label>
-                    <input type="number"
+            <div class="col-12 col-md-6 mb-3">
+                <label for="numberSeasons" class="form-label">Qtde Temporadas</label>
+                <input type="number"
+                       class="form-control"
+                       id="numberSeasons"
+                       name="numberSeasons"
+                       placeholder="15"
+                       value="@Model?.SeriesDto?.NumberSeasons"
+                       required>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-12">
+                    <label for="trailerVideoYoutubeId" class="form-label">Trailer (YouTube Video ID)</label>
+                    <input type="text"
                            class="form-control"
-                           id="numberSeasons"
-                           name="numberSeasons"
-                           placeholder="15"
-                           value="@Model?.SeriesDto?.NumberSeasons"
-                           required>
+                           id="trailerVideoYoutubeId"
+                           name="trailerVideoYoutubeId"
+                           placeholder="Cole o link ou o ID do vídeo..."
+                           value="@Model?.SeriesDto?.TrailerVideoYoutubeId">
                 </div>
             </div>
 
@@ -279,12 +289,31 @@
 
         });
 
+        $('#trailerVideoYoutubeId').blur(function() {
+            const url = $(this).val();
+            const youtubeId = extractYouTubeVideoId(url);
+            $(this).val(youtubeId);
+        });
+
         $('#disabled').change(e => e.target.value = e.target.checked);
 
         function deleteSeries() {
             if (!confirm('Deseja realmente remover a série?')) return;
 
             location.href = '/Series/Delete/@Model?.SeriesDto?.Id'
+        }
+
+        function extractYouTubeVideoId(input) {
+            const trimmedInput = input.trim();
+
+            if (trimmedInput.length === 11 && !trimmedInput.includes('/') && !trimmedInput.includes('.')) {
+                return trimmedInput;
+            }
+
+            const regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            const match = trimmedInput.match(regExp);
+
+            return (match && match[2].length === 11) ? match[2] : null;
         }
     </script>
 }
