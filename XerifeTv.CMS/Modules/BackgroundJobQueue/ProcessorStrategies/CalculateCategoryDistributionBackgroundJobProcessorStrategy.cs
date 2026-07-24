@@ -138,7 +138,7 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
             .Select(x => x.Items.Select(i => i.Id).ToHashSet())
             .ToArray();
 
-        var similarity = new double[count, count];
+        var similarity = new int[count, count];
 
         Parallel.For(0, count, i =>
         {
@@ -151,68 +151,47 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
                 var larger = setA.Count < setB.Count ? setB : setA;
 
                 int common = 0;
+
                 foreach (var item in smaller)
                 {
                     if (larger.Contains(item))
                         common++;
                 }
 
-                int union = setA.Count + setB.Count - common;
-                double jaccard = union == 0 ? 0.0 : (double)common / union;
-
-                similarity[i, j] = jaccard;
-                similarity[j, i] = jaccard;
+                similarity[i, j] = common;
+                similarity[j, i] = common;
             }
         });
 
-        int startA = 0, startB = 1;
-        double lowestPairSimilarity = double.MaxValue;
-
-        for (int i = 0; i < count; i++)
-        {
-            for (int j = i + 1; j < count; j++)
-            {
-                if (similarity[i, j] < lowestPairSimilarity)
-                {
-                    lowestPairSimilarity = similarity[i, j];
-                    startA = i;
-                    startB = j;
-                }
-            }
-        }
-
-        var result = new List<int>(count) { startA };
+        var result = new List<int>(count);
         var remaining = new HashSet<int>(Enumerable.Range(0, count));
-        remaining.Remove(startA);
 
-        var score = new double[count];
-        foreach (var c in remaining)
-            score[c] = similarity[startA, c];
+        result.Add(0);
+        remaining.Remove(0);
 
         while (remaining.Count > 0)
         {
             int bestCandidate = -1;
-            double bestScore = double.MaxValue;
-            int bestOriginalIndex = int.MaxValue;
+            int bestScore = int.MaxValue;
 
             foreach (var candidate in remaining)
             {
-                double s = score[candidate];
+                int score = 0;
 
-                if (s < bestScore || (s == bestScore && candidate < bestOriginalIndex))
+                foreach (var selected in result)
                 {
-                    bestScore = s;
+                    score += similarity[candidate, selected];
+                }
+
+                if (score < bestScore)
+                {
+                    bestScore = score;
                     bestCandidate = candidate;
-                    bestOriginalIndex = candidate;
                 }
             }
 
             result.Add(bestCandidate);
             remaining.Remove(bestCandidate);
-
-            int distanceFromEnd = result.Count;
-            foreach (var c in remaining)
-                score[c] += similarity[bestCandidate, c] / distanceFromEnd;
         }
 
         return result.Select(i => categoryList[i].Category);
