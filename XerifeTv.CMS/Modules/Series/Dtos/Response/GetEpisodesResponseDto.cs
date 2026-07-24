@@ -3,6 +3,7 @@
 public class GetEpisodesResponseDto
 {
     public string SerieId { get; private set; } = string.Empty;
+    public string SerieImdbId { get; private set; } = string.Empty;
     public string SerieTitle { get; private set; } = string.Empty;
     public int NumberSeasons { get; private set; }
     public IEnumerable<Episode> Episodes { get; private set; } = [];
@@ -12,6 +13,7 @@ public class GetEpisodesResponseDto
         return new GetEpisodesResponseDto
         {
             SerieId = entity.Id,
+            SerieImdbId = entity.ImdbId,
             SerieTitle = entity.Title,
             NumberSeasons = entity.NumberSeasons,
             Episodes = entity.Episodes

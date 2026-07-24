@@ -1,4 +1,6 @@
 ﻿using MongoDB.Driver.Linq;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
@@ -15,6 +17,7 @@ public class SeriesService(
     ISeriesRepository _repository,
     IWebhookService _webhookService,
     IFranchiseService _franchiseService,
+    IBackgroundJobQueueService _backgroundJobQueueService,
     IConfiguration _configuration) : ISeriesService
 {
     public async Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit)
@@ -89,6 +92,7 @@ public class SeriesService(
                   new Error("409", $"Serie nao cadastrada. Imdb ID {entity.ImdbId} duplicado"));
 
             var response = await _repository.CreateAsync(entity);
+            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
 
             _ = Task.Run(() => _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.SERIES_PUBLISHED, response));
 
@@ -117,8 +121,9 @@ public class SeriesService(
                 return Result<string>.Failure(
                   new Error("409", $"Serie nao atualizada. Imdb ID {entity.ImdbId} duplicado"));
 
-
             await _repository.UpdateAsync(entity);
+            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
+
             return Result<string>.Success(entity.Id);
         }
         catch (Exception ex)
@@ -138,6 +143,8 @@ public class SeriesService(
                 return Result<bool>.Failure(new Error("404", "Conteudo nao encontrado"));
 
             await _repository.DeleteAsync(id);
+            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
+
             return Result<bool>.Success(true);
         }
         catch (Exception ex)

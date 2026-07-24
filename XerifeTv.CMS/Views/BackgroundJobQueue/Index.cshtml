@@ -177,7 +177,7 @@
 
             <div class="col-6 col-md-2">
               <div class="card-body h-100 d-flex justify-content-center align-items-center">
-                <p class="card-text">@job.CreateAt.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</p>
+                <p class="card-text">@TimeZoneInfo.ConvertTime(job.CreateAt, TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo")).ToString("dd/MM/yyyy HH:mm")</p>
               </div>
             </div>
 

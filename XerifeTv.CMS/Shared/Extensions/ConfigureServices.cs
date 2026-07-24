@@ -6,11 +6,14 @@ using XerifeTv.CMS.Modules.Authentication.Interfaces;
 using XerifeTv.CMS.Modules.Authentication.Services;
 using XerifeTv.CMS.Modules.BackgroundJobQueue;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.ProcessorStrategies;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Services;
 using XerifeTv.CMS.Modules.Channel;
 using XerifeTv.CMS.Modules.Channel.Importers;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Content;
 using XerifeTv.CMS.Modules.Content.Interfaces;
+using XerifeTv.CMS.Modules.Content.Services;
 using XerifeTv.CMS.Modules.Dashboard;
 using XerifeTv.CMS.Modules.Dashboard.Interfaces;
 using XerifeTv.CMS.Modules.Franchise;
@@ -57,7 +60,9 @@ public static class ConfigureServices
 		services.AddScoped<IUserRepository, UserRepository>();
 		services.AddScoped<IWebhookRepository, WebhookRepository>();
 		services.AddScoped<IMediaDeliveryProfileRepository, MediaDeliveryProfileRepository>();
-		return services;
+		services.AddScoped<IContentSettingsRepository, ContentSettingsRepository>();
+
+        return services;
 	}
 
 	private static IServiceCollection AddServices(this IServiceCollection services)
@@ -93,6 +98,10 @@ public static class ConfigureServices
 		services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenNoneStrategy>();
 		services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenStaticQueryStrategy>();
         services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenSignedQueryStrategy>();
+
+		services.AddScoped<IBackgroundJobProcessorStrategy, ImportSpreadsheetBackgroundJobProcessorStrategy>();
+		services.AddScoped<IBackgroundJobProcessorStrategy, ImportEpisodesSeriesBackgroundJobProcessorStrategy>();
+		services.AddScoped<IBackgroundJobProcessorStrategy, CalculateCategoryDistributionBackgroundJobProcessorStrategy>();
 
         services.AddHostedService<BackgroundJobQueueWorker>();
 

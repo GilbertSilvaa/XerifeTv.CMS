@@ -50,7 +50,7 @@ public class EpisodesImdbImporter(
 			var createdEpisodesCount = 0;
 			var episodeCreationAttemptsCount = 0;
 
-			void UpdateProgress()
+            void UpdateProgress()
 			{
 				var progressCount = (int)(((float)episodeCreationAttemptsCount / seriesEpisodesImdbCount) * 100);
 				var _dto = new ImportEpisodesResponseDto(
@@ -62,9 +62,9 @@ public class EpisodesImdbImporter(
 				_cacheService.SetValue<ImportEpisodesResponseDto>(importId, _dto);
 			}
 
-			for (int i = 1; i <= seriesResult.Data?.NumberSeasons; i++)
+			for (int i = 1; i <= seriesImdbResult?.Data?.NumberSeasons; i++)
 			{
-				var result = await _imdbService.GetSeriesEpisodesBySeasonAsync(seriesResult.Data.ImdbId, i);
+				var result = await _imdbService.GetSeriesEpisodesBySeasonAsync(seriesResult.Data!.ImdbId, i);
 				if (result.IsFailure || result.Data == null) continue;
 
 				foreach (var episode in result.Data.Episodes)
