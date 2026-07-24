@@ -127,7 +127,7 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
 
     private static IEnumerable<string> SpreadCategories<T>(IEnumerable<ItemsByCategory<T>> categories) where T : BaseEntity
     {
-        const double RedundancyThreshold = 0.6;
+        const double RedundancyThreshold = 0.7;
 
         var categoryList = categories.ToList();
 
@@ -140,7 +140,6 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
             .Select(x => x.Items.Select(i => i.Id).ToHashSet())
             .ToArray();
 
-        // 1) Remove categorias redundantes (>= 70% de sobreposição com outra categoria maior/igual)
         var excluded = new HashSet<int>();
 
         for (int i = 0; i < rawCount; i++)
@@ -153,7 +152,6 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
                 if (i == j || excluded.Contains(j))
                     continue;
 
-                // só considera "absorver" i em j se j for maior ou igual (evita remover ambos os lados)
                 if (rawItemSets[j].Count < rawItemSets[i].Count)
                     continue;
 
@@ -178,7 +176,6 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
         if (filteredList.Count <= 2)
             return filteredList.Select(c => c.Category);
 
-        // 2) A partir daqui, segue exatamente a lógica original, mas sobre a lista filtrada
         int count = filteredList.Count;
 
         var itemSets = filteredList

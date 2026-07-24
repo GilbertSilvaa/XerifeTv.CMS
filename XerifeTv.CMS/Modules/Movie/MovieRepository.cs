@@ -67,27 +67,36 @@ public sealed class MovieRepository(IOptions<DBSettings> options)
 
     public async Task<IEnumerable<ItemsByCategory<MovieEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
     {
-        List<ItemsByCategory<MovieEntity>> result = [];
-        List<string> uniqueMovieIds = [];
+        var fetchTasks = dto.Categories
+            .Select(category => _collection
+                .Find(r => r.Categories.Contains(category) && (!r.Disabled || dto.IsIncludeDisabled))
+                .SortByDescending(x => x.CreateAt)
+                .Skip(dto.LimitResults * (dto.CurrentPage - 1))
+                .Limit(dto.LimitResults)
+                .ToListAsync())
+            .ToList();
 
-        foreach (var category in dto.Categories)
+        var moviesPerCategory = await Task.WhenAll(fetchTasks);
+
+        var result = new List<ItemsByCategory<MovieEntity>>(dto.Categories.Count);
+        var seenMoviesIds = new HashSet<string>();
+        var categoriesArray = dto.Categories.ToArray();
+
+        for (var i = 0; i < categoriesArray.Length; i++)
         {
-            var moviesByCategory = await _collection
-              .Find(r => r.Categories.Any(x => x.Equals(category)) && (!r.Disabled || dto.IsIncludeDisabled))
-              .SortByDescending(x => x.CreateAt)
-              .Skip(dto.LimitResults * (dto.CurrentPage - 1))
-              .Limit(dto.LimitResults)
-              .ToListAsync();
+            var moviesByCategory = moviesPerCategory[i];
+            if (moviesByCategory.Count == 0)
+                continue;
 
             var orderedMovies = moviesByCategory
-                .OrderBy(x => uniqueMovieIds.Contains(x.Id))
+                .OrderBy(x => seenMoviesIds.Contains(x.Id))
                 .ThenByDescending(x => x.CreateAt)
                 .ToList();
 
-            uniqueMovieIds.AddRange(moviesByCategory.Select(x => x.Id));
+            foreach (var s in moviesByCategory)
+                seenMoviesIds.Add(s.Id);
 
-            if (moviesByCategory.Any())
-                result.Add(new ItemsByCategory<MovieEntity>(category, orderedMovies));
+            result.Add(new ItemsByCategory<MovieEntity>(categoriesArray[i], orderedMovies));
         }
 
         return result;

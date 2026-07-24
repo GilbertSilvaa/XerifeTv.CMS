@@ -92,27 +92,36 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
 
     public async Task<IEnumerable<ItemsByCategory<SeriesEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
     {
-        List<ItemsByCategory<SeriesEntity>> result = [];
-        List<string> uniqueSeriesIds = [];
+        var fetchTasks = dto.Categories
+            .Select(category => _collection
+                .Find(r => r.Categories.Contains(category) && (!r.Disabled || dto.IsIncludeDisabled))
+                .SortByDescending(x => x.CreateAt)
+                .Skip(dto.LimitResults * (dto.CurrentPage - 1))
+                .Limit(dto.LimitResults)
+                .ToListAsync())
+            .ToList();
 
-        foreach (var category in dto.Categories)
+        var seriesPerCategory = await Task.WhenAll(fetchTasks);
+
+        var result = new List<ItemsByCategory<SeriesEntity>>(dto.Categories.Count);
+        var seenSeriesIds = new HashSet<string>();
+        var categoriesArray = dto.Categories.ToArray();
+
+        for (var i = 0; i < categoriesArray.Length; i++)
         {
-            var seriesByCategory = await _collection
-              .Find(r => r.Categories.Any(x => x.Equals(category)) && (!r.Disabled || dto.IsIncludeDisabled))
-              .SortByDescending(x => x.CreateAt)
-              .Skip(dto.LimitResults * (dto.CurrentPage - 1))
-              .Limit(dto.LimitResults)
-              .ToListAsync();
+            var seriesByCategory = seriesPerCategory[i];
+            if (seriesByCategory.Count == 0)
+                continue;
 
             var orderedSeries = seriesByCategory
-                .OrderBy(x => uniqueSeriesIds.Contains(x.Id))
+                .OrderBy(x => seenSeriesIds.Contains(x.Id))
                 .ThenByDescending(x => x.CreateAt)
                 .ToList();
 
-            uniqueSeriesIds.AddRange(seriesByCategory.Select(x => x.Id));
+            foreach (var s in seriesByCategory)
+                seenSeriesIds.Add(s.Id);
 
-            if (seriesByCategory.Any())
-                result.Add(new ItemsByCategory<SeriesEntity>(category, orderedSeries));
+            result.Add(new ItemsByCategory<SeriesEntity>(categoriesArray[i], orderedSeries));
         }
 
         return result;
