@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.Content;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
 
@@ -23,7 +24,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesAsync(10);
+        var response = await _service.GetMoviesAsync(ContentConstants.DefaultPageSizeMin);
 
         if (response.IsSuccess)
         {
@@ -44,7 +45,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesAsync(10);
+        var response = await _service.GetSeriesAsync(ContentConstants.DefaultPageSizeMin);
 
         if (response.IsSuccess)
         {
@@ -145,7 +146,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesCategoriesAsync(15);
+        var response = await _service.GetMoviesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
 
         if (response.IsSuccess)
         {
@@ -166,7 +167,7 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesCategoriesAsync(15);
+        var response = await _service.GetSeriesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
 
         if (response.IsSuccess)
         {
@@ -272,8 +273,8 @@ public class ContentV2Controller(
         var responseCache = _cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var moviesResponse = await _service.GetMoviesByTermAsync(term, limit: 15);
-        var seriesResponse = await _service.GetSeriesByTermAsync(term, limit: 15);
+        var moviesResponse = await _service.GetMoviesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
+        var seriesResponse = await _service.GetSeriesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
 
         if (moviesResponse.IsSuccess && seriesResponse.IsSuccess)
         {

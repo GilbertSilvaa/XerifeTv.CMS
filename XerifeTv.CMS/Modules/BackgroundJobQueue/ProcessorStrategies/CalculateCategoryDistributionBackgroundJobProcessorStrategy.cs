@@ -163,25 +163,33 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
             }
         });
 
+        var categorySize = itemSets.Select(s => s.Count).ToArray();
+        int maxSize = categorySize.Max();
+
         var result = new List<int>(count);
         var remaining = new HashSet<int>(Enumerable.Range(0, count));
 
-        result.Add(0);
-        remaining.Remove(0);
+        int startIndex = Array.IndexOf(categorySize, maxSize);
+
+        result.Add(startIndex);
+        remaining.Remove(startIndex);
 
         while (remaining.Count > 0)
         {
             int bestCandidate = -1;
-            int bestScore = int.MaxValue;
+            double bestScore = double.MaxValue;
 
             foreach (var candidate in remaining)
             {
-                int score = 0;
+                int similarityScore = 0;
 
                 foreach (var selected in result)
                 {
-                    score += similarity[candidate, selected];
+                    similarityScore += similarity[candidate, selected];
                 }
+
+                double sizeBonus = (double)categorySize[candidate] / maxSize;
+                double score = similarityScore - sizeBonus;
 
                 if (score < bestScore)
                 {
