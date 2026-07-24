@@ -157,7 +157,7 @@ public class ContentV2Service(
 
             if (contentSettings?.MovieCategoriesDistribution != null && contentSettings.MovieCategoriesDistribution.Count > 0)
             {
-                return Result<string[]>.Success([.. contentSettings.MovieCategoriesDistribution]);
+                return Result<string[]>.Success([.. contentSettings.MovieCategoriesDistribution.Take(limit)]);
             }
 
             var moviesCategoriesResult = await _movieRepository.GetCategoriesWithCountAsync();
@@ -177,7 +177,7 @@ public class ContentV2Service(
 
             if (contentSettings?.SeriesCategoriesDistribution != null && contentSettings.SeriesCategoriesDistribution.Count > 0)
             {
-                return Result<string[]>.Success([.. contentSettings.SeriesCategoriesDistribution]);
+                return Result<string[]>.Success([.. contentSettings.SeriesCategoriesDistribution.Take(limit)]);
             }
 
             var seriesCategoriesResult = await _seriesRepository.GetCategoriesWithCountAsync();
