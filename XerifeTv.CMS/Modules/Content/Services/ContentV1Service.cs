@@ -14,7 +14,7 @@ using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
 
-namespace XerifeTv.CMS.Modules.Content;
+namespace XerifeTv.CMS.Modules.Content.Services;
 
 public sealed class ContentV1Service(
   IMovieRepository _movieRepository,

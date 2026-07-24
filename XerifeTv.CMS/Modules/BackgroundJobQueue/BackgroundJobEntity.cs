@@ -6,81 +6,97 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue;
 
 public class BackgroundJobEntity : BaseEntity
 {
-	public string JobName { get; private set; } = string.Empty;
-	public EBackgroundJobType Type { get; private set; }
-	public EBackgroundJobStatus Status { get; private set; }
-	public string RequestedByUserId { get; private set; } = string.Empty;
-	public int TotalRecordsToProcess { get; private set; }
-	public int TotalFailedRecords { get; private set; }
-	public int TotalSuccessfulRecords { get; private set; }
-	public int TotalProcessedRecords { get; private set; }
-	public DateTime? ProcessedAt { get; private set; }
-	public DateTime? FinishedAt { get; private set; }
-	public ICollection<string> ErrorList { get; private set; } = [];
-	public string? SpreadsheetFileUrl { get; private set; } = null;
-	public string? SeriesIdImportEpisodes { get; private set; } = null;
-	public bool UserWasNotified { get; private set; } = false;
+    public string JobName { get; private set; } = string.Empty;
+    public EBackgroundJobType Type { get; private set; }
+    public EBackgroundJobStatus Status { get; private set; }
+    public string RequestedByUserId { get; private set; } = string.Empty;
+    public int TotalRecordsToProcess { get; private set; }
+    public int TotalFailedRecords { get; private set; }
+    public int TotalSuccessfulRecords { get; private set; }
+    public int TotalProcessedRecords { get; private set; }
+    public DateTime? ProcessedAt { get; private set; }
+    public DateTime? FinishedAt { get; private set; }
+    public ICollection<string> ErrorList { get; private set; } = [];
+    public string? SpreadsheetFileUrl { get; private set; } = null;
+    public string? SeriesIdImportEpisodes { get; private set; } = null;
+    public bool UserWasNotified { get; private set; } = false;
 
-	public static BackgroundJobEntity Create(
-		string id,
-		EBackgroundJobType type,
-		string spreadsheetFileName,
-		string spreadsheetFileUrl,
-		string userId)
-	{
-		return new BackgroundJobEntity
-		{
-			Id = id,
-			Type = type,
-			JobName = type switch
-			{
-				EBackgroundJobType.REGISTER_SPREADSHEET_MOVIES => $"Cadastro/Atualizacao de Filmes ({spreadsheetFileName})",
-				EBackgroundJobType.REGISTER_SPREADSHEET_SERIES => $"Cadastro/Atualizacao de Series ({spreadsheetFileName})",
-				EBackgroundJobType.REGISTER_SPREADSHEET_CHANNELS => $"Cadastro de Canais ({spreadsheetFileName})",
-				_ => string.Empty
-			},
-			Status = EBackgroundJobStatus.PENDING,
-			RequestedByUserId = userId,
-			SpreadsheetFileUrl = spreadsheetFileUrl
-		};
-	}
+    public static BackgroundJobEntity Create(
+        string id,
+        EBackgroundJobType type,
+        string spreadsheetFileName,
+        string spreadsheetFileUrl,
+        string userId)
+    {
+        return new BackgroundJobEntity
+        {
+            Id = id,
+            Type = type,
+            JobName = type switch
+            {
+                EBackgroundJobType.REGISTER_SPREADSHEET_MOVIES => $"Cadastro/Atualizacao de Filmes ({spreadsheetFileName})",
+                EBackgroundJobType.REGISTER_SPREADSHEET_SERIES => $"Cadastro/Atualizacao de Series ({spreadsheetFileName})",
+                EBackgroundJobType.REGISTER_SPREADSHEET_CHANNELS => $"Cadastro de Canais ({spreadsheetFileName})",
+                _ => string.Empty
+            },
+            Status = EBackgroundJobStatus.PENDING,
+            RequestedByUserId = userId,
+            SpreadsheetFileUrl = spreadsheetFileUrl
+        };
+    }
 
-	public static BackgroundJobEntity Create(string seriesId, string seriesImdbId, string userId)
-	{
-		return new BackgroundJobEntity
-		{
-			Type = EBackgroundJobType.IMPORT_EPISODES_FROM_SERIES_IMDB,
-			JobName = $"Importacao de Episodios via IMDB [{seriesImdbId}]",
-			Status = EBackgroundJobStatus.PENDING,
-			RequestedByUserId = userId,
-			SeriesIdImportEpisodes = seriesId
-		};
-	}
+    public static BackgroundJobEntity Create(string seriesId, string seriesImdbId, string userId)
+    {
+        return new BackgroundJobEntity
+        {
+            Type = EBackgroundJobType.IMPORT_EPISODES_FROM_SERIES_IMDB,
+            JobName = $"Importacao de Episodios via IMDB [{seriesImdbId}]",
+            Status = EBackgroundJobStatus.PENDING,
+            RequestedByUserId = userId,
+            SeriesIdImportEpisodes = seriesId
+        };
+    }
 
-	public BackgroundJobEntity Update(UpdateBackgroundJobRequestDto dto)
-	{
-		if (Status == EBackgroundJobStatus.COMPLETED || Status == EBackgroundJobStatus.FAILED)
-			throw new Exception("Background Job ja concluido");
+    public static BackgroundJobEntity Create(ECalculateCategoryDistributionJobQueueType type)
+    {
+        return new BackgroundJobEntity
+        {
+            Type = type == ECalculateCategoryDistributionJobQueueType.MOVIES
+                 ? EBackgroundJobType.CALCULATE_CATEGORY_DISTRIBUTION_FOR_CONTENT_API_MOVIES
+                 : EBackgroundJobType.CALCULATE_CATEGORY_DISTRIBUTION_FOR_CONTENT_API_SERIES,
 
-		if (TotalProcessedRecords > dto.TotalProcessedRecords)
-			throw new Exception("Nao foi possível reduzir o progresso. O valor atual ja esta maior ao informado");
+            JobName = type == ECalculateCategoryDistributionJobQueueType.MOVIES
+                ? "Calculo de Distribuicao de Categorias - Filmes"
+                : "Calculo de Distribuicao de Categorias - Series",
 
-		if (dto.Status == EBackgroundJobStatus.PROCESSING && Status != EBackgroundJobStatus.PROCESSING)
-			ProcessedAt = DateTime.UtcNow;
+            Status = EBackgroundJobStatus.PENDING
+        };
+    }
 
-		if (dto.Status is EBackgroundJobStatus.COMPLETED or EBackgroundJobStatus.FAILED or EBackgroundJobStatus.CANCELED)
-			FinishedAt = DateTime.UtcNow;
+    public BackgroundJobEntity Update(UpdateBackgroundJobRequestDto dto)
+    {
+        if (Status == EBackgroundJobStatus.COMPLETED || Status == EBackgroundJobStatus.FAILED)
+            throw new Exception("Background Job ja concluido");
 
-		Status = dto.Status;
-		TotalRecordsToProcess = dto.TotalRecordsToProcess;
-		TotalFailedRecords = dto.TotalFailedRecords;
-		TotalSuccessfulRecords = dto.TotalSuccessfulRecords;
-		TotalProcessedRecords = dto.TotalProcessedRecords;
-		ErrorList = dto.ErrorList;
-		UpdateAt = DateTime.UtcNow;
+        if (TotalProcessedRecords > dto.TotalProcessedRecords)
+            throw new Exception("Nao foi possível reduzir o progresso. O valor atual ja esta maior ao informado");
 
-		return this;
-	}
+        if (dto.Status == EBackgroundJobStatus.PROCESSING && Status != EBackgroundJobStatus.PROCESSING)
+            ProcessedAt = DateTime.UtcNow;
 
-	public void UserNotify() => UserWasNotified = true;
+        if (dto.Status is EBackgroundJobStatus.COMPLETED or EBackgroundJobStatus.FAILED or EBackgroundJobStatus.CANCELED)
+            FinishedAt = DateTime.UtcNow;
+
+        Status = dto.Status;
+        TotalRecordsToProcess = dto.TotalRecordsToProcess;
+        TotalFailedRecords = dto.TotalFailedRecords;
+        TotalSuccessfulRecords = dto.TotalSuccessfulRecords;
+        TotalProcessedRecords = dto.TotalProcessedRecords;
+        ErrorList = dto.ErrorList;
+        UpdateAt = DateTime.UtcNow;
+
+        return this;
+    }
+
+    public void UserNotify() => UserWasNotified = true;
 }

@@ -8,11 +8,12 @@ using XerifeTv.CMS.Modules.Series;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
 
-namespace XerifeTv.CMS.Modules.Content;
+namespace XerifeTv.CMS.Modules.Content.Services;
 
 public class ContentV2Service(
     IMovieRepository _movieRepository,
     ISeriesRepository _seriesRepository,
+    IContentSettingsRepository _contentSettingsRepository,
     IConfiguration _configuration) : IContentV2Service
 {
     public async Task<Result<IEnumerable<MovieContentV2ResponseDto>>> GetMoviesAsync(int limit)
@@ -152,6 +153,13 @@ public class ContentV2Service(
     {
         try
         {
+            var contentSettings = await _contentSettingsRepository.GetContentSettingsAsync();
+
+            if (contentSettings?.MovieCategoriesDistribution != null && contentSettings.MovieCategoriesDistribution.Count > 0)
+            {
+                return Result<string[]>.Success([.. contentSettings.MovieCategoriesDistribution]);
+            }
+
             var moviesCategoriesResult = await _movieRepository.GetCategoriesWithCountAsync();
             return Result<string[]>.Success([.. moviesCategoriesResult.Where(c => c.Count >= 10).Take(limit).Select(c => c.Category)]);
         }
@@ -165,6 +173,13 @@ public class ContentV2Service(
     {
         try
         {
+            var contentSettings = await _contentSettingsRepository.GetContentSettingsAsync();
+
+            if (contentSettings?.SeriesCategoriesDistribution != null && contentSettings.SeriesCategoriesDistribution.Count > 0)
+            {
+                return Result<string[]>.Success([.. contentSettings.SeriesCategoriesDistribution]);
+            }
+
             var seriesCategoriesResult = await _seriesRepository.GetCategoriesWithCountAsync();
             return Result<string[]>.Success([.. seriesCategoriesResult.Where(c => c.Count >= 10).Take(limit).Select(c => c.Category)]);
         }
@@ -304,7 +319,6 @@ public class ContentV2Service(
         try
         {
             var moviesByCategories = await _movieRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
-            moviesByCategories = CategoryDistributor.SpreadCategories(moviesByCategories);
 
             return Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>.Success(new(
                 currentPage: page,
@@ -327,7 +341,6 @@ public class ContentV2Service(
         try
         {
             var seriesByCategories = await _seriesRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
-            seriesByCategories = CategoryDistributor.SpreadCategories(seriesByCategories);
 
             return Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>.Success(new(
                 currentPage: page,

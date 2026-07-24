@@ -196,6 +196,7 @@
             if (confirm('Deseja executar o processamento em segundo plano?')) {
                 const formDataBackgroundJob = new FormData();
                 formDataBackgroundJob.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                formDataBackgroundJob.append('seriesImdbId', '@Model?.EpisodesDto?.SerieImdbId');
 
                 await fetch(`/BackgroundJobQueue/AddJobInQueueImportEpisodesSeries`, {
                     method: 'POST',

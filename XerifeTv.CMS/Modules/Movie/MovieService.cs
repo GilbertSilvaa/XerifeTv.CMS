@@ -1,4 +1,6 @@
-﻿using XerifeTv.CMS.Modules.Common;
+﻿using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
+using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
@@ -12,7 +14,8 @@ namespace XerifeTv.CMS.Modules.Movie;
 public sealed class MovieService(
     IMovieRepository _repository,
     IWebhookService _webhookService,
-    IFranchiseService _franchiseService) : IMovieService
+    IFranchiseService _franchiseService,
+    IBackgroundJobQueueService _backgroundJobQueueService) : IMovieService
 {
     public async Task<Result<PagedList<GetMovieResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -87,6 +90,7 @@ public sealed class MovieService(
 
             var response = await _repository.CreateAsync(entity);
 
+            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
             _ = Task.Run(() => _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.MOVIE_PUBLISHED, response));
 
             return Result<string>.Success(response);
@@ -116,6 +120,8 @@ public sealed class MovieService(
 
             entity.CreateAt = response.CreateAt;
             await _repository.UpdateAsync(entity);
+            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
+
             return Result<string>.Success(entity.Id);
         }
         catch (Exception ex)
@@ -135,6 +141,8 @@ public sealed class MovieService(
                 return Result<bool>.Failure(new Error("404", "Conteudo nao encontrado"));
 
             await _repository.DeleteAsync(id);
+            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
+
             return Result<bool>.Success(true);
         }
         catch (Exception ex)

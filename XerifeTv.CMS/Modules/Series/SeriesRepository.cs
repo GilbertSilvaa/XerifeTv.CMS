@@ -125,6 +125,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options)
           r => new SeriesEntity
           {
               Id = r.Id,
+              ImdbId = r.ImdbId,
               Title = r.Title,
               NumberSeasons = r.NumberSeasons,
               Episodes = r.Episodes
