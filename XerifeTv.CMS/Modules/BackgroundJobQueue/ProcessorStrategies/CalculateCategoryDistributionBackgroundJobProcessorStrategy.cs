@@ -127,14 +127,61 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
 
     private static IEnumerable<string> SpreadCategories<T>(IEnumerable<ItemsByCategory<T>> categories) where T : BaseEntity
     {
+        const double RedundancyThreshold = 0.6;
+
         var categoryList = categories.ToList();
 
         if (categoryList.Count <= 2)
             return categoryList.Select(c => c.Category);
 
-        int count = categoryList.Count;
+        int rawCount = categoryList.Count;
 
-        var itemSets = categoryList
+        var rawItemSets = categoryList
+            .Select(x => x.Items.Select(i => i.Id).ToHashSet())
+            .ToArray();
+
+        // 1) Remove categorias redundantes (>= 70% de sobreposição com outra categoria maior/igual)
+        var excluded = new HashSet<int>();
+
+        for (int i = 0; i < rawCount; i++)
+        {
+            if (excluded.Contains(i))
+                continue;
+
+            for (int j = 0; j < rawCount; j++)
+            {
+                if (i == j || excluded.Contains(j))
+                    continue;
+
+                // só considera "absorver" i em j se j for maior ou igual (evita remover ambos os lados)
+                if (rawItemSets[j].Count < rawItemSets[i].Count)
+                    continue;
+
+                if (rawItemSets[i].Count == 0)
+                    continue;
+
+                int common = rawItemSets[i].Count(item => rawItemSets[j].Contains(item));
+                double overlapRatio = (double)common / rawItemSets[i].Count;
+
+                if (overlapRatio >= RedundancyThreshold)
+                {
+                    excluded.Add(i);
+                    break;
+                }
+            }
+        }
+
+        var filteredList = categoryList
+            .Where((_, idx) => !excluded.Contains(idx))
+            .ToList();
+
+        if (filteredList.Count <= 2)
+            return filteredList.Select(c => c.Category);
+
+        // 2) A partir daqui, segue exatamente a lógica original, mas sobre a lista filtrada
+        int count = filteredList.Count;
+
+        var itemSets = filteredList
             .Select(x => x.Items.Select(i => i.Id).ToHashSet())
             .ToArray();
 
@@ -202,6 +249,6 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
             remaining.Remove(bestCandidate);
         }
 
-        return result.Select(i => categoryList[i].Category);
+        return result.Select(i => filteredList[i].Category);
     }
 }
