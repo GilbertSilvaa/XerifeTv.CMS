@@ -87,7 +87,7 @@
 </head>
 <body>
     <script>
-            (function() {
+            (function () {
                 const theme = localStorage.getItem('theme') || 'light';
                 document.documentElement.setAttribute('data-bs-theme', theme);
                 if (theme === 'dark') document.body.classList.add('bg-dark');
@@ -249,36 +249,41 @@
     @if (!User.IsInRole("visitor") && !pagesViewWithoutTemplate.Contains(ViewData["title"]?.ToString()))
     {
         <script>
+                const jobsEventSource = new EventSource('/BackgroundJobQueue/GetJobsNotification');
 
-                setInterval(async () => {
-                    var response = await fetch('/BackgroundJobQueue/GetJobsNotification');
-                    var data = await response.json();
+                jobsEventSource.onmessage = (e) => {
+                    const data = JSON.parse(e.data);
 
                     for (const jobNotification of data) {
+                        if (document.getElementById(`jobNotification${jobNotification.JobId}`)) continue;
+
                         var statusText = 'Concluido';
-                        if (jobNotification.jobStatus == '@((int)EBackgroundJobStatus.FAILED)') statusText = 'Falha no processamento';
-                        if (jobNotification.jobStatus == '@((int)EBackgroundJobStatus.CANCELED)') statusText = 'Cancelado';
+                        if (jobNotification.JobStatus == '@((int)EBackgroundJobStatus.FAILED)') statusText = 'Falha no processamento';
+                        if (jobNotification.JobStatus == '@((int)EBackgroundJobStatus.CANCELED)') statusText = 'Cancelado';
 
                         $('.toast-container').append(`
-                              <div id="jobNotification${jobNotification.jobId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
-                                  <div class="toast-header">
-                                      <i class="fa-solid fa-bell"></i>
-                                      <strong class="me-auto ms-2">${statusText}</strong>
-                                      <small>${jobNotification.jobTimeAgo}</small>
-                                      <button type="button" class="btn-close shadow-none" data-bs-dismiss="toast" aria-label="Close"></button>
-                                  </div>
-                                  <div class="toast-body text-truncate" style="max-width: 100%;">
-                                    ${jobNotification.jobName}
-                                  </div>
-                              </div>
-                            `);
+                                                  <div id="jobNotification${jobNotification.JobId}" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                                                      <div class="toast-header">
+                                                          <i class="fa-solid fa-bell"></i>
+                                                          <strong class="me-auto ms-2">${statusText}</strong>
+                                                          <small>${jobNotification.JobTimeAgo}</small>
+                                                          <button type="button" class="btn-close shadow-none" data-bs-dismiss="toast" aria-label="Close"></button>
+                                                      </div>
+                                                      <div class="toast-body text-truncate" style="max-width: 100%;">
+                                                        ${jobNotification.JobName}
+                                                      </div>
+                                                  </div>
+                                                `);
 
-                        const toastNotification = document.getElementById(`jobNotification${jobNotification.jobId}`);
+                        const toastNotification = document.getElementById(`jobNotification${jobNotification.JobId}`);
                         const toastBootstrap = new bootstrap.Toast(toastNotification, { autohide: false });
                         toastBootstrap.show();
                     }
-                }, 8000);
+                };
 
+                jobsEventSource.onerror = (err) => {
+                    console.error('Erro na conexão SSE de notificações', err);
+                };
         </script>
     }
 </body>
