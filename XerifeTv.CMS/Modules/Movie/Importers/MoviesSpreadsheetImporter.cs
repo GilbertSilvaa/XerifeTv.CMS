@@ -2,6 +2,7 @@
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
+using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
@@ -15,7 +16,8 @@ public class MoviesSpreadsheetImporter(
   IImdbService _imdbService,
   ICacheService _cacheService,
   ISpreadsheetReaderService _spreadsheetReaderService,
-  IMediaDeliveryProfileService _mediaDeliveryProfileService) : ISpreadsheetBatchImporter<IMovieService>
+  IMediaDeliveryProfileService _mediaDeliveryProfileService,
+  IFranchiseService _franchiseService) : ISpreadsheetBatchImporter<IMovieService>
 {
 	public async Task<Result<string>> ImportAsync(IFormFile file)
 	{
@@ -54,8 +56,9 @@ public class MoviesSpreadsheetImporter(
                 "URL VIDEO FIXED",
 				"STREAM FORMAT",
 				"URL SUBTITLES",
-				"TRAILER YOUTUBE VIDEO ID"
-			];
+				"TRAILER YOUTUBE VIDEO ID",
+                "FRANCHISE"
+            ];
 
 			using var stream = new MemoryStream();
 			file.CopyTo(stream);
@@ -114,6 +117,21 @@ public class MoviesSpreadsheetImporter(
 					movieItem.MediaDeliveryProfileId = mediaProfileResponse.Data!.Id;
                 }
 
+				if (!string.IsNullOrWhiteSpace(movieItem.FranchiseName))
+				{
+					var franchiseResponse = await _franchiseService.GetByNameAsync(movieItem.FranchiseName);
+
+					if (franchiseResponse.IsFailure)
+					{
+						failCount++;
+						errorList.Add($"[{movieItem.ImdbId}] {franchiseResponse.Error?.Description ?? string.Empty}");
+						UpdateProgress();
+						continue;
+					}
+
+					movieItem.FranchiseId = franchiseResponse.Data!.Id;
+				}
+
 				var movieImdbAPIResponse = await _imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
 
 				if (movieImdbAPIResponse.IsFailure)
@@ -148,7 +166,8 @@ public class MoviesSpreadsheetImporter(
 						VideoSubtitle = movieItem.Video?.Subtitle,
 						MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,
 						MediaRoute = movieItem.MediaRoute,
-						TrailerVideoYoutubeId = movieItem.TrailerVideoYoutubeId
+						TrailerVideoYoutubeId = movieItem.TrailerVideoYoutubeId,
+						FranchiseId = movieItem.FranchiseId
                     };
 
 					responseCreateOrUpdate = await _service.UpdateAsync(updateMovieDto);									
@@ -172,7 +191,8 @@ public class MoviesSpreadsheetImporter(
 						VideoSubtitle = movieItem.Video?.Subtitle,
                         MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,
                         MediaRoute = movieItem.MediaRoute,
-						TrailerVideoYoutubeId = movieItem.TrailerVideoYoutubeId
+						TrailerVideoYoutubeId = movieItem.TrailerVideoYoutubeId,
+						FranchiseId = movieItem.FranchiseId
                     };
 
 					responseCreateOrUpdate = await _service.CreateAsync(createMovieDto);
