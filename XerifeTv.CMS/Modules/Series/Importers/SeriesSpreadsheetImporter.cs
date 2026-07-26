@@ -2,6 +2,7 @@
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
+using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
@@ -15,7 +16,8 @@ public class SeriesSpreadsheetImporter(
     IImdbService _imdbService,
     ICacheService _cacheService,
     ISpreadsheetReaderService _spreadsheetReaderService,
-    IMediaDeliveryProfileService _mediaDeliveryProfileService) : ISpreadsheetBatchImporter<ISeriesService>
+    IMediaDeliveryProfileService _mediaDeliveryProfileService,
+    IFranchiseService _franchiseService) : ISpreadsheetBatchImporter<ISeriesService>
 {
     public async Task<Result<string>> ImportAsync(IFormFile file)
     {
@@ -49,7 +51,9 @@ public class SeriesSpreadsheetImporter(
             [
                 "IMDB ID (REQUIRED)",
                 "TITLE (REQUIRED)",
-                "PARENTAL RATING (REQUIRED)"
+                "PARENTAL RATING (REQUIRED)",
+                "TRAILER YOUTUBE VIDEO ID",
+                "FRANCHISE"
             ];
 
             string[] expectedCollunsEpisodesWorksheet =
@@ -132,6 +136,21 @@ public class SeriesSpreadsheetImporter(
 
             foreach (var seriesItem in seriesList)
             {
+                if (!string.IsNullOrWhiteSpace(seriesItem.FranchiseName))
+                {
+                    var franchiseResponse = await _franchiseService.GetByNameAsync(seriesItem.FranchiseName);
+
+                    if (franchiseResponse.IsFailure)
+                    {
+                        seriesFailCount++;
+                        errorList.Add($"[{seriesItem.ImdbId}] {franchiseResponse.Error.Description ?? string.Empty}");
+                        UpdateProgress();
+                        continue;
+                    }
+
+                    seriesItem.FranchiseId = franchiseResponse.Data!.Id;
+                }
+
                 var seriesByImdbResponse = await _imdbService.GetSeriesByImdbIdAsync(seriesItem.ImdbId);
 
                 if (seriesByImdbResponse.IsFailure)
@@ -153,7 +172,9 @@ public class SeriesSpreadsheetImporter(
                     ReleaseYear = int.Parse(seriesByImdbResponse?.Data?.ReleaseYear ?? "0"),
                     ParentalRating = seriesItem.ParentalRating,
                     Review = seriesByImdbResponse?.Data?.VoteAverage ?? 0,
-                    NumberSeasons = seriesByImdbResponse?.Data?.NumberSeasons ?? 0
+                    NumberSeasons = seriesByImdbResponse?.Data?.NumberSeasons ?? 0,
+                    TrailerVideoYoutubeId = seriesItem.TrailerVideoYoutubeId,
+                    FranchiseId = seriesItem.FranchiseId
                 };
 
                 var response = await _service.CreateAsync(createSeriesDto);
@@ -220,7 +241,7 @@ public class SeriesSpreadsheetImporter(
                         Number = episode.Number,
                         Season = episode.Season,
                         VideoUrl = item.Video?.Url ?? episode.Video?.Url ?? string.Empty,
-                        VideoDuration = item.Video?.Duration ?? episode.Video?.Duration ??  0,
+                        VideoDuration = item.Video?.Duration ?? episode.Video?.Duration ?? 0,
                         VideoStreamFormat = item.Video?.StreamFormat ?? episode.Video?.StreamFormat ?? string.Empty,
                         VideoSubtitle = item.Video?.Subtitle ?? episode.Video?.Subtitle ?? string.Empty,
                         MediaDeliveryProfileId = item.MediaDeliveryProfileId ?? episode.MediaDeliveryProfileId,

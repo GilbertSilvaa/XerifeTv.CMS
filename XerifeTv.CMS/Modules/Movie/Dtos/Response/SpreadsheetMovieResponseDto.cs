@@ -13,6 +13,8 @@ public sealed class SpreadsheetMovieResponseDto
     public string? MediaRoute { get; private set; }
     public string? MediaDeliveryProfileId { get; set; }
     public string? TrailerVideoYoutubeId { get; set; }
+    public string? FranchiseName { get; set; }
+    public string? FranchiseId { get; set; }
 
     public static SpreadsheetMovieResponseDto FromCollunsStr(string[] cols)
     {
@@ -24,6 +26,7 @@ public sealed class SpreadsheetMovieResponseDto
         string? videoStreamFormat = cols[5];
         string? videoSubtitleUrl = cols[6];
         string? trailerVideoYoutubeId = cols[7];
+        string? franchiseName = cols[8];
 
         List<string?> requiredValues = [
             imdbId,
@@ -62,7 +65,8 @@ public sealed class SpreadsheetMovieResponseDto
             Video = new Video(videoUrl, 0, videoStreamFormat, videoSubtitleUrl),
             MediaDeliveryProfileName = mediaDeliveryProfileName,
             MediaRoute = mediaPath,
-            TrailerVideoYoutubeId = trailerVideoYoutubeId
+            TrailerVideoYoutubeId = trailerVideoYoutubeId,
+            FranchiseName = franchiseName
         };
     }
 }
