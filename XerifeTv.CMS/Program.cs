@@ -1,5 +1,7 @@
 ﻿using Scalar.AspNetCore;
 using System.Globalization;
+using System.Text.Encodings.Web;
+using System.Text.Unicode;
 using XerifeTv.CMS.Shared.Database.MongoDB;
 using XerifeTv.CMS.Shared.Extensions;
 
@@ -26,6 +28,8 @@ builder.Services.Configure<DBSettings>(
 	builder.Configuration.GetSection("MongoDBConfig"));
 
 builder.Services.AddConfiguration(builder.Configuration);
+
+builder.Services.AddSingleton<HtmlEncoder>(HtmlEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Latin1Supplement));
 
 var app = builder.Build();
 

@@ -41,7 +41,7 @@ public sealed class UserService(
 
 			if (response == null)
 				return Result<GetUserResponseDto?>.Failure(
-				  new Error("404", "Usuario nao encontrado"));
+				  new Error("404", "Usuário não encontrado"));
 
 			return Result<GetUserResponseDto?>.Success(GetUserResponseDto.FromEntity(response));
 		}
@@ -60,7 +60,7 @@ public sealed class UserService(
 
             if (response == null)
                 return Result<GetUserResponseDto?>.Failure(
-                  new Error("404", "Usuario nao encontrado"));
+                  new Error("404", "Usuário não encontrado"));
 
             return Result<GetUserResponseDto?>.Success(GetUserResponseDto.FromEntity(response));
         }
@@ -80,10 +80,10 @@ public sealed class UserService(
 			var usernameSpec = new UniqueUsernameSpecification(_repository);
 
 			if (!await emailSpec.IsSatisfiedByAsync(entity))
-				return Result<string>.Failure(new Error("409", "Email ja esta em uso"));
+				return Result<string>.Failure(new Error("409", "Email já está em uso"));
 
 			if (!await usernameSpec.IsSatisfiedByAsync(entity))
-				return Result<string>.Failure(new Error("409", "Username ja esta em uso"));
+				return Result<string>.Failure(new Error("409", "Username já está em uso"));
 
 			entity.Password = _hashPassword.Encrypt(dto.Password);
 			var response = await _repository.CreateAsync(entity);
@@ -108,16 +108,16 @@ public sealed class UserService(
 			var user = await _repository.GetAsync(dto.Id);
 
 			if (user == null)
-				return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
+				return Result<string>.Failure(new Error("404", "Usuário não encontrado"));
 
 			var emailSpec = new UniqueEmailSpecification(_repository);
 			var usernameSpec = new UniqueUsernameSpecification(_repository);
 
 			if (!await emailSpec.IsSatisfiedByAsync(dto.ToEntity()))
-				return Result<string>.Failure(new Error("409", "Email ja esta em uso"));
+				return Result<string>.Failure(new Error("409", "Email já está em uso"));
 
 			if (!await usernameSpec.IsSatisfiedByAsync(dto.ToEntity()))
-				return Result<string>.Failure(new Error("409", "Username ja esta em uso"));
+				return Result<string>.Failure(new Error("409", "Username já está em uso"));
 
 			if (dto.Blocked == false && user.Blocked)
 				user.FailedLoginAttempts = 0;
@@ -149,7 +149,7 @@ public sealed class UserService(
 			var user = await _repository.GetAsync(dto.Id);
 
 			if (user is null)
-				return Result<string>.Failure(new Error("404", "Usuario nao encontrado"));
+				return Result<string>.Failure(new Error("404", "Usuário não encontrado"));
 
 			var isPasswordCorrect = _hashPassword.Verify(dto.OldPassword, user.Password);
 
@@ -176,7 +176,7 @@ public sealed class UserService(
 
 			if (user is null)
 				return Result<ValidateResetPasswordGuidResponseDto>.Failure(
-					new Error("404", "Usuario nao encontrado"));
+					new Error("404", "Usuário não encontrado"));
 
 			user.Password = _hashPassword.Encrypt(dto.Password);
 			user.ResetPasswordGuid = Guid.Empty;
@@ -199,10 +199,10 @@ public sealed class UserService(
 			var response = await _repository.GetAsync(id);
 
 			if (response is null)
-				return Result<bool>.Failure(new Error("404", "Usuario nao encontrado"));
+				return Result<bool>.Failure(new Error("404", "Usuário não encontrado"));
 
 			if (response.Role == Enums.EUserRole.ADMIN)
-				return Result<bool>.Failure(new Error("403", "Usuario nao pode ser deletado"));
+				return Result<bool>.Failure(new Error("403", "Usuário não pode ser deletado"));
 
 			await _repository.DeleteAsync(id);
 			return Result<bool>.Success(true);
@@ -221,7 +221,7 @@ public sealed class UserService(
 			var user = await _repository.GetByEmailAsync(email);
 
 			if (user is null)
-				return Result<string>.Failure(new Error("404", "Email nao encontrado"));
+				return Result<string>.Failure(new Error("404", "Email não encontrado"));
 
 			user.ResetPasswordGuid = Guid.NewGuid();
 			user.ResetPasswordGuidExpires = DateTimeOffset.UtcNow.AddMinutes(10);
@@ -245,7 +245,7 @@ public sealed class UserService(
 			var user = await _repository.GetByResetPasswordGuidAsync(guid);
 
 			if (user is null)
-				return Result<ValidateResetPasswordGuidResponseDto>.Failure(new Error("404", "Link invalido"));
+				return Result<ValidateResetPasswordGuidResponseDto>.Failure(new Error("404", "Link inválido"));
 
 			if (user.ResetPasswordGuidExpires < DateTimeOffset.UtcNow)
 				return Result<ValidateResetPasswordGuidResponseDto>.Failure(new Error("401", "O link expirou"));
@@ -269,7 +269,7 @@ public sealed class UserService(
             var user = await _repository.GetAsync(userId);
 
             if (user == null)
-                return Result<bool>.Failure(new Error("404", "Usuario nao encontrado"));
+                return Result<bool>.Failure(new Error("404", "Usuário não encontrado"));
 
 			if (!_hashPassword.Verify(password, user.Password))
 			{

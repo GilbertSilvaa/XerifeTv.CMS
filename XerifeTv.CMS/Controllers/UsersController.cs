@@ -161,7 +161,7 @@ public class UsersController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Usuario {dto.UserName} cadastrado com sucesso");
+		  : MessageViewHelper.SuccessJson($"Usuário {dto.UserName} cadastrado com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} registered a new user");
 
@@ -176,7 +176,7 @@ public class UsersController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Usuario {dto.UserName} atualizado com sucesso");
+		  : MessageViewHelper.SuccessJson($"Usuário {dto.UserName} atualizado com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
 		return RedirectToAction("Index");
@@ -189,7 +189,7 @@ public class UsersController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson("Usuario deletado com sucesso");
+		  : MessageViewHelper.SuccessJson("Usuário deletado com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} removed user with id = {id}");
 

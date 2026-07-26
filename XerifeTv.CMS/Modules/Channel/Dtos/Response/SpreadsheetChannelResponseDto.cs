@@ -31,12 +31,12 @@ public class SpreadsheetChannelResponseDto
 		];
 
 		if (requiredValues.Any(string.IsNullOrEmpty))
-			throw new SpreadsheetInvalidException($"[{title[..8]}] algum campo obrigatorio esta vazio");
+			throw new SpreadsheetInvalidException($"[{title[..8]}] algum campo obrigatório está vazio");
 		
 		if (!string.IsNullOrWhiteSpace(videoStreamFormat)
             && !StreamFormatsHelper.Streaming.Contains(videoStreamFormat) 
 		    && !StreamFormatsHelper.Vod.Contains(videoStreamFormat))
-			throw new SpreadsheetInvalidException($"[{title[..8]}] stream format invalido");
+			throw new SpreadsheetInvalidException($"[{title[..8]}] stream format inválido");
 
         var hasMediaDeliveryProfile =
             !string.IsNullOrWhiteSpace(mediaDeliveryProfileName) &&
@@ -47,7 +47,7 @@ public class SpreadsheetChannelResponseDto
             !string.IsNullOrWhiteSpace(videoStreamFormat);
 
         if (!hasMediaDeliveryProfile && !hasFixedVideo)
-            throw new SpreadsheetInvalidException($"[{title[..8]}] obrigatorio informar Media Delivery Profile/Media Path ou URL Video Fixed/Stream Format");
+            throw new SpreadsheetInvalidException($"[{title[..8]}] obrigatório informar Media Delivery Profile/Media Path ou URL Video Fixed/Stream Format");
 
 
         return new SpreadsheetChannelResponseDto

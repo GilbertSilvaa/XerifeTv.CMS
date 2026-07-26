@@ -35,8 +35,8 @@ public class BackgroundJobEntity : BaseEntity
             Type = type,
             JobName = type switch
             {
-                EBackgroundJobType.REGISTER_SPREADSHEET_MOVIES => $"Cadastro/Atualizacao de Filmes ({spreadsheetFileName})",
-                EBackgroundJobType.REGISTER_SPREADSHEET_SERIES => $"Cadastro/Atualizacao de Series ({spreadsheetFileName})",
+                EBackgroundJobType.REGISTER_SPREADSHEET_MOVIES => $"Cadastro/Atualização de Filmes ({spreadsheetFileName})",
+                EBackgroundJobType.REGISTER_SPREADSHEET_SERIES => $"Cadastro/Atualização de Séries ({spreadsheetFileName})",
                 EBackgroundJobType.REGISTER_SPREADSHEET_CHANNELS => $"Cadastro de Canais ({spreadsheetFileName})",
                 _ => string.Empty
             },
@@ -51,7 +51,7 @@ public class BackgroundJobEntity : BaseEntity
         return new BackgroundJobEntity
         {
             Type = EBackgroundJobType.IMPORT_EPISODES_FROM_SERIES_IMDB,
-            JobName = $"Importacao de Episodios via IMDB [{seriesImdbId}]",
+            JobName = $"Importação de Episódios via IMDB [{seriesImdbId}]",
             Status = EBackgroundJobStatus.PENDING,
             RequestedByUserId = userId,
             SeriesIdImportEpisodes = seriesId
@@ -67,8 +67,8 @@ public class BackgroundJobEntity : BaseEntity
                  : EBackgroundJobType.CALCULATE_CATEGORY_DISTRIBUTION_FOR_CONTENT_API_SERIES,
 
             JobName = type == ECalculateCategoryDistributionJobQueueType.MOVIES
-                ? "Calculo de Distribuicao de Categorias - Filmes"
-                : "Calculo de Distribuicao de Categorias - Series",
+                ? "Cálculo de Distribuição de Categorias - Filmes"
+                : "Cálculo de Distribuição de Categorias - Séries",
 
             Status = EBackgroundJobStatus.PENDING
         };
@@ -89,7 +89,7 @@ public class BackgroundJobEntity : BaseEntity
             JobName = type switch
             {
                 EDispatchWebhooksJobQueueType.MOVIES => "Disparo de Webhooks - Filmes",
-                EDispatchWebhooksJobQueueType.SERIES => "Disparo de Webhooks - Series",
+                EDispatchWebhooksJobQueueType.SERIES => "Disparo de Webhooks - Séries",
                 EDispatchWebhooksJobQueueType.CHANNELS => "Disparo de Webhooks - Canais",
                 _ => string.Empty
             },
@@ -102,10 +102,10 @@ public class BackgroundJobEntity : BaseEntity
     public BackgroundJobEntity Update(UpdateBackgroundJobRequestDto dto)
     {
         if (Status == EBackgroundJobStatus.COMPLETED || Status == EBackgroundJobStatus.FAILED)
-            throw new Exception("Background Job ja concluido");
+            throw new Exception("Background Job já concluído");
 
         if (TotalProcessedRecords > dto.TotalProcessedRecords)
-            throw new Exception("Nao foi possível reduzir o progresso. O valor atual ja esta maior ao informado");
+            throw new Exception("Não foi possível reduzir o progresso. O valor atual já está maior ao informado");
 
         if (dto.Status == EBackgroundJobStatus.PROCESSING && Status != EBackgroundJobStatus.PROCESSING)
             ProcessedAt = DateTime.UtcNow;

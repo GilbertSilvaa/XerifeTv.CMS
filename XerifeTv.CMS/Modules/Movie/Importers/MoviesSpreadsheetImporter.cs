@@ -37,7 +37,7 @@ public class MoviesSpreadsheetImporter(
 
 		if (response == null)
 			return Result<ImportSpreadsheetResponseDto>.Failure(
-			  new Error("400", $"Import Id {importId} nao encontrado"));
+			  new Error("400", $"Import Id {importId} não encontrado"));
 
 		await Task.Delay(500);
 		return Result<ImportSpreadsheetResponseDto>.Success(response);

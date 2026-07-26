@@ -40,7 +40,7 @@ public sealed class ChannelService(
 
             if (response is null)
                 return Result<GetChannelResponseDto?>
-                  .Failure(new Error("404", "Conteudo nao encontrado"));
+                  .Failure(new Error("404", "Conteúdo não encontrado"));
 
             return Result<GetChannelResponseDto?>
               .Success(GetChannelResponseDto.FromEntity(response));
@@ -61,7 +61,7 @@ public sealed class ChannelService(
 
             if (!await titleSpec.IsSatisfiedByAsync(entity))
             {
-                var errorMessage = $"Canal nao cadastrado. Titulo [{entity.Title}] duplicado";
+                var errorMessage = $"Canal não cadastrado. Título [{entity.Title}] duplicado";
                 return Result<string>.Failure(new Error("409", errorMessage));
             }
 
@@ -85,13 +85,13 @@ public sealed class ChannelService(
             var response = await _repository.GetAsync(entity.Id);
 
             if (response is null)
-                return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
+                return Result<string>.Failure(new Error("404", "Conteúdo não encontrado"));
 
             var titleSpec = new UniqueTitleSpecification(_repository);
 
             if (!await titleSpec.IsSatisfiedByAsync(entity))
             {
-                var errorMessage = $"Canal nao cadastrado. Titulo [{entity.Title}] duplicado";
+                var errorMessage = $"Canal não cadastrado. Título [{entity.Title}] duplicado";
                 return Result<string>.Failure(new Error("409", errorMessage));
             }
 
@@ -113,7 +113,7 @@ public sealed class ChannelService(
             var response = await _repository.GetAsync(id);
 
             if (response is null)
-                return Result<bool>.Failure(new Error("404", "Conteudo nao encontrado"));
+                return Result<bool>.Failure(new Error("404", "Conteúdo não encontrado"));
 
             await _repository.DeleteAsync(id);
             return Result<bool>.Success(true);

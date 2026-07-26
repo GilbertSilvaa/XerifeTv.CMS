@@ -24,7 +24,7 @@ public class BasicLoginStrategy(IUserService _userService, ITokenService _tokenS
 			var userResult = response.Data!;
 
 			if (userResult.Blocked)
-				return Result<LoginResponseDto>.Failure(new Error("403", "Usuario bloqueado"));
+				return Result<LoginResponseDto>.Failure(new Error("403", "Usuário bloqueado"));
 
 			var isPasswordCorrectResponse = await _userService.IsPasswordCorrect(userResult.Id, dto.Password);
 
@@ -32,7 +32,7 @@ public class BasicLoginStrategy(IUserService _userService, ITokenService _tokenS
 				return Result<LoginResponseDto>.Failure(isPasswordCorrectResponse.Error);
 
 			if (!isPasswordCorrectResponse.Data)
-				return Result<LoginResponseDto>.Failure(new Error("401", "Credenciais invalidas"));
+				return Result<LoginResponseDto>.Failure(new Error("401", "Credênciais inválidas"));
 
 			return Result<LoginResponseDto>.Success(
 				new LoginResponseDto(

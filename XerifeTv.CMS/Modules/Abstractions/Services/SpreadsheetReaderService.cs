@@ -13,7 +13,7 @@ public class SpreadsheetReaderService : ISpreadsheetReaderService
         {
             using var package = new ExcelPackage(fileStream);
             var worksheet = package.Workbook.Worksheets[worksheetIndex] 
-                ?? throw new SpreadsheetInvalidException("Planilha vazia ou nao encontrada");
+                ?? throw new SpreadsheetInvalidException("Planilha vazia ou não encontrada");
 
             var spreadsheetColumns = new List<string>();
             for (int col = 1; col <= worksheet.Dimension.End.Column; col++)

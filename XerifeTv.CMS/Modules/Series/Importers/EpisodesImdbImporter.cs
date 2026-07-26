@@ -30,7 +30,7 @@ public class EpisodesImdbImporter(
 
 		if (response == null)
 			return Result<ImportEpisodesResponseDto>.Failure(
-			  new Error("400", $"Import Id {importId} nao encontrado"));
+			  new Error("400", $"Import Id {importId} não encontrado"));
 
 		await Task.Delay(500);
 		return Result<ImportEpisodesResponseDto>.Success(response);

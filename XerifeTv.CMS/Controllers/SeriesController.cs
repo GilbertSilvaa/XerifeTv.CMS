@@ -100,7 +100,7 @@ public class SeriesController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Serie {dto.ImdbId} cadastrada com sucesso");
+		  : MessageViewHelper.SuccessJson($"Série {dto.ImdbId} cadastrada com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} registered the serie {dto.Title}");
 
@@ -114,7 +114,7 @@ public class SeriesController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Serie {dto.ImdbId} atualizada com sucesso");
+		  : MessageViewHelper.SuccessJson($"Série {dto.ImdbId} atualizada com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} updated the serie {dto.Title}");
 
@@ -130,7 +130,7 @@ public class SeriesController(
 
 			TempData["Notification"] = response.IsFailure
 			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-			  : MessageViewHelper.SuccessJson($"Serie deletada com sucesso");
+			  : MessageViewHelper.SuccessJson($"Série deletada com sucesso");
 
 			_logger.LogInformation($"{User.Identity?.Name} removed the serie with id = {id}");
 		}
@@ -169,7 +169,7 @@ public class SeriesController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Episodio T{dto.Season}:EP{dto.Number} cadastrado com sucesso");
+		  : MessageViewHelper.SuccessJson($"Episódio T{dto.Season}:EP{dto.Number} cadastrado com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
@@ -183,7 +183,7 @@ public class SeriesController(
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Episodio T{dto.Season}:EP{dto.Number} atualizado com sucesso");
+		  : MessageViewHelper.SuccessJson($"Episódio T{dto.Season}:EP{dto.Number} atualizado com sucesso");
 
 		_logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
@@ -199,7 +199,7 @@ public class SeriesController(
 
 			TempData["Notification"] = response.IsFailure
 			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-			  : MessageViewHelper.SuccessJson($"Episodio deletado com sucesso");
+			  : MessageViewHelper.SuccessJson($"Episódio deletado com sucesso");
 
 			_logger.LogInformation($"{User.Identity?.Name} deleted episode with id = {id} of the serie with id = {serieId}");
 		}
@@ -241,7 +241,7 @@ public class SeriesController(
 
 		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
 			TempData["Notification"] = MessageViewHelper
-			  .SuccessJson($"{response.Data.SuccessCount} series/episodios cadastrados/atualizados com sucesso");
+			  .SuccessJson($"{response.Data.SuccessCount} séries/episódios cadastrados/atualizados com sucesso");
 
 		if (response.IsSuccess)
 			return Ok(response.Data);
@@ -255,7 +255,7 @@ public class SeriesController(
 	{
 		if (string.IsNullOrEmpty(dto.SeriesId))
 		{
-			TempData["Notification"] = MessageViewHelper.ErrorJson("Ops! Houve um problema [serie invalida]");
+			TempData["Notification"] = MessageViewHelper.ErrorJson("Ops! Houve um problema [série inválida]");
 			return BadRequest();
 		}
 
@@ -275,7 +275,7 @@ public class SeriesController(
 
 		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.ImportedCount > 1)
 			TempData["Notification"] = MessageViewHelper
-			  .SuccessJson($"{response.Data.ImportedCount} episodios importados com sucesso");
+			  .SuccessJson($"{response.Data.ImportedCount} episódios importados com sucesso");
 
 		if (response.IsSuccess)
 			return Ok(response.Data);
