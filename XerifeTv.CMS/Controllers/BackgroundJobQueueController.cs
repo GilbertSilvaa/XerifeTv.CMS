@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text.Json;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
@@ -13,86 +14,101 @@ namespace XerifeTv.CMS.Controllers;
 [Authorize]
 public class BackgroundJobQueueController(IBackgroundJobQueueService _service, IUserService _userService) : Controller
 {
-	private const int limitResultsPage = 15;
+    private const int limitResultsPage = 15;
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Index(int? currentPage, string? username, EBackgroundJobStatus? status)
-	{
-		var modelView = new BackgroundJobQueueModelView();
-		var usernameSearch = User.Identity?.Name;
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Index(int? currentPage, string? username, EBackgroundJobStatus? status)
+    {
+        var modelView = new BackgroundJobQueueModelView();
+        var usernameSearch = User.Identity?.Name;
 
-		if (User.IsInRole("admin"))
-		{
-			usernameSearch = username ?? User.Identity?.Name;
-			var usersResult = await _userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
-			if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => u.Role != EUserRole.VISITOR) ?? [];
-		}
+        if (User.IsInRole("admin"))
+        {
+            usernameSearch = username ?? User.Identity?.Name;
+            var usersResult = await _userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
+            if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => u.Role != EUserRole.VISITOR) ?? [];
+        }
 
-		var jobsResult = await _service.GetByFilterAsync(new GetBackgroundJobsByFilterRequestDto(
-			order: EBackgroundJobOrderFilter.REGISTRATION_DATE_DESC,
-			limitResults: limitResultsPage,
-			currentPage: currentPage ?? 1,
-			responsibleUsername: usernameSearch,
-			status));
+        var jobsResult = await _service.GetByFilterAsync(new GetBackgroundJobsByFilterRequestDto(
+            order: EBackgroundJobOrderFilter.REGISTRATION_DATE_DESC,
+            limitResults: limitResultsPage,
+            currentPage: currentPage ?? 1,
+            responsibleUsername: usernameSearch,
+            status));
 
-		if (jobsResult.IsSuccess)
-		{
-			modelView.Jobs = jobsResult.Data?.Items ?? [];
-			ViewBag.CurrentPage = jobsResult.Data?.CurrentPage;
-			ViewBag.TotalPages = jobsResult.Data?.TotalPageCount ?? 1;
-			ViewBag.HasNextPage = jobsResult.Data?.HasNext;
-			ViewBag.HasPrevPage = jobsResult.Data?.HasPrevious;
-			ViewBag.Username = usernameSearch;
-			ViewBag.Status = status != null ? $"{(int)status}" : string.Empty;
+        if (jobsResult.IsSuccess)
+        {
+            modelView.Jobs = jobsResult.Data?.Items ?? [];
+            ViewBag.CurrentPage = jobsResult.Data?.CurrentPage;
+            ViewBag.TotalPages = jobsResult.Data?.TotalPageCount ?? 1;
+            ViewBag.HasNextPage = jobsResult.Data?.HasNext;
+            ViewBag.HasPrevPage = jobsResult.Data?.HasPrevious;
+            ViewBag.Username = usernameSearch;
+            ViewBag.Status = status != null ? $"{(int)status}" : string.Empty;
 
-			return View(modelView);
-		}
+            return View(modelView);
+        }
 
-		TempData["Notification"] = MessageViewHelper.ErrorJson(jobsResult.Error.Description ?? string.Empty);
+        TempData["Notification"] = MessageViewHelper.ErrorJson(jobsResult.Error.Description ?? string.Empty);
 
-		return View(modelView);
-	}
+        return View(modelView);
+    }
 
-	[HttpPost]
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> AddJobInQueueSpreadsheetRegisters(AddSpreadsheetJobQueueRequestDto dto)
-	{
-		dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
-		var response = await _service.AddJobInQueueAsync(dto);
+    [HttpPost]
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> AddJobInQueueSpreadsheetRegisters(AddSpreadsheetJobQueueRequestDto dto)
+    {
+        dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
+        var response = await _service.AddJobInQueueAsync(dto);
 
-		if (response.IsFailure) return BadRequest(response.Error.Description);
+        if (response.IsFailure) return BadRequest(response.Error.Description);
 
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Processo adicionado a fila com sucesso");
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Processo adicionado a fila com sucesso");
 
-		return Ok(response.Data);
-	}
+        return Ok(response.Data);
+    }
 
-	[HttpPost]
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> AddJobInQueueImportEpisodesSeries(AddImportEpisodesJobQueueRequestDto dto)
-	{
-		dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
-		var response = await _service.AddJobInQueueAsync(dto);
+    [HttpPost]
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> AddJobInQueueImportEpisodesSeries(AddImportEpisodesJobQueueRequestDto dto)
+    {
+        dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
+        var response = await _service.AddJobInQueueAsync(dto);
 
-		if (response.IsFailure) return BadRequest(response.Error.Description);
+        if (response.IsFailure) return BadRequest(response.Error.Description);
 
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Processo adicionado a fila com sucesso");
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Processo adicionado a fila com sucesso");
 
-		return Ok(response.Data);
-	}
+        return Ok(response.Data);
+    }
 
-	[HttpGet]
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> GetJobsNotification()
-	{
-		var response = await _service.GetJobsToNotifyAsync(username: User?.Identity?.Name ?? string.Empty);
+    [HttpGet]
+    [Authorize(Roles = "admin, common")]
+    public async Task GetJobsNotification(CancellationToken cancellationToken)
+    {
+        Response.Headers.Append("Content-Type", "text/event-stream");
+        Response.Headers.Append("Cache-Control", "no-cache");
+        Response.Headers.Append("Connection", "keep-alive");
 
-		if (response.IsFailure) return BadRequest(response.Error.Description);
+        using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, HttpContext.RequestAborted);
 
-		return Ok(response.Data);
-	}
+        try
+        {
+            while (!linked.IsCancellationRequested)
+            {
+                var response = await _service.GetJobsToNotifyAsync(username: User?.Identity?.Name ?? string.Empty);
+
+                var payload = $"data: {JsonSerializer.Serialize(response.Data)}\n\n";
+                await Response.WriteAsync(payload, linked.Token);
+                await Response.Body.FlushAsync(linked.Token);
+
+                await Task.Delay(TimeSpan.FromSeconds(5), linked.Token);
+            }
+        }
+        catch (OperationCanceledException) { }
+    }
 }
