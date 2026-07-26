@@ -11,5 +11,5 @@ public interface IWebhookService
     Task<Result<string>> CreateAsync(CreateWebhookRequestDto dto);
     Task<Result<string>> UpdateAsync(UpdateWebhookRequestDto dto);
     Task<Result<bool>> DeleteAsync(string id);
-    Task DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent @event, string idEntity);
+    Task<Result<IEnumerable<WebhookEntity>>> GetByTriggerEventAsync(EWebhookTriggerEvent @event, bool includeDisabled = false);
 }

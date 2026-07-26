@@ -1,16 +1,16 @@
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Dtos.Request;
 using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Specifications;
 using XerifeTv.CMS.Modules.Common;
-using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
-using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Channel;
 
 public sealed class ChannelService(
     IChannelRepository _repository,
-    IWebhookService _webhookService) : IChannelService
+    IBackgroundJobQueueService _backgroundJobQueueService) : IChannelService
 {
     public async Task<Result<PagedList<GetChannelResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -66,8 +66,7 @@ public sealed class ChannelService(
             }
 
             var response = await _repository.CreateAsync(entity);
-
-            _ = Task.Run(() => _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.CHANNEL_PUBLISHED, response));
+            await _backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.CHANNELS, response!);
 
             return Result<string>.Success(response);
         }

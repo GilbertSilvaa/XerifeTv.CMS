@@ -93,8 +93,7 @@ public class SeriesService(
 
             var response = await _repository.CreateAsync(entity);
             await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
-
-            _ = Task.Run(() => _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.SERIES_PUBLISHED, response));
+            await _backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.SERIES, response!);
 
             return Result<string>.Success(entity.Id);
         }

@@ -22,8 +22,8 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
 
     public async Task ProcessJobAsync(GetBackgroundJobResponseDto job)
     {
-        const int pageSizeContent = 16;
-        const int pageSizeMin = 10;
+        int pageSizeContent = ContentConstants.DefaultPageSizeContent;
+        int pageSizeMin = ContentConstants.DefaultPageSizeMin;
 
         using var scope = _serviceProvider.CreateScope();
         var backgroundJobQueueService = scope.ServiceProvider.GetRequiredService<IBackgroundJobQueueService>();
@@ -71,7 +71,15 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
 
             await contentSettingsRepository.CreateOrUpdateAsync(contentSettings);
 
-            updateBackgroundJobDto.Status = EBackgroundJobStatus.COMPLETED;
+            updateBackgroundJobDto = new UpdateBackgroundJobRequestDto
+            {
+                Id = job.Id,
+                TotalRecordsToProcess = categoriesWithEnoughContent.Count,
+                TotalSuccessfulRecords = categoriesWithEnoughContent.Count,
+                TotalProcessedRecords = categoriesWithEnoughContent.Count,
+                Status = EBackgroundJobStatus.COMPLETED
+            };
+
             await backgroundJobQueueService.UpdateAsync(updateBackgroundJobDto);
         }
 
@@ -115,7 +123,15 @@ public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBack
 
             await contentSettingsRepository.CreateOrUpdateAsync(contentSettings);
 
-            updateBackgroundJobDto.Status = EBackgroundJobStatus.COMPLETED;
+            updateBackgroundJobDto = new UpdateBackgroundJobRequestDto
+            {
+                Id = job.Id,
+                TotalRecordsToProcess = categoriesWithEnoughContent.Count,
+                TotalSuccessfulRecords = categoriesWithEnoughContent.Count,
+                TotalProcessedRecords = categoriesWithEnoughContent.Count,
+                Status = EBackgroundJobStatus.COMPLETED
+            };
+
             await backgroundJobQueueService.UpdateAsync(updateBackgroundJobDto);
         }
     }

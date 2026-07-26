@@ -102,6 +102,7 @@ public static class ConfigureServices
 		services.AddScoped<IBackgroundJobProcessorStrategy, ImportSpreadsheetBackgroundJobProcessorStrategy>();
 		services.AddScoped<IBackgroundJobProcessorStrategy, ImportEpisodesSeriesBackgroundJobProcessorStrategy>();
 		services.AddScoped<IBackgroundJobProcessorStrategy, CalculateCategoryDistributionBackgroundJobProcessorStrategy>();
+		services.AddScoped<IBackgroundJobProcessorStrategy, DispacthWebhooksBackgroundProcessorStrategy>();
 
         services.AddHostedService<BackgroundJobQueueWorker>();
 

@@ -99,6 +99,23 @@ public class BackgroundJobQueueService(
         }
     }
 
+    public async Task<Result<AddJobQueueResponseDto>> AddJobInQueueAsync(EDispatchWebhooksJobQueueType type, string dispatchWebhooksEntityId)
+    {
+        try
+        {
+            var backgroundJob = BackgroundJobEntity.Create(type, dispatchWebhooksEntityId);
+
+            var resultId = await _repository.CreateAsync(backgroundJob);
+
+            return Result<AddJobQueueResponseDto>.Success(new AddJobQueueResponseDto(resultId));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<AddJobQueueResponseDto>.Failure(error);
+        }
+    }
+
     public async Task<Result<PagedList<GetBackgroundJobResponseDto>>> GetByFilterAsync(GetBackgroundJobsByFilterRequestDto dto)
     {
         try

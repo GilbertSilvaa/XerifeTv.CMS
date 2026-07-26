@@ -91,7 +91,7 @@ public sealed class MovieService(
             var response = await _repository.CreateAsync(entity);
 
             await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
-            _ = Task.Run(() => _webhookService.DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent.MOVIE_PUBLISHED, response));
+            await _backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.MOVIES, response!);
 
             return Result<string>.Success(response);
         }
