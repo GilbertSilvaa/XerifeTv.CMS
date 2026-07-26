@@ -1,25 +1,12 @@
-﻿using Amazon.Runtime.Internal;
-using Microsoft.AspNetCore;
-using System.Text;
-using XerifeTv.CMS.Modules.Abstractions.Entities;
-using XerifeTv.CMS.Modules.Channel.Interfaces;
-using XerifeTv.CMS.Modules.Common;
-using XerifeTv.CMS.Modules.Common.Enums;
+﻿using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Request;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
-using XerifeTv.CMS.Modules.Movie.Interfaces;
-using XerifeTv.CMS.Modules.Series.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Integrations.Webhook;
 
-public sealed class WebhookService(
-    IWebhookRepository _repository,
-    IMovieRepository _movieRepository,
-    ISeriesRepository _seriesRepository,
-    IChannelRepository _channelRepository,
-    ILogger<WebhookService> _logger) : IWebhookService
+public sealed class WebhookService(IWebhookRepository _repository) : IWebhookService
 {
     public async Task<Result<PagedList<GetWebhookResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -97,150 +84,17 @@ public sealed class WebhookService(
         }
     }
 
-    public async Task DispacthWebhooksByTriggerEventAsync(EWebhookTriggerEvent @event, string idEntity)
+    public async Task<Result<IEnumerable<WebhookEntity>>> GetByTriggerEventAsync(EWebhookTriggerEvent @event, bool includeDisabled = false)
     {
-        const int MAX_RETRY_ATTEMPTS = 5;
-
-        var webhooks = await _repository.GetByTriggerEventAsync(@event);
-
-        using HttpClient httpClient = new();
-
-        foreach (var webhook in webhooks)
-        {
-            for (int attempt = 1; attempt <= MAX_RETRY_ATTEMPTS; attempt++)
-            {
-                try
-                {
-                    var request = new HttpRequestMessage
-                    {
-                        RequestUri = new Uri(webhook.Url),
-                        Method = webhook.HttpMethod.ToHttpMethod()
-                    };
-
-                    foreach (var header in webhook.Headers)
-                        request.Headers.TryAddWithoutValidation(header.Key, header.Value);
-
-                    string? payloadContent = await BuildPayloadAsync(@event, idEntity, webhook);
-
-                    if (!string.IsNullOrWhiteSpace(payloadContent))
-                        request.Content = new StringContent(payloadContent, Encoding.UTF8, "application/json");
-
-                    var result = await SendRequestWebhookAsync(httpClient, request, webhook);
-
-                    if (result.IsSuccess) break;
-
-                    _logger.LogWarning("Retrying webhook {WebhookName}, attempt {Attempt}/{MaxAttempts}", webhook.Name, attempt, MAX_RETRY_ATTEMPTS);
-
-                    await Task.Delay(TimeSpan.FromSeconds(attempt * 6));
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error executing webhook {WebhookName} on attempt {Attempt}", webhook.Name, attempt);
-
-                    if (attempt == MAX_RETRY_ATTEMPTS) break;
-                }
-            }
-        }
-    }
-
-    private async Task<string?> BuildPayloadAsync(EWebhookTriggerEvent @event, string idEntity, WebhookEntity webhook)
-    {
-        if (!webhook.HttpMethod.IsBodySupported() || string.IsNullOrWhiteSpace(webhook.PayloadTemplate))
-            return null;
-
-        return @event switch
-        {
-            EWebhookTriggerEvent.MOVIE_PUBLISHED =>
-                ReplacePayload(await _movieRepository.GetAsync(idEntity)),
-
-            EWebhookTriggerEvent.SERIES_PUBLISHED =>
-                ReplacePayload(await _seriesRepository.GetAsync(idEntity)),
-
-            EWebhookTriggerEvent.CHANNEL_PUBLISHED =>
-                ReplacePayload(await _channelRepository.GetAsync(idEntity)),
-
-            _ => null
-        };
-
-        string? ReplacePayload(BaseEntity? entity)
-        {
-            if (entity is null) return null;
-            return @event.ReplaceKeywords(webhook.PayloadTemplate!, entity);
-        }
-    }
-
-    private async Task<Result<bool>> SendRequestWebhookAsync(
-        HttpClient httpClient,
-        HttpRequestMessage requestMessage,
-        WebhookEntity webhook)
-    {
-        HttpResponseMessage? response = null;
-        string? responseBody = null;
-
         try
         {
-            response = await httpClient.SendAsync(requestMessage);
-
-            responseBody = response.Content != null
-                ? await response.Content.ReadAsStringAsync()
-                : null;
-
-            if (!response.IsSuccessStatusCode)
-            {
-                _logger.LogError(
-                    """
-                    Webhook execution failed
-                    Webhook: {WebhookName}
-                    Request:
-                      Method: {Method}
-                      Url: {Url}
-                      Headers: {@RequestHeaders}
-
-                    Response:
-                      StatusCode: {StatusCode}
-                      ReasonPhrase: {ReasonPhrase}
-                      Headers: {@ResponseHeaders}
-                      Body: {ResponseBody}
-                    """,
-                    webhook.Name,
-                    requestMessage.Method.Method,
-                    requestMessage.RequestUri,
-                    requestMessage.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
-                    (int)response.StatusCode,
-                    response.ReasonPhrase,
-                    response.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
-                    responseBody
-                );
-
-                return Result<bool>.Failure(new Error(response.StatusCode.ToString(), "Webhook returned a non-success status code"));
-            }
-
-            _logger.LogInformation("Webhook {WebhookName} executed successfully with status code {StatusCode}", webhook.Name, (int)response.StatusCode);
-
-            return Result<bool>.Success(true);
+            var response = await _repository.GetByTriggerEventAsync(@event, includeDisabled);
+            return Result<IEnumerable<WebhookEntity>>.Success(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
-                ex,
-                """
-                Exception while executing webhook
-                Webhook: {WebhookName}
-                Request:
-                  Method: {Method}
-                  Url: {Url}
-                  Headers: {@RequestHeaders}
-                ResponseBody (if any): {ResponseBody}
-                """,
-                webhook.Name,
-                requestMessage.Method.Method,
-                requestMessage.RequestUri,
-                requestMessage.Headers.ToDictionary(h => h.Key, h => string.Join(", ", h.Value)),
-                responseBody
-            );
-
-            return Result<bool>.Failure(new Error("500", ex.Message));
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<IEnumerable<WebhookEntity>>.Failure(error);
         }
     }
-
 }

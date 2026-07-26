@@ -19,6 +19,7 @@ public class BackgroundJobEntity : BaseEntity
     public ICollection<string> ErrorList { get; private set; } = [];
     public string? SpreadsheetFileUrl { get; private set; } = null;
     public string? SeriesIdImportEpisodes { get; private set; } = null;
+    public string? DispatchWebhooksEntityId { get; private set; } = null;
     public bool UserWasNotified { get; private set; } = false;
 
     public static BackgroundJobEntity Create(
@@ -69,6 +70,31 @@ public class BackgroundJobEntity : BaseEntity
                 ? "Calculo de Distribuicao de Categorias - Filmes"
                 : "Calculo de Distribuicao de Categorias - Series",
 
+            Status = EBackgroundJobStatus.PENDING
+        };
+    }
+
+    public static BackgroundJobEntity Create(EDispatchWebhooksJobQueueType type, string dispatchWebhooksEntityId)
+    {
+        return new BackgroundJobEntity
+        {
+            Type = type switch
+            {
+                EDispatchWebhooksJobQueueType.MOVIES => EBackgroundJobType.DISPATCH_WEBHOOKS_MOVIES,
+                EDispatchWebhooksJobQueueType.SERIES => EBackgroundJobType.DISPATCH_WEBHOOKS_SERIES,
+                EDispatchWebhooksJobQueueType.CHANNELS => EBackgroundJobType.DISPATCH_WEBHOOKS_CHANNELS,
+                _ => EBackgroundJobType.DISPATCH_WEBHOOKS_MOVIES
+            },
+
+            JobName = type switch
+            {
+                EDispatchWebhooksJobQueueType.MOVIES => "Disparo de Webhooks - Filmes",
+                EDispatchWebhooksJobQueueType.SERIES => "Disparo de Webhooks - Series",
+                EDispatchWebhooksJobQueueType.CHANNELS => "Disparo de Webhooks - Canais",
+                _ => string.Empty
+            },
+
+            DispatchWebhooksEntityId = dispatchWebhooksEntityId,
             Status = EBackgroundJobStatus.PENDING
         };
     }
