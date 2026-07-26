@@ -23,13 +23,13 @@ public sealed class SpreadsheetSeriesResponseDto
         List<string?> requiredValues = [imdbId, title, parentalRating];
 
         if (requiredValues.Any(string.IsNullOrEmpty))
-            throw new SpreadsheetInvalidException($"[{imdbId}] algum campo obrigatorio esta vazio");
+            throw new SpreadsheetInvalidException($"[{imdbId}] algum campo obrigatório está vazio");
 
         if (!int.TryParse(parentalRating, out var parentalRatingResult))
-            throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa em formato invalido");
+            throw new SpreadsheetInvalidException($"[{imdbId}] classificação indicativa em formato inválido");
 
         if (!ParentalRatingHelper.ParentalRatingList.Contains(parentalRatingResult))
-            throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa invalida");
+            throw new SpreadsheetInvalidException($"[{imdbId}] classificação indicativa inválida");
 
         return new SpreadsheetSeriesResponseDto
         {

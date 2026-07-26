@@ -45,7 +45,7 @@ public sealed class MovieService(
 
             if (response is null)
                 return Result<GetMovieResponseDto?>
-                  .Failure(new Error("404", "Conteudo nao encontrado"));
+                  .Failure(new Error("404", "Conteúdo não encontrado"));
 
             return Result<GetMovieResponseDto?>
               .Success(GetMovieResponseDto.FromEntity(response));
@@ -65,7 +65,7 @@ public sealed class MovieService(
 
             if (response is null)
                 return Result<GetMovieResponseDto?>
-                  .Failure(new Error("404", "Conteudo nao encontrado"));
+                  .Failure(new Error("404", "Conteúdo não encontrado"));
 
             return Result<GetMovieResponseDto?>
               .Success(GetMovieResponseDto.FromEntity(response));
@@ -86,7 +86,7 @@ public sealed class MovieService(
 
             if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
                 return Result<string>.Failure(
-                  new Error("409", $"Filme nao cadastrado. Imdb ID {entity.ImdbId} duplicado"));
+                  new Error("409", $"Filme não cadastrado. Imdb ID {entity.ImdbId} duplicado"));
 
             var response = await _repository.CreateAsync(entity);
 
@@ -110,13 +110,13 @@ public sealed class MovieService(
             var response = await _repository.GetAsync(entity.Id);
 
             if (response is null)
-                return Result<string>.Failure(new Error("404", "Conteudo nao encontrado"));
+                return Result<string>.Failure(new Error("404", "Conteúdo não encontrado"));
 
             var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
 
             if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
                 return Result<string>.Failure(
-                  new Error("409", $"Filme nao atualizado. Imdb ID {entity.ImdbId} duplicado"));
+                  new Error("409", $"Filme não atualizado. Imdb ID {entity.ImdbId} duplicado"));
 
             entity.CreateAt = response.CreateAt;
             await _repository.UpdateAsync(entity);
@@ -138,7 +138,7 @@ public sealed class MovieService(
             var response = await _repository.GetAsync(id);
 
             if (response is null)
-                return Result<bool>.Failure(new Error("404", "Conteudo nao encontrado"));
+                return Result<bool>.Failure(new Error("404", "Conteúdo não encontrado"));
 
             await _repository.DeleteAsync(id);
             await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);

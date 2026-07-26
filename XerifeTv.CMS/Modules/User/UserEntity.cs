@@ -15,7 +15,7 @@ public class UserEntity : BaseEntity
         set
         {
             if (!RegexHelper.IsValidEmail(value))
-                throw new ArgumentException("Email invalido");
+                throw new ArgumentException("Email inválido");
 
             _email = value;
         }

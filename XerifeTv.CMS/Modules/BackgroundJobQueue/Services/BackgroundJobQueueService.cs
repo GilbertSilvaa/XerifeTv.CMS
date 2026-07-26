@@ -24,7 +24,7 @@ public class BackgroundJobQueueService(
             var fileExtension = Path.GetExtension(dto.SpreadsheetFile?.FileName);
 
             if (dto.SpreadsheetFile == null || !_acceptedExtensions.Contains(fileExtension))
-                return Result<AddJobQueueResponseDto>.Failure(new Error("400", "Arquivo de planilha invalido"));
+                return Result<AddJobQueueResponseDto>.Failure(new Error("400", "Arquivo de planilha inválido"));
 
             var jobGuidId = Guid.NewGuid();
 
@@ -153,7 +153,7 @@ public class BackgroundJobQueueService(
             var response = await _repository.GetAsync(dto.Id);
 
             if (response == null)
-                return Result<string>.Failure(new Error("404", "Background Job nao encontrado"));
+                return Result<string>.Failure(new Error("404", "Background Job não encontrado"));
 
             await _repository.UpdateAsync(response.Update(dto));
 
@@ -173,7 +173,7 @@ public class BackgroundJobQueueService(
             var entity = await _repository.GetAsync(id);
 
             if (entity == null)
-                return Result<bool>.Failure(new Error("404", "Background Job nao encontrado"));
+                return Result<bool>.Failure(new Error("404", "Background Job não encontrado"));
 
             await _repository.DeleteAsync(id);
 

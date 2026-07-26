@@ -30,12 +30,12 @@ public class GoogleLoginStrategy(
 				return Result<LoginResponseDto>.Failure(new Error("401", "Erro ao validar o token Google"));
 
 			if (payload.Aud != _configuration["OAuth2Google:ClientId"])
-				return Result<LoginResponseDto>.Failure(new Error("401", "Token Google invalido: client ID nao autorizado"));
+				return Result<LoginResponseDto>.Failure(new Error("401", "Token Google inválido: client ID não autorizado"));
 
 			var expiry = DateTimeOffset.FromUnixTimeSeconds(long.Parse(payload!.Exp));
 
 			if (expiry < DateTimeOffset.UtcNow)
-				return Result<LoginResponseDto>.Failure(new Error("401", "Token Google invalido ou expirado"));
+				return Result<LoginResponseDto>.Failure(new Error("401", "Token Google inválido ou expirado"));
 
 			var userResponse = await _userService.GetByEmailAsync(payload!.Email);
 
@@ -45,7 +45,7 @@ public class GoogleLoginStrategy(
 			var userResult = userResponse.Data!;
 
 			if (userResult.Blocked)
-				return Result<LoginResponseDto>.Failure(new Error("403", "Usuario bloqueado"));
+				return Result<LoginResponseDto>.Failure(new Error("403", "Usuário bloqueado"));
 
 			return Result<LoginResponseDto>.Success(
 				new LoginResponseDto(

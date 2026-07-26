@@ -22,7 +22,7 @@ public class MediaDeliveryProfilesController(
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson($"Perfil Entrega de Midia cadastrado com sucesso");
+          : MessageViewHelper.SuccessJson($"Perfil Entrega de Mídia cadastrado com sucesso");
 
         _logger.LogInformation($"{User.Identity?.Name} registered the media delivery profile {dto.Name}");
 
@@ -35,7 +35,7 @@ public class MediaDeliveryProfilesController(
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson($"Perfil Entrega de Midia atualizado com sucesso");
+          : MessageViewHelper.SuccessJson($"Perfil Entrega de Mídia atualizado com sucesso");
 
         _logger.LogInformation($"{User.Identity?.Name} updated the media delivery profile {dto.Name}");
 
@@ -50,7 +50,7 @@ public class MediaDeliveryProfilesController(
 
             TempData["Notification"] = response.IsFailure
               ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-              : MessageViewHelper.SuccessJson($"Perfil Entrega de Midia deletado com sucesso");
+              : MessageViewHelper.SuccessJson($"Perfil Entrega de Mídia deletado com sucesso");
 
             _logger.LogInformation($"{User.Identity?.Name} removed the media delivery profile with id = {id}");
         }

@@ -34,18 +34,18 @@ public sealed class SpreadsheetMovieResponseDto
         ];
 
         if (requiredValues.Any(string.IsNullOrEmpty))
-            throw new SpreadsheetInvalidException($"[{imdbId}] algum campo obrigatorio esta vazio");
+            throw new SpreadsheetInvalidException($"[{imdbId}] algum campo obrigatório está vazio");
 
         if (!int.TryParse(parentalRating, out var parentalRatingResult))
-            throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa em formato invalido");
+            throw new SpreadsheetInvalidException($"[{imdbId}] classificação indicativa em formato inválido");
 
         if (!ParentalRatingHelper.ParentalRatingList.Contains(parentalRatingResult))
-            throw new SpreadsheetInvalidException($"[{imdbId}] classificacao indicativa invalida");
+            throw new SpreadsheetInvalidException($"[{imdbId}] classificação indicativa inválida");
 
         if (!string.IsNullOrWhiteSpace(videoStreamFormat)
             && !StreamFormatsHelper.Streaming.Contains(videoStreamFormat)
             && !StreamFormatsHelper.Vod.Contains(videoStreamFormat))
-            throw new SpreadsheetInvalidException($"[{imdbId}] stream format invalido");
+            throw new SpreadsheetInvalidException($"[{imdbId}] stream format inválido");
 
         var hasMediaDeliveryProfile =
             !string.IsNullOrWhiteSpace(mediaDeliveryProfileName) &&
@@ -56,7 +56,7 @@ public sealed class SpreadsheetMovieResponseDto
             !string.IsNullOrWhiteSpace(videoStreamFormat);
 
         if (!hasMediaDeliveryProfile && !hasFixedVideo)
-            throw new SpreadsheetInvalidException( $"[{imdbId}] obrigatorio informar Media Delivery Profile/Media Path ou URL Video Fixed/Stream Format");
+            throw new SpreadsheetInvalidException( $"[{imdbId}] obrigatório informar Media Delivery Profile/Media Path ou URL Video Fixed/Stream Format");
 
         return new SpreadsheetMovieResponseDto
         {

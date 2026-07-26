@@ -36,7 +36,7 @@ public class AuthService(
             var (isValid, userName) = await _tokenService.ValidateTokenAsync(refreshToken);
 
             if (!isValid)
-                return Result<(string?, string?)>.Failure(new Error("401", "Token invalido"));
+                return Result<(string?, string?)>.Failure(new Error("401", "Token inválido"));
 
             var response = await _userService.GetByUsernameAsync(userName!);
 
@@ -46,7 +46,7 @@ public class AuthService(
             var userResult = response.Data!;
 
             if (userResult.Blocked)
-                return Result<(string?, string?)>.Failure(new Error("403", "Usuario bloqueado"));
+                return Result<(string?, string?)>.Failure(new Error("403", "Usuário bloqueado"));
 
             return Result<(string?, string?)>.Success((
                 _tokenService.GenerateToken(userResult.UserName, userResult.Role),

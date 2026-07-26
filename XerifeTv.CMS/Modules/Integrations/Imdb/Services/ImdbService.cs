@@ -25,7 +25,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
 
             if (result is null)
                 return Result<GetAllResultsByImdbIdResponseDto?>.Failure(
-                    new Error("404", $"Imdb ID: {imdbId} invalido"));
+                    new Error("404", $"Imdb ID: {imdbId} inválido"));
 
             return Result<GetAllResultsByImdbIdResponseDto?>.Success(result);
         }
@@ -55,7 +55,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
 
             if (result is null)
                 return Result<GetMovieByImdbResponseDto?>.Failure(
-                    new Error("404", $"Imdb ID: {imdbId} invalido"));
+                    new Error("404", $"Imdb ID: {imdbId} inválido"));
 
             return Result<GetMovieByImdbResponseDto?>.Success(result);
         }
@@ -77,7 +77,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
             var seriesResult = allResults.Data?.TvResults.FirstOrDefault();
             if (seriesResult == null)
                 return Result<GetSeriesByImdbResponseDto?>.Failure(
-                    new Error("404", $"[{imdbId}] serie invalida"));
+                    new Error("404", $"[{imdbId}] série inválida"));
 
             var client = new HttpClient();
             var url = $"https://api.themoviedb.org/3/tv/{seriesResult.Id}";
@@ -94,7 +94,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
 
             if (result is null)
                 return Result<GetSeriesByImdbResponseDto?>.Failure(
-                    new Error("404", $"Imdb ID: {imdbId} invalido"));
+                    new Error("404", $"Imdb ID: {imdbId} inválido"));
 
             return Result<GetSeriesByImdbResponseDto?>.Success(result);
         }
@@ -128,7 +128,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
 
             if (result is null)
                 return Result<GetSeriesEpisodesBySeasonResponseDto?>.Failure(
-                    new Error("404", $"Imdb ID: {imdbId} invalido"));
+                    new Error("404", $"Imdb ID: {imdbId} inválido"));
 
             return Result<GetSeriesEpisodesBySeasonResponseDto?>.Success(result);
         }

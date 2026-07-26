@@ -40,21 +40,21 @@ public sealed class SpreadsheetEpisodeResponseDto
 		];
 
 		if (requiredValues.Any(string.IsNullOrEmpty))
-			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] algum campo obrigatorio esta vazio");
+			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] algum campo obrigatório está vazio");
 
 		if (!int.TryParse(season, out var seasonResult))
-			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] season em formato invalido");
+			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] season em formato inválido");
 
 		if (!int.TryParse(episode, out var episodeResult))
-			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] numero de episodio em formato invalido");
+			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] número de episódio em formato inválido");
 
 		if (!string.IsNullOrWhiteSpace(videoStreamFormat)
             && !StreamFormatsHelper.Streaming.Contains(videoStreamFormat)
 			&& !StreamFormatsHelper.Vod.Contains(videoStreamFormat))
-			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] stream format invalido");
+			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] stream format inválido");
 
 		if (!long.TryParse(videoDuration, out var videoDurationResult))
-			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] duracao de video em formato invalido");
+			throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] duração de vídeo em formato inválido");
 
         var hasMediaDeliveryProfile =
             !string.IsNullOrWhiteSpace(mediaDeliveryProfileName) &&
@@ -65,7 +65,7 @@ public sealed class SpreadsheetEpisodeResponseDto
             !string.IsNullOrWhiteSpace(videoStreamFormat);
 
         if (!hasMediaDeliveryProfile && !hasFixedVideo)
-            throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] obrigatorio informar Media Delivery Profile/Media Path ou URL Video Fixed/Stream Format");
+            throw new SpreadsheetInvalidException($"[{seriesImdbId}:S{season}E{episode}] obrigatório informar Media Delivery Profile/Media Path ou URL Video Fixed/Stream Format");
 
 
         return new SpreadsheetEpisodeResponseDto

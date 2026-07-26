@@ -20,7 +20,7 @@ public static class EWebhookTriggerEventExtensions
         return eventType switch
         {
             EWebhookTriggerEvent.MOVIE_PUBLISHED => "Filme Publicado",
-            EWebhookTriggerEvent.SERIES_PUBLISHED => "Serie Publicada",
+            EWebhookTriggerEvent.SERIES_PUBLISHED => "Série Publicada",
             EWebhookTriggerEvent.CHANNEL_PUBLISHED => "Canal Publicado",
             _ => "Unknown Event"
         };
@@ -34,11 +34,11 @@ public static class EWebhookTriggerEventExtensions
                 return [
                     "{{Id}}",
                     "{{ImdbId}}",
-                    "{{Titulo}}",
+                    "{{Título}}",
                     "{{PosterUrl}}",
                     "{{BannerUrl}}",
-                    "{{Ano Lancamento}}",
-                    "{{Classificacao Indicativa}}",
+                    "{{Ano Lançamento}}",
+                    "{{Classificação Indicativa}}",
                     "{{Tempo}}"
                 ];
 
@@ -46,18 +46,18 @@ public static class EWebhookTriggerEventExtensions
                 return [
                     "{{Id}}",
                     "{{ImdbId}}",
-                    "{{Titulo}}",
+                    "{{Título}}",
                     "{{PosterUrl}}",
                     "{{BannerUrl}}",
-                    "{{Ano Lancamento}}",
-                    "{{Classificacao Indicativa}}",
+                    "{{Ano Lançamento}}",
+                    "{{Classificação Indicativa}}",
                     "{{Temporadas}}"
                 ];
 
             case EWebhookTriggerEvent.CHANNEL_PUBLISHED:
                 return [
                     "{{Id}}",
-                    "{{Titulo}}",
+                    "{{Título}}",
                     "{{LogoUrl}}"
                 ];
 
@@ -72,10 +72,13 @@ public static class EWebhookTriggerEventExtensions
         {
             payloadTemplate = payloadTemplate.Replace("{{Id}}", movieEntity!.Id);
             payloadTemplate = payloadTemplate.Replace("{{ImdbId}}", movieEntity!.ImdbId);
+            payloadTemplate = payloadTemplate.Replace("{{Título}}", movieEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{Titulo}}", movieEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{PosterUrl}}", movieEntity!.PosterUrl);
             payloadTemplate = payloadTemplate.Replace("{{BannerUrl}}", movieEntity!.BannerUrl);
+            payloadTemplate = payloadTemplate.Replace("{{Ano Lançamento}}", movieEntity!.ReleaseYear.ToString());
             payloadTemplate = payloadTemplate.Replace("{{Ano Lancamento}}", movieEntity!.ReleaseYear.ToString());
+            payloadTemplate = payloadTemplate.Replace("{{Classificação Indicativa}}", movieEntity!.ParentalRating.ToString());
             payloadTemplate = payloadTemplate.Replace("{{Classificacao Indicativa}}", movieEntity!.ParentalRating.ToString());
             payloadTemplate = payloadTemplate.Replace("{{Tempo}}", DateTimeHelper.ConvertSecondsToHHmm(movieEntity!.Video!.Duration));
         }
@@ -84,10 +87,13 @@ public static class EWebhookTriggerEventExtensions
         {
             payloadTemplate = payloadTemplate.Replace("{{Id}}", seriesEntity!.Id);
             payloadTemplate = payloadTemplate.Replace("{{ImdbId}}", seriesEntity!.ImdbId);
+            payloadTemplate = payloadTemplate.Replace("{{Título}}", seriesEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{Titulo}}", seriesEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{PosterUrl}}", seriesEntity!.PosterUrl);
             payloadTemplate = payloadTemplate.Replace("{{BannerUrl}}", seriesEntity!.BannerUrl);
+            payloadTemplate = payloadTemplate.Replace("{{Ano Lançamento}}", seriesEntity!.ReleaseYear.ToString());
             payloadTemplate = payloadTemplate.Replace("{{Ano Lancamento}}", seriesEntity!.ReleaseYear.ToString());
+            payloadTemplate = payloadTemplate.Replace("{{Classificação Indicativa}}", seriesEntity!.ParentalRating.ToString());
             payloadTemplate = payloadTemplate.Replace("{{Classificacao Indicativa}}", seriesEntity!.ParentalRating.ToString());
             payloadTemplate = payloadTemplate.Replace("{{Temporadas}}", seriesEntity!.NumberSeasons.ToString());
         }
@@ -95,6 +101,7 @@ public static class EWebhookTriggerEventExtensions
         if (eventType == EWebhookTriggerEvent.CHANNEL_PUBLISHED && entity is ChannelEntity channelEntity)
         {
             payloadTemplate = payloadTemplate.Replace("{{Id}}", channelEntity!.Id);
+            payloadTemplate = payloadTemplate.Replace("{{Título}}", channelEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{Titulo}}", channelEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{LogoUrl}}", channelEntity!.LogoUrl);
         }

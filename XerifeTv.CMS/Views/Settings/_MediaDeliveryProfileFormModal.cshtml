@@ -25,7 +25,7 @@
                 <h1 class="modal-title fs-5"
                     id="mediaDeliveryProfileFormModal-@Model?.Id-Label">
                     @(string.IsNullOrEmpty(Model?.Id) ? "Cadastrar" : "Editar")
-                    Perfil de Entrega de Midia
+                    Perfil de Entrega de Mídia
                 </h1>
 
                 <button type="button"
@@ -175,7 +175,7 @@
     });
 
     document.querySelector('.btn-delete-media-profile-@Model?.Id')?.addEventListener('click', function() {
-        if (!confirm('Deseja realmente remover este Perfil Entrega de Midia?')) return;
+        if (!confirm('Deseja realmente remover este Perfil Entrega de Mídia?')) return;
 
         location.href = '@Url.Action("Delete", "MediaDeliveryProfiles", new { id = Model?.Id })';
     });

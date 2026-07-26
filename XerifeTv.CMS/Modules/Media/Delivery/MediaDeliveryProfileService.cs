@@ -53,7 +53,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
             var response = await _repository.GetAsync(id);
 
             if (response == null)
-                return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de midia nao encontrado"));
+                return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de mídia não encontrado"));
 
             return Result<GetMediaDeliveryProfileResponseDto?>.Success(GetMediaDeliveryProfileResponseDto.FromEntity(response));
         }
@@ -71,7 +71,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
             var response = await _repository.GetByNameAsync(name, isIncludeDisabled);
 
             if (response == null)
-                return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de midia nao encontrado"));
+                return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de mídia não encontrado"));
 
             return Result<GetMediaDeliveryProfileResponseDto?>.Success(GetMediaDeliveryProfileResponseDto.FromEntity(response));
         }
@@ -106,7 +106,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
             var response = await _repository.GetAsync(dto.Id);
 
             if (response == null)
-                return Result<string>.Failure(new Error("404", "Perfil de entrega de midia nao encontrado"));
+                return Result<string>.Failure(new Error("404", "Perfil de entrega de mídia não encontrado"));
 
             entity.CreateAt = response.CreateAt;
             await _repository.UpdateAsync(entity);
@@ -126,7 +126,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
             var response = await _repository.GetAsync(id);
 
             if (response == null)
-                return Result<bool>.Failure(new Error("404", "Perfil de entrega de midia nao encontrado"));
+                return Result<bool>.Failure(new Error("404", "Perfil de entrega de mídia não encontrado"));
 
             await _repository.DeleteAsync(id);
             return Result<bool>.Success(true);
