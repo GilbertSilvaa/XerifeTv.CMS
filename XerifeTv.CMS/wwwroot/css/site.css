@@ -1,5 +1,23 @@
 @import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:ital,wght@0,200..900;1,200..900&display=swap');
 
+:root,
+[data-bs-theme="light"] {
+    --dashboard-card-bg: #fff;
+    --dashboard-card-border: 1px solid #ddd;
+}
+
+[data-bs-theme="dark"] {
+    --dashboard-card-bg: #2b3035;
+    --dashboard-card-border: none;
+}
+
+.card-dashboard,
+.cards-statistics,
+.card-graphic {
+    background-color: var(--dashboard-card-bg) !important;
+    border: var(--dashboard-card-border) !important;
+}
+
 * {
   font-family: 'Source Sans 3', sans-serif;
 }
@@ -32,7 +50,7 @@ html {
 }
 
 .card-dashboard {
-  height: 10rem;
+  height: 10.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;

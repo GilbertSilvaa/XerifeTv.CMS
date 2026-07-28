@@ -1,100 +1,248 @@
 ﻿@using XerifeTv.CMS.Modules.Dashboard.Dtos.Response;
+@using XerifeTv.CMS.Shared.Extensions
 
 @model GetDashboardDataRequestDto;
 
 @{
-  ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Dashboard";
 }
 
+<style>
+    .cards-statistics {
+        max-width: 49%;
+    }
+
+    @@media (max-width: 800px) {
+        .cards-statistics {
+            max-width: 100%;
+            margin-top: 1rem;
+        }
+    }
+</style>
+
 <div class="container">
-  <header>
-    <div class="d-flex align-items-center justify-content-between gap-4">
-      <span class="fs-3 fw-normal">Dashboard</span>
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4">
+            <span class="fs-3 fw-normal">Dashboard</span>
+        </div>
+        <hr />
+    </header>
+
+    <div class="d-flex flex-wrap gap-4">
+        <div class="flex-fill card-dashboard py-3">
+            <div class="d-flex justify-content-between align-items-center px-3">
+                <i class="fa-solid fa-film display-6 text-success"></i>
+                <span class="display-5 fw-bold">@Model.NumberOfMoviesTotal</span>
+            </div>
+            <div class="px-3 d-flex flex-column align-items-start">
+                <span class="fs-4 fw-normal">Filmes</span>
+
+                @if (Model.NumberOfMoviesAddedCurrentMonth > 0)
+                {
+                    <span class="fs-6 text-success">+@Model.NumberOfMoviesAddedCurrentMonth este mês</span>
+                }
+                else
+                {
+                    <span class="fs-6 opacity-75">sem alteração</span>
+                }
+            </div>
+        </div>
+
+        <div class="flex-fill card-dashboard py-3">
+            <div class="d-flex justify-content-between align-items-center px-3">
+                <i class="fa-solid fa-clapperboard display-6 text-primary"></i>
+                <span class="display-5 fw-bold">@Model.NumberOfSeriesTotal</span>
+            </div>
+            <div class="px-3 d-flex flex-column align-items-start">
+                <span class="fs-4 fw-normal">Séries</span>
+
+                @if (Model.NumberOfSeriesAddedCurrentMonth > 0)
+                {
+                    <span class="fs-6 text-primary">+@Model.NumberOfSeriesAddedCurrentMonth este mês</span>
+                }
+                else
+                {
+                    <span class="fs-6 opacity-75">sem alteração</span>
+                }
+            </div>
+        </div>
+
+        <div class="flex-fill card-dashboard py-3">
+            <div class="d-flex justify-content-between align-items-center px-3">
+                <i class="fa-solid fa-satellite-dish display-6 text-warning"></i>
+                <span class="display-5 fw-bold">@Model.NumberOfChannelsTotal</span>
+            </div>
+            <div class="px-3 d-flex flex-column align-items-start">
+                <span class="fs-4 fw-normal">Canais</span>
+
+                @if (Model.NumberOfChannelsAddedCurrentMonth > 0)
+                {
+                    <span class="fs-6 text-warning">+@Model.NumberOfChannelsAddedCurrentMonth este mês</span>
+                }
+                else
+                {
+                    <span class="fs-6 opacity-75">sem alteração</span>
+                }
+            </div>
+        </div>
     </div>
-    <hr />
-  </header>
 
-  <div class="row gap-4">
-    <div class="col-lg-3 card-dashboard bg-success text-light py-3">
-      <div class="d-flex justify-content-between align-items-center px-3">
-        <i class="fa-solid fa-clapperboard display-5"></i>
-        <span class="display-5 fw-bold">@Model.NumberOfMovies</span>
-      </div>
-      <div class="w-full px-3 d-flex justify-content-between align-items-center">
-        <span class="fs-4">Qtde. Filmes</span>
+    <div class="d-none d-lg-flex mt-4">
+        <div class="col-lg-12 card-graphic p-3 flex-fill" style="height: 30vh;">
+            <span class="fs-6 fw-bold text-opacity-75">Conteúdos adicionados por mês (acumulado)</span>
 
-        @if (!User.IsInRole("visitor"))
-        {
-          <a class="text-light fs-5" asp-controller="Movies" asp-action="Form">
-            <i class="fa-solid fa-plus"></i>
-          </a>
-        }
-      </div>
+            <div class="mt-3" style="height: 90%;">
+                <canvas id="chart" style="width: 100%; height: 100%;"></canvas>
+            </div>
+        </div>
     </div>
 
-    <div class="col-lg-3 card-dashboard bg-primary text-light py-3">
-      <div class="d-flex justify-content-between align-items-center px-3">
-        <i class="fa-solid fa-photo-film display-5"></i>
-        <span class="display-5 fw-bold">@Model.NumberOfSeries</span>
-      </div>
-      <div class="w-full px-3 d-flex justify-content-between align-items-center">
-        <span class="fs-4">Qtde. Séries</span>
+    <div class="d-flex flex-wrap justify-content-between mt-4">
+        <div class="flex-fill p-3 cards-statistics">
+            <span class="fs-6 fw-normal text-opacity-75 fw-bold">Adicionados recentemente</span>
 
-        @if (!User.IsInRole("visitor"))
-        {
-          <a class="text-light fs-5" asp-controller="Series" asp-action="Form">
-            <i class="fa-solid fa-plus"></i>
-          </a>
-        }
-      </div>
+            <div class="mt-3 d-flex flex-column gap-2">
+
+                @foreach (var item in Model.LatestContents)
+                {
+                    <div class="d-flex justify-content-between align-items-center gap-2">
+
+                        <div class="d-flex align-items-center gap-2" style="max-width: 78%;">
+                            @{
+                                string iconContent = item.Type switch
+                                {
+                                    ELatestContentType.CHANNEL => "fa-solid fa-satellite-dish",
+                                    ELatestContentType.MOVIE => "fa-solid fa-film",
+                                    ELatestContentType.SERIES => "fa-solid fa-clapperboard",
+                                    _ => "fa-solid fa-film"
+                                };
+                            }
+
+                            <i class="@Html.Raw(iconContent) opacity-75"></i>
+                            <span class="opacity-75 text-truncate">
+                                @item.Title
+                            </span>
+                        </div>
+
+                        <div class="opacity-75 text-nowrap">@item.PublishAt.ToRelativeString()</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="flex-fill p-3 cards-statistics">
+            <span class="fs-6 fw-normal fw-bold">Últimas ações no sistema</span>
+
+            <div class="mt-3 d-flex flex-column gap-2 w-100">
+                <div class="d-flex justify-content-between align-items-center gap-2">
+
+                    <div class="d-flex align-items-center gap-2" style="max-width: 78%;">
+                        <i class="fa-regular fa-user text-opacity-50"></i>
+                        <span class="text-opacity-75 text-truncate">
+                            Daniel adicionou Duna: Parte 4
+                        </span>
+                    </div>
+
+                    <div class="text-opacity-50 text-nowrap">ontem</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center gap-2">
+
+                    <div class="d-flex align-items-center gap-2" style="max-width: 78%;">
+                        <i class="fa-regular fa-user text-opacity-50"></i>
+                        <span class="text-opacity-75 text-truncate">
+                            Daniel adicionou Duna: Parte 4
+                        </span>
+                    </div>
+
+                    <div class="text-opacity-50 text-nowrap">ontem</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center gap-2">
+
+                    <div class="d-flex align-items-center gap-2" style="max-width: 78%;">
+                        <i class="fa-regular fa-user text-opacity-50"></i>
+                        <span class="text-opacity-75 text-truncate">
+                            Churrasco adicionou Duna: Parte 4
+                        </span>
+                    </div>
+
+                    <div class="text-opacity-50 text-nowrap">ontem</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center gap-2">
+
+                    <div class="d-flex align-items-center gap-2" style="max-width: 78%;">
+                        <i class="fa-regular fa-user text-opacity-50"></i>
+                        <span class="text-opacity-75 text-truncate">
+                            Daniel adicionou Duna: Parte 4
+                        </span>
+                    </div>
+
+                    <div class="text-opacity-50 text-nowrap">ontem</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center gap-2">
+
+                    <div class="d-flex align-items-center gap-2" style="max-width: 78%;">
+                        <i class="fa-regular fa-user text-opacity-50"></i>
+                        <span class="text-opacity-75 text-truncate">
+                            Admin adicionou Homem-Aranha: de volta pra casa
+                        </span>
+                    </div>
+
+                    <div class="text-opacity-50 text-nowrap">ontem</div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="col-lg-3 card-dashboard bg-danger text-light py-3">
-      <div class="d-flex justify-content-between align-items-center px-3">
-        <i class="fa-solid fa-satellite-dish display-5"></i>
-        <span class="display-5 fw-bold">@Model.NumberOfChannels</span>
-      </div>
-      <div class="w-full px-3 d-flex justify-content-between align-items-center">
-        <span class="fs-4">Qtde. Canais</span>
+    <div class="d-flex flex-wrap justify-content-between mt-4 p-3 opacity-75 card-graphic">
+        <div>
+            <i class="fa-solid fa-arrows-rotate me-2"></i>
+            Última sincronização em: @TimeZoneInfo.ConvertTime(DateTime.UtcNow, TimeZoneInfo.FindSystemTimeZoneById("America/Sao_Paulo")).ToString("dd/MM/yyyy HH:mm")
+        </div>
 
-        @if (!User.IsInRole("visitor"))
-        {
-          <a class="text-light fs-5" asp-controller="Channels" asp-action="Form">
-            <i class="fa-solid fa-plus"></i>
-          </a>
-        }
-      </div>
+        <div>
+            <i class="fa-solid fa-database me-2"></i>
+            Armazenamento: 24% usado
+        </div>
     </div>
-  </div>
-
-  <div class="w-full d-none d-lg-block" style="height: 60vh;">
-    <canvas class="mt-5 w-full h-full" id="chart"></canvas>
-  </div>
 
 </div>
 
 @section scripts {
-  <script>
-    var ctx = document.getElementById('chart').getContext('2d');
+    <script>
+        var ctx = document.getElementById('chart').getContext('2d');
 
-    var chart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['Filmes', 'Séries', 'Canais'],
-        datasets: [{
-          label: 'Qtde. Conteúdos',
-          data: [
-            @Model.NumberOfMovies, 
-            @Model.NumberOfSeries, 
-            @Model.NumberOfChannels
-          ],
-          backgroundColor: [
-            '#0d8d3799',
-            '#2b60a3b8',
-            'rgba(227,51,51,0.72)',
-          ]
-        }]
-      },  
-    });
-  </script>
+        var chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [ @Html.Raw(string.Join(',', Model.MonthlyContentCounts.Select(c => "'" + c.MonthName + "'"))) ],
+                datasets: [{
+                    label: 'Conteúdos adicionados (acumulado)',
+                    data: [ @Html.Raw(string.Join(',', Model.MonthlyContentCounts.Select(c => c.Count))) ],
+                    borderColor: '#1D9E75',
+                    backgroundColor: 'rgba(29,158,117,0.15)',
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#1D9E75'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
 }

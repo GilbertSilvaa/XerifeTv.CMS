@@ -16,6 +16,6 @@ public class HomeController(IDashboardService _service, ILogger<HomeController> 
 
         if (response.IsSuccess) return View(response.Data);
 
-        return View(new GetDashboardDataRequestDto(0, 0, 0));
+        return View(new GetDashboardDataRequestDto([], []));
     }
 }
