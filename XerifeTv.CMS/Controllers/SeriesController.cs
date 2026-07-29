@@ -1,6 +1,7 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
@@ -11,6 +12,7 @@ using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.Series.Models;
 
@@ -18,13 +20,14 @@ namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
 public class SeriesController(
-  ISeriesService _service,
-  IImdbService _imdbService,
-  ILogger<SeriesController> _logger,
-  IEpisodesImporter _episodesImporter,
-  ISpreadsheetBatchImporter<ISeriesService> _spreadsheetBatchImporter,
-  IMediaDeliveryProfileService _mediaDeliveryProfileService,
-  IFranchiseService _franchiseService) : Controller
+  ISeriesService service,
+  IImdbService imdbService,
+  ILogger<SeriesController> logger,
+  IEpisodesImporter episodesImporter,
+  ISpreadsheetBatchImporter<ISeriesService> spreadsheetBatchImporter,
+  IMediaDeliveryProfileService mediaDeliveryProfileService,
+  IFranchiseService franchiseService,
+  IAuditLogService auditLogService) : Controller
 {
 	private const int limitResultsPage = 20;
 
@@ -32,11 +35,11 @@ public class SeriesController(
 	{
 		Result<PagedList<GetSeriesResponseDto>> result;
 
-		_logger.LogInformation($"{User.Identity?.Name} accessed the series page");
+		logger.LogInformation($"{User.Identity?.Name} accessed the series page");
 
 		if (filter is ESeriesSearchFilter && !string.IsNullOrEmpty(search))
 		{
-			result = await _service.GetByFilterAsync(
+			result = await service.GetByFilterAsync(
 			  new GetSeriesByFilterRequestDto(
 				filter,
 				search,
@@ -49,7 +52,7 @@ public class SeriesController(
 		}
 		else
 		{
-			result = await _service.GetAsync(currentPage ?? 1, limitResultsPage);
+			result = await service.GetAsync(currentPage ?? 1, limitResultsPage);
 		}
 
 		if (result.IsSuccess)
@@ -73,12 +76,12 @@ public class SeriesController(
 
 		if (id is not null)
 		{
-			var response = await _service.GetAsync(id);
+			var response = await service.GetAsync(id);
 			if (response.IsSuccess)
             {
                 if (!string.IsNullOrWhiteSpace(response.Data?.FranchiseId))
                 {
-                    var franchiseResponse = await _franchiseService.GetAsync(response.Data.FranchiseId);
+                    var franchiseResponse = await franchiseService.GetAsync(response.Data.FranchiseId);
                     if (franchiseResponse.IsSuccess && franchiseResponse.Data is not null)
                     {
                         selectedFranchiseName = franchiseResponse.Data.Name;
@@ -96,13 +99,16 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> Create(CreateSeriesRequestDto dto)
 	{
-		var response = await _service.CreateAsync(dto);
+		var response = await service.CreateAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 		  : MessageViewHelper.SuccessJson($"Série {dto.ImdbId} cadastrada com sucesso");
 
-		_logger.LogInformation($"{User.Identity?.Name} registered the serie {dto.Title}");
+		logger.LogInformation($"{User.Identity?.Name} registered the serie {dto.Title}");
+
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Series", response.Data ?? string.Empty, $"adicionou a série {dto.Title}");
 
 		return RedirectToAction("Index");
 	}
@@ -110,13 +116,16 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> Update(UpdateSeriesRequestDto dto)
 	{
-		var response = await _service.UpdateAsync(dto);
+		var response = await service.UpdateAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 		  : MessageViewHelper.SuccessJson($"Série {dto.ImdbId} atualizada com sucesso");
 
-		_logger.LogInformation($"{User.Identity?.Name} updated the serie {dto.Title}");
+		logger.LogInformation($"{User.Identity?.Name} updated the serie {dto.Title}");
+
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Series", dto.Id, $"atualizou a série {dto.Title}");
 
 		return RedirectToAction("Index");
 	}
@@ -126,13 +135,21 @@ public class SeriesController(
 	{
 		if (id is not null)
 		{
-			var response = await _service.DeleteAsync(id);
+            var seriesResponse = await service.GetAsync(id);
+            var title = seriesResponse.IsSuccess && seriesResponse.Data is not null
+                ? seriesResponse.Data.Title
+                : id;
+
+			var response = await service.DeleteAsync(id);
 
 			TempData["Notification"] = response.IsFailure
 			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 			  : MessageViewHelper.SuccessJson($"Série deletada com sucesso");
 
-			_logger.LogInformation($"{User.Identity?.Name} removed the serie with id = {id}");
+			logger.LogInformation($"{User.Identity?.Name} removed the serie with id = {id}");
+
+            if (response.IsSuccess)
+                await this.AddAuditLogAsync(auditLogService, "Series", id, $"removeu a série {title}");
 		}
 
 		return RedirectToAction("Index");
@@ -145,15 +162,15 @@ public class SeriesController(
 		ViewBag.SerieId = id;
 		ViewBag.SeasonFilter = seasonFilter;
 
-		var response = await _service.GetEpisodesBySeasonAsync(id, seasonFilter ?? 1, includeDisabled: true);
+		var response = await service.GetEpisodesBySeasonAsync(id, seasonFilter ?? 1, includeDisabled: true);
 
 		if (response.IsSuccess)
 		{
 			ViewBag.NumberSeasons = response.Data?.NumberSeasons;
-			_logger.LogInformation($"{User.Identity?.Name} accessed the series episodes with id = {id}");
+			logger.LogInformation($"{User.Identity?.Name} accessed the series episodes with id = {id}");
 
             IEnumerable<GetMediaDeliveryProfileResponseDto> mediaDeliveryProfiles = [];
-            var mediaProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
+            var mediaProfilesResponse = await mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
             if (mediaProfilesResponse.IsSuccess) mediaDeliveryProfiles = mediaProfilesResponse.Data ?? [];
 
             return View(new EpisodesModelView(response.Data, mediaDeliveryProfiles));
@@ -165,13 +182,16 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> CreateEpisode(CreateEpisodeRequestDto dto)
 	{
-		var response = await _service.CreateEpisodeAsync(dto);
+		var response = await service.CreateEpisodeAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 		  : MessageViewHelper.SuccessJson($"Episódio T{dto.Season}:EP{dto.Number} cadastrado com sucesso");
 
-		_logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
+		logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
+
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Episode", response.Data ?? string.Empty, $"adicionou o episódio {dto.Title}");
 
 		return RedirectToAction("Episodes", new { id = dto.SerieId, seasonFilter = dto.Season });
 	}
@@ -179,29 +199,35 @@ public class SeriesController(
 	[Authorize(Roles = "admin, common")]
 	public async Task<IActionResult> UpdateEpisode(UpdateEpisodeRequestDto dto)
 	{
-		var response = await _service.UpdateEpisodeAsync(dto);
+		var response = await service.UpdateEpisodeAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 		  : MessageViewHelper.SuccessJson($"Episódio T{dto.Season}:EP{dto.Number} atualizado com sucesso");
 
-		_logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
+		logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
+
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Episode", dto.Id, $"atualizou o episódio {dto.Title}");
 
 		return RedirectToAction("Episodes", new { id = dto.SerieId, seasonFilter = dto.Season });
 	}
 
 	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> DeleteEpisode(string? serieId, string? id)
+	public async Task<IActionResult> DeleteEpisode(string? serieId, string? id, string? serieTitle)
 	{
 		if (serieId is not null && id is not null)
 		{
-			var response = await _service.DeleteEpisodeAsync(serieId, id);
+			var response = await service.DeleteEpisodeAsync(serieId, id);
 
 			TempData["Notification"] = response.IsFailure
 			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 			  : MessageViewHelper.SuccessJson($"Episódio deletado com sucesso");
 
-			_logger.LogInformation($"{User.Identity?.Name} deleted episode with id = {id} of the serie with id = {serieId}");
+			logger.LogInformation($"{User.Identity?.Name} deleted episode with id = {id} of the serie with id = {serieId}");
+
+            if (response.IsSuccess)
+                await this.AddAuditLogAsync(auditLogService, "Episode", id, $"removeu um episódio da série {serieTitle}");
 		}
 
 		return RedirectToAction("Episodes", new { id = serieId });
@@ -212,7 +238,7 @@ public class SeriesController(
 	{
 		if (string.IsNullOrEmpty(imdbId)) return BadRequest();
 
-		var response = await _imdbService.GetSeriesByImdbIdAsync(imdbId);
+		var response = await imdbService.GetSeriesByImdbIdAsync(imdbId);
 
 		if (response.IsFailure) return BadRequest(response.Error.Description);
 
@@ -225,10 +251,12 @@ public class SeriesController(
 	{
 		if (file is null || file.Length == 0) return BadRequest();
 
-		var response = await _spreadsheetBatchImporter.ImportAsync(file);
+		var response = await spreadsheetBatchImporter.ImportAsync(file);
 
 		if (response.IsFailure)
 			return BadRequest(response.Error.Description ?? string.Empty);
+
+        await this.AddAuditLogAsync(auditLogService, "Series", file.FileName, $"iniciou a importação de séries da planilha {file.FileName}");
 
 		return Ok(response.Data);
 	}
@@ -237,7 +265,7 @@ public class SeriesController(
 	[HttpGet]
 	public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
 	{
-		var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+		var response = await spreadsheetBatchImporter.MonitorImportAsync(importId);
 
 		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
 			TempData["Notification"] = MessageViewHelper
@@ -259,10 +287,12 @@ public class SeriesController(
 			return BadRequest();
 		}
 
-		var response = await _episodesImporter.ImportAsync(dto.SeriesId);
+		var response = await episodesImporter.ImportAsync(dto.SeriesId);
 
 		if (response.IsFailure)
 			return BadRequest(response.Error.Description ?? string.Empty);
+
+        await this.AddAuditLogAsync(auditLogService, "Episode", dto.SeriesId, $"iniciou a importação de episódios da série {dto.SeriesTitle}");
 
 		return Ok(response.Data);
 	}
@@ -271,7 +301,7 @@ public class SeriesController(
 	[HttpGet]
 	public async Task<IActionResult> MonitorImdbEpisodesImport(string importId)
 	{
-		var response = await _episodesImporter.MonitorImportAsync(importId);
+		var response = await episodesImporter.MonitorImportAsync(importId);
 
 		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.ImportedCount > 1)
 			TempData["Notification"] = MessageViewHelper
@@ -283,3 +313,4 @@ public class SeriesController(
 		return BadRequest(response.Error.Description ?? string.Empty);
 	}
 }
+

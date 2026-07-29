@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Dtos.Request;
 using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Enums;
@@ -8,6 +9,7 @@ using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.Channels.Models;
 
@@ -15,10 +17,11 @@ namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
 public class ChannelsController(
-  IChannelService _service,
-  ILogger<ChannelsController> _logger,
-  ISpreadsheetBatchImporter<IChannelService> _spreadsheetBatchImporter,
-  IMediaDeliveryProfileService _mediaDeliveryProfileService) : Controller
+  IChannelService service,
+  ILogger<ChannelsController> logger,
+  ISpreadsheetBatchImporter<IChannelService> spreadsheetBatchImporter,
+  IMediaDeliveryProfileService mediaDeliveryProfileService,
+  IAuditLogService auditLogService) : Controller
 {
     private const int limitResultsPage = 20;
 
@@ -26,11 +29,11 @@ public class ChannelsController(
     {
         Result<PagedList<GetChannelResponseDto>>? result;
 
-        _logger.LogInformation($"{User.Identity?.Name} accessed the channels page");
+        logger.LogInformation($"{User.Identity?.Name} accessed the channels page");
 
         if (filter is EChannelSearchFilter && !string.IsNullOrEmpty(search))
         {
-            result = await _service.GetByFilterAsync(
+            result = await service.GetByFilterAsync(
               new GetChannelsByFilterRequestDto(
                 filter,
                 search,
@@ -43,7 +46,7 @@ public class ChannelsController(
         }
         else
         {
-            result = await _service.GetAsync(currentPage ?? 1, limitResultsPage);
+            result = await service.GetAsync(currentPage ?? 1, limitResultsPage);
         }
 
         if (result.IsSuccess)
@@ -63,12 +66,12 @@ public class ChannelsController(
     public async Task<IActionResult> Form(string? id)
     {
         IEnumerable<GetMediaDeliveryProfileResponseDto> mediaDeliveryProfiles = [];
-        var mediaProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
+        var mediaProfilesResponse = await mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
         if (mediaProfilesResponse.IsSuccess) mediaDeliveryProfiles = mediaProfilesResponse.Data ?? [];
         
         if (id is not null)
         {
-            var response = await _service.GetAsync(id);
+            var response = await service.GetAsync(id);
             if (response.IsSuccess) return View(new ChannelFormModelView(response.Data, mediaDeliveryProfiles));
         }
 
@@ -78,13 +81,16 @@ public class ChannelsController(
     [Authorize(Roles = "admin, common")]
     public async Task<IActionResult> Create(CreateChannelRequestDto dto)
     {
-        var response = await _service.CreateAsync(dto);
+        var response = await service.CreateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson($"Canal cadastrado com sucesso");
 
-        _logger.LogInformation($"{User.Identity?.Name} registered the channel {dto.Title}");
+        logger.LogInformation($"{User.Identity?.Name} registered the channel {dto.Title}");
+
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Channel", response.Data ?? string.Empty, $"adicionou o canal {dto.Title}");
 
         return RedirectToAction("Index");
     }
@@ -92,13 +98,16 @@ public class ChannelsController(
     [Authorize(Roles = "admin, common")]
     public async Task<IActionResult> Update(UpdateChannelRequestDto dto)
     {
-        var response = await _service.UpdateAsync(dto);
+        var response = await service.UpdateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson($"Canal atualizado com sucesso");
 
-        _logger.LogInformation($"{User.Identity?.Name} updated the channel {dto.Title}");
+        logger.LogInformation($"{User.Identity?.Name} updated the channel {dto.Title}");
+
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Channel", dto.Id, $"atualizou o canal {dto.Title}");
 
         return RedirectToAction("Index");
     }
@@ -108,13 +117,21 @@ public class ChannelsController(
     {
         if (id is not null)
         {
-            var response = await _service.DeleteAsync(id);
+            var channelResponse = await service.GetAsync(id);
+            var title = channelResponse.IsSuccess && channelResponse.Data is not null
+                ? channelResponse.Data.Title
+                : id;
+
+            var response = await service.DeleteAsync(id);
 
             TempData["Notification"] = response.IsFailure
               ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
               : MessageViewHelper.SuccessJson($"Canal deletado com sucesso");
 
-            _logger.LogInformation($"{User.Identity?.Name} removed the channel with id = {id}");
+            logger.LogInformation($"{User.Identity?.Name} removed the channel with id = {id}");
+
+            if (response.IsSuccess)
+                await this.AddAuditLogAsync(auditLogService, "Channel", id, $"removeu o canal {title}");
         }
 
         return RedirectToAction("Index");
@@ -126,10 +143,12 @@ public class ChannelsController(
     {
         if (file is null || file.Length == 0) return BadRequest();
 
-        var response = await _spreadsheetBatchImporter.ImportAsync(file);
+        var response = await spreadsheetBatchImporter.ImportAsync(file);
 
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
+
+        await this.AddAuditLogAsync(auditLogService, "Channel", file.FileName, $"iniciou a importação de canais da planilha {file.FileName}");
 
         return Ok(response.Data);
     }
@@ -138,7 +157,7 @@ public class ChannelsController(
 	[HttpGet]
     public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
     {
-        var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+        var response = await spreadsheetBatchImporter.MonitorImportAsync(importId);
 
         if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
             TempData["Notification"] = MessageViewHelper
@@ -150,4 +169,5 @@ public class ChannelsController(
         return BadRequest(response.Error.Description ?? string.Empty);
     }
 }
+
 

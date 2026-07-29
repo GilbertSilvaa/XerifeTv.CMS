@@ -1,4 +1,4 @@
-﻿using MongoDB.Driver.Linq;
+using MongoDB.Driver.Linq;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
@@ -14,16 +14,16 @@ using XerifeTv.CMS.Modules.Series.Specifications;
 namespace XerifeTv.CMS.Modules.Series;
 
 public class SeriesService(
-    ISeriesRepository _repository,
-    IFranchiseService _franchiseService,
-    IBackgroundJobQueueService _backgroundJobQueueService,
-    IConfiguration _configuration) : ISeriesService
+    ISeriesRepository repository,
+    IFranchiseService franchiseService,
+    IBackgroundJobQueueService backgroundJobQueueService,
+    IConfiguration configuration) : ISeriesService
 {
     public async Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
-            var response = await _repository.GetAsync(currentPage, limit);
+            var response = await repository.GetAsync(currentPage, limit);
 
             var result = new PagedList<GetSeriesResponseDto>(
               response.CurrentPage,
@@ -43,7 +43,7 @@ public class SeriesService(
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response is null)
                 return Result<GetSeriesResponseDto?>
@@ -63,7 +63,7 @@ public class SeriesService(
     {
         try
         {
-            var response = await _repository.GetByImdbIdAsync(imdbId);
+            var response = await repository.GetByImdbIdAsync(imdbId);
 
             if (response is null)
                 return Result<GetSeriesResponseDto?>
@@ -84,15 +84,15 @@ public class SeriesService(
         try
         {
             var entity = dto.ToEntity();
-            var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
+            var imdbIdSpec = new UniqueImdbIdSpecification(repository);
 
             if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
                 return Result<string>.Failure(
                   new Error("409", $"Série não cadastrada. Imdb ID {entity.ImdbId} duplicado"));
 
-            var response = await _repository.CreateAsync(entity);
-            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
-            await _backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.SERIES, response!);
+            var response = await repository.CreateAsync(entity);
+            await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
+            await backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.SERIES, response!);
 
             return Result<string>.Success(entity.Id);
         }
@@ -108,19 +108,19 @@ public class SeriesService(
         try
         {
             var entity = dto.ToEntity();
-            var response = await _repository.GetAsync(entity.Id);
+            var response = await repository.GetAsync(entity.Id);
 
             if (response is null)
                 return Result<string>.Failure(new Error("404", "Conteúdo não encontrado"));
 
-            var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
+            var imdbIdSpec = new UniqueImdbIdSpecification(repository);
 
             if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
                 return Result<string>.Failure(
                   new Error("409", $"Série não atualizada. Imdb ID {entity.ImdbId} duplicado"));
 
-            await _repository.UpdateAsync(entity);
-            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
+            await repository.UpdateAsync(entity);
+            await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
 
             return Result<string>.Success(entity.Id);
         }
@@ -135,13 +135,13 @@ public class SeriesService(
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response is null)
                 return Result<bool>.Failure(new Error("404", "Conteúdo não encontrado"));
 
-            await _repository.DeleteAsync(id);
-            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
+            await repository.DeleteAsync(id);
+            await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
 
             return Result<bool>.Success(true);
         }
@@ -158,7 +158,7 @@ public class SeriesService(
         {
             if (dto.Filter == Enums.ESeriesSearchFilter.FRANCHISE)
             {
-                var franchiseResult = await _franchiseService.GetByNameAsync(dto.Search);
+                var franchiseResult = await franchiseService.GetByNameAsync(dto.Search);
 
                 if (franchiseResult.IsFailure)
                     return Result<PagedList<GetSeriesResponseDto>>.Success(new PagedList<GetSeriesResponseDto>(0, 0, []));
@@ -166,7 +166,7 @@ public class SeriesService(
                 dto.Search = franchiseResult.Data!.Id;
             }
 
-            var response = await _repository.GetByFilterAsync(dto);
+            var response = await repository.GetByFilterAsync(dto);
 
             var result = new PagedList<GetSeriesResponseDto>(
               response.CurrentPage,
@@ -187,14 +187,14 @@ public class SeriesService(
     {
         try
         {
-            var response = await _repository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled, specificEpisode);
+            var response = await repository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled, specificEpisode);
 
             if (response is null)
                 return Result<GetEpisodesResponseDto>
                   .Failure(new Error("404", "Conteúdo não encontrado"));
 
             var result = GetEpisodesResponseDto.FromEntity(response);
-            result.SetUrlResolverPathEpisodes(_configuration["SecuritySettings:ContentEncryptionKey"]!);
+            result.SetUrlResolverPathEpisodes(configuration["SecuritySettings:ContentEncryptionKey"]!);
 
             return Result<GetEpisodesResponseDto>.Success(result);
         }
@@ -209,7 +209,7 @@ public class SeriesService(
     {
         try
         {
-            var seriesResponse = await _repository.GetAsync(dto.SerieId);
+            var seriesResponse = await repository.GetAsync(dto.SerieId);
 
             if (seriesResponse is null)
                 return Result<string>.Failure(new Error("404", "Conteúdo não encontrado"));
@@ -225,7 +225,7 @@ public class SeriesService(
                 return Result<string>.Failure(
                     new Error("409", $"Episódio não cadastrado. [{seriesResponse.ImdbId}|T{dto.Season}:EP{dto.Number}] duplicado"));
 
-            await _repository.CreateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
+            await repository.CreateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
 
             return Result<string>.Success(dto.ToEntity().Id);
         }
@@ -240,7 +240,7 @@ public class SeriesService(
     {
         try
         {
-            var seriesResponse = await _repository.GetAsync(dto.SerieId);
+            var seriesResponse = await repository.GetAsync(dto.SerieId);
 
             if (seriesResponse is null)
                 return Result<string>.Failure(new Error("404", "Conteúdo não encontrado"));
@@ -256,7 +256,7 @@ public class SeriesService(
                 return Result<string>.Failure(
                     new Error("409", $"Episódio não atualizado. [{seriesResponse.ImdbId}|T{dto.Season}:EP{dto.Number}] duplicado"));
 
-            await _repository.UpdateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
+            await repository.UpdateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
 
             return Result<string>.Success(seriesResponse.Id);
         }
@@ -271,12 +271,12 @@ public class SeriesService(
     {
         try
         {
-            var response = await _repository.GetAsync(serieId);
+            var response = await repository.GetAsync(serieId);
 
             if (response is null)
                 return Result<bool>.Failure(new Error("404", "Série não encontrada"));
 
-            await _repository.DeleteEpisodeAsync(serieId, id);
+            await repository.DeleteEpisodeAsync(serieId, id);
 
             return Result<bool>.Success(true);
         }
@@ -287,3 +287,4 @@ public class SeriesService(
         }
     }
 }
+

@@ -3,7 +3,7 @@ using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Abstractions.Services;
 
-public sealed class CacheService(IMemoryCache _cache) : ICacheService
+public sealed class CacheService(IMemoryCache cache) : ICacheService
 {
     private readonly MemoryCacheEntryOptions _cacheOptions = new MemoryCacheEntryOptions()
       .SetSlidingExpiration(TimeSpan.FromMinutes(10))
@@ -12,13 +12,13 @@ public sealed class CacheService(IMemoryCache _cache) : ICacheService
 
     public T? GetValue<T>(string key)
     {
-        _cache.TryGetValue(key, out T? result);
+        cache.TryGetValue(key, out T? result);
         return result;
     }
 
     public void SetValue<T>(string key, T value)
-      => _cache.Set(key, value, _cacheOptions);
+      => cache.Set(key, value, _cacheOptions);
 
     public void Remove(string key)
-      => _cache.Remove(key);
+      => cache.Remove(key);
 }

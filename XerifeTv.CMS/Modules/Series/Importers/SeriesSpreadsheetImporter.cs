@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Abstractions.Exceptions;
+using XerifeTv.CMS.Modules.Abstractions.Exceptions;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
@@ -12,18 +12,18 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 namespace XerifeTv.CMS.Modules.Series.Importers;
 
 public class SeriesSpreadsheetImporter(
-    ISeriesService _service,
-    IImdbService _imdbService,
-    ICacheService _cacheService,
-    ISpreadsheetReaderService _spreadsheetReaderService,
-    IMediaDeliveryProfileService _mediaDeliveryProfileService,
-    IFranchiseService _franchiseService) : ISpreadsheetBatchImporter<ISeriesService>
+    ISeriesService service,
+    IImdbService imdbService,
+    ICacheService cacheService,
+    ISpreadsheetReaderService spreadsheetReaderService,
+    IMediaDeliveryProfileService mediaDeliveryProfileService,
+    IFranchiseService franchiseService) : ISpreadsheetBatchImporter<ISeriesService>
 {
     public async Task<Result<string>> ImportAsync(IFormFile file)
     {
         var importId = Guid.NewGuid().ToString();
         var emptyDto = new ImportSpreadsheetResponseDto(0, 0, 0, 0, [], 0);
-        _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
+        cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
 
         _ = HandleImportAsync(file, importId);
 
@@ -33,7 +33,7 @@ public class SeriesSpreadsheetImporter(
 
     public async Task<Result<ImportSpreadsheetResponseDto>> MonitorImportAsync(string importId)
     {
-        var response = _cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+        var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
 
         if (response == null)
             return Result<ImportSpreadsheetResponseDto>.Failure(
@@ -80,8 +80,8 @@ public class SeriesSpreadsheetImporter(
             int episodesFailCount = 0;
             ICollection<string> errorList = [];
 
-            var spreadsheetSeriesResult = _spreadsheetReaderService.Read(expectedCollunsSeriesWorksheet, stream, worksheetIndex: 0);
-            var spreadsheetEpisodesResult = _spreadsheetReaderService.Read(expectedCollunsEpisodesWorksheet, stream, worksheetIndex: 1);
+            var spreadsheetSeriesResult = spreadsheetReaderService.Read(expectedCollunsSeriesWorksheet, stream, worksheetIndex: 0);
+            var spreadsheetEpisodesResult = spreadsheetReaderService.Read(expectedCollunsEpisodesWorksheet, stream, worksheetIndex: 1);
 
             ICollection<SpreadsheetSeriesResponseDto> seriesList = [];
             ICollection<SpreadsheetEpisodeResponseDto> episodeList = [];
@@ -101,7 +101,7 @@ public class SeriesSpreadsheetImporter(
                     ErrorList: [.. errorList],
                     ProgressCount: progressCount);
 
-                _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
+                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
             }
 
             foreach (var item in spreadsheetSeriesResult)
@@ -138,7 +138,7 @@ public class SeriesSpreadsheetImporter(
             {
                 if (!string.IsNullOrWhiteSpace(seriesItem.FranchiseName))
                 {
-                    var franchiseResponse = await _franchiseService.GetByNameAsync(seriesItem.FranchiseName);
+                    var franchiseResponse = await franchiseService.GetByNameAsync(seriesItem.FranchiseName);
 
                     if (franchiseResponse.IsFailure)
                     {
@@ -151,7 +151,7 @@ public class SeriesSpreadsheetImporter(
                     seriesItem.FranchiseId = franchiseResponse.Data!.Id;
                 }
 
-                var seriesByImdbResponse = await _imdbService.GetSeriesByImdbIdAsync(seriesItem.ImdbId);
+                var seriesByImdbResponse = await imdbService.GetSeriesByImdbIdAsync(seriesItem.ImdbId);
 
                 if (seriesByImdbResponse.IsFailure)
                 {
@@ -177,7 +177,7 @@ public class SeriesSpreadsheetImporter(
                     FranchiseId = seriesItem.FranchiseId
                 };
 
-                var response = await _service.CreateAsync(createSeriesDto);
+                var response = await service.CreateAsync(createSeriesDto);
 
                 if (response.IsSuccess)
                 {
@@ -197,7 +197,7 @@ public class SeriesSpreadsheetImporter(
             {
                 if (!string.IsNullOrWhiteSpace(item.MediaDeliveryProfileName))
                 {
-                    var mediaProfileResponse = await _mediaDeliveryProfileService.GetByNameAsync(item.MediaDeliveryProfileName);
+                    var mediaProfileResponse = await mediaDeliveryProfileService.GetByNameAsync(item.MediaDeliveryProfileName);
 
                     if (mediaProfileResponse.IsFailure)
                     {
@@ -210,7 +210,7 @@ public class SeriesSpreadsheetImporter(
                     item.MediaDeliveryProfileId = mediaProfileResponse.Data!.Id;
                 }
 
-                var seriesResult = await _service.GetByImdbIdAsync(item.SeriesImdbId);
+                var seriesResult = await service.GetByImdbIdAsync(item.SeriesImdbId);
 
                 if (seriesResult.IsFailure)
                 {
@@ -220,7 +220,7 @@ public class SeriesSpreadsheetImporter(
                     continue;
                 }
 
-                var episodeResponse = await _service.GetEpisodesBySeasonAsync(
+                var episodeResponse = await service.GetEpisodesBySeasonAsync(
                     serieId: seriesResult?.Data?.Id ?? string.Empty,
                     season: item.Season,
                     includeDisabled: true,
@@ -249,7 +249,7 @@ public class SeriesSpreadsheetImporter(
                         Disabled = false
                     };
 
-                    responseCreateOrUpdate = await _service.UpdateEpisodeAsync(updateEpisodeDto);
+                    responseCreateOrUpdate = await service.UpdateEpisodeAsync(updateEpisodeDto);
                 }
                 else
                 {
@@ -268,7 +268,7 @@ public class SeriesSpreadsheetImporter(
                         MediaRoute = item.MediaRoute
                     };
 
-                    responseCreateOrUpdate = await _service.CreateEpisodeAsync(createEpisodeDto);
+                    responseCreateOrUpdate = await service.CreateEpisodeAsync(createEpisodeDto);
                 }
 
                 if (responseCreateOrUpdate.IsSuccess)
@@ -304,8 +304,9 @@ public class SeriesSpreadsheetImporter(
                     ErrorList: [.. errorList],
                     ProgressCount: 100);
 
-                _cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
+                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
             }
         }
     }
 }
+

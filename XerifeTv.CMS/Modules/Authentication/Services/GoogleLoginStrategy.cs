@@ -1,4 +1,4 @@
-﻿using System.Text.Json;
+using System.Text.Json;
 using XerifeTv.CMS.Modules.Authentication.Dtos.Request;
 using XerifeTv.CMS.Modules.Authentication.Dtos.Response;
 using XerifeTv.CMS.Modules.Authentication.Enums;
@@ -9,9 +9,9 @@ using XerifeTv.CMS.Modules.User.Interfaces;
 namespace XerifeTv.CMS.Modules.Authentication.Services;
 
 public class GoogleLoginStrategy(
-	IUserService _userService,
-	ITokenService _tokenService,
-	IConfiguration _configuration) : ILoginStrategy
+	IUserService userService,
+	ITokenService tokenService,
+	IConfiguration configuration) : ILoginStrategy
 {
 	public async Task<Result<LoginResponseDto>> AuthenticateAsync(LoginRequestDto dto)
 	{
@@ -29,7 +29,7 @@ public class GoogleLoginStrategy(
 			if (payload == null)
 				return Result<LoginResponseDto>.Failure(new Error("401", "Erro ao validar o token Google"));
 
-			if (payload.Aud != _configuration["OAuth2Google:ClientId"])
+			if (payload.Aud != configuration["OAuth2Google:ClientId"])
 				return Result<LoginResponseDto>.Failure(new Error("401", "Token Google inválido: client ID não autorizado"));
 
 			var expiry = DateTimeOffset.FromUnixTimeSeconds(long.Parse(payload!.Exp));
@@ -37,7 +37,7 @@ public class GoogleLoginStrategy(
 			if (expiry < DateTimeOffset.UtcNow)
 				return Result<LoginResponseDto>.Failure(new Error("401", "Token Google inválido ou expirado"));
 
-			var userResponse = await _userService.GetByEmailAsync(payload!.Email);
+			var userResponse = await userService.GetByEmailAsync(payload!.Email);
 
 			if (userResponse.IsFailure)
 				return Result<LoginResponseDto>.Failure(userResponse.Error);
@@ -49,8 +49,8 @@ public class GoogleLoginStrategy(
 
 			return Result<LoginResponseDto>.Success(
 				new LoginResponseDto(
-					_tokenService.GenerateToken(userResult.UserName, userResult.Role),
-					_tokenService.GenerateRefreshToken(userResult.UserName)));
+					tokenService.GenerateToken(userResult.UserName, userResult.Role),
+					tokenService.GenerateRefreshToken(userResult.UserName)));
 		}
 		catch (Exception ex)
 		{
@@ -62,3 +62,4 @@ public class GoogleLoginStrategy(
 	public bool CanHandle(ELoginProvider loginProvider)
 		=> loginProvider == ELoginProvider.Google;
 }
+

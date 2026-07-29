@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Request;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
@@ -6,13 +6,13 @@ using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 
 namespace XerifeTv.CMS.Modules.Media.Delivery;
 
-public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _repository) : IMediaDeliveryProfileService
+public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository repository) : IMediaDeliveryProfileService
 {
     public async Task<Result<PagedList<GetMediaDeliveryProfileResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
-            var response = await _repository.GetAsync(currentPage, limit);
+            var response = await repository.GetAsync(currentPage, limit);
 
             var result = new PagedList<GetMediaDeliveryProfileResponseDto>(
                 response.CurrentPage,
@@ -32,7 +32,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
     {
         try
         {
-            var response = await _repository.GetAsync(isIncludeDisabled);
+            var response = await repository.GetAsync(isIncludeDisabled);
 
             return Result<IEnumerable<GetMediaDeliveryProfileResponseDto>>.Success(
                 response
@@ -50,7 +50,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response == null)
                 return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de mídia não encontrado"));
@@ -68,7 +68,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
     {
         try
         {
-            var response = await _repository.GetByNameAsync(name, isIncludeDisabled);
+            var response = await repository.GetByNameAsync(name, isIncludeDisabled);
 
             if (response == null)
                 return Result<GetMediaDeliveryProfileResponseDto?>.Failure(new Error("404", "Perfil de entrega de mídia não encontrado"));
@@ -87,7 +87,7 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
         try
         {
             var entity = dto.ToEntity();
-            var response = await _repository.CreateAsync(entity);
+            var response = await repository.CreateAsync(entity);
 
             return Result<string>.Success(response);
         }
@@ -103,13 +103,13 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
         try
         {
             var entity = dto.ToEntity();
-            var response = await _repository.GetAsync(dto.Id);
+            var response = await repository.GetAsync(dto.Id);
 
             if (response == null)
                 return Result<string>.Failure(new Error("404", "Perfil de entrega de mídia não encontrado"));
 
             entity.CreateAt = response.CreateAt;
-            await _repository.UpdateAsync(entity);
+            await repository.UpdateAsync(entity);
             return Result<string>.Success(entity.Id);
         }
         catch (Exception ex)
@@ -123,12 +123,12 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response == null)
                 return Result<bool>.Failure(new Error("404", "Perfil de entrega de mídia não encontrado"));
 
-            await _repository.DeleteAsync(id);
+            await repository.DeleteAsync(id);
             return Result<bool>.Success(true);
         }
         catch (Exception ex)
@@ -138,3 +138,4 @@ public class MediaDeliveryProfileService(IMediaDeliveryProfileRepository _reposi
         }
     }
 }
+

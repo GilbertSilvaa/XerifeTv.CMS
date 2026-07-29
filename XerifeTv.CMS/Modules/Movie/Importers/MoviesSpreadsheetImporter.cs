@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Abstractions.Exceptions;
+using XerifeTv.CMS.Modules.Abstractions.Exceptions;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
@@ -12,18 +12,18 @@ using XerifeTv.CMS.Modules.Movie.Interfaces;
 namespace XerifeTv.CMS.Modules.Movie.Importers;
 
 public class MoviesSpreadsheetImporter(
-  IMovieService _service,
-  IImdbService _imdbService,
-  ICacheService _cacheService,
-  ISpreadsheetReaderService _spreadsheetReaderService,
-  IMediaDeliveryProfileService _mediaDeliveryProfileService,
-  IFranchiseService _franchiseService) : ISpreadsheetBatchImporter<IMovieService>
+  IMovieService service,
+  IImdbService imdbService,
+  ICacheService cacheService,
+  ISpreadsheetReaderService spreadsheetReaderService,
+  IMediaDeliveryProfileService mediaDeliveryProfileService,
+  IFranchiseService franchiseService) : ISpreadsheetBatchImporter<IMovieService>
 {
 	public async Task<Result<string>> ImportAsync(IFormFile file)
 	{
 		var importId = Guid.NewGuid().ToString();
 		var emptyDto = new ImportSpreadsheetResponseDto(0, 0, 0, 0, [], 0);
-		_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
+		cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
 
 		_ = HandleImportAsync(file, importId);
 
@@ -33,7 +33,7 @@ public class MoviesSpreadsheetImporter(
 
 	public async Task<Result<ImportSpreadsheetResponseDto>> MonitorImportAsync(string importId)
 	{
-		var response = _cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+		var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
 
 		if (response == null)
 			return Result<ImportSpreadsheetResponseDto>.Failure(
@@ -67,7 +67,7 @@ public class MoviesSpreadsheetImporter(
 			int failCount = 0;
 			ICollection<string> errorList = [];
 
-			var spreadsheetResult = _spreadsheetReaderService.Read(expectedColluns, stream);
+			var spreadsheetResult = spreadsheetReaderService.Read(expectedColluns, stream);
 			ICollection<SpreadsheetMovieResponseDto> movieList = [];
 
 			void UpdateProgress()
@@ -82,7 +82,7 @@ public class MoviesSpreadsheetImporter(
 					ErrorList: [.. errorList],
 					ProgressCount: progressCount);
 
-				_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
+				cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
 			}
 
 			foreach (var item in spreadsheetResult)
@@ -104,7 +104,7 @@ public class MoviesSpreadsheetImporter(
 			{
 				if (!string.IsNullOrWhiteSpace(movieItem.MediaDeliveryProfileName))
 				{
-					var mediaProfileResponse = await _mediaDeliveryProfileService.GetByNameAsync(movieItem.MediaDeliveryProfileName);
+					var mediaProfileResponse = await mediaDeliveryProfileService.GetByNameAsync(movieItem.MediaDeliveryProfileName);
 
 					if (mediaProfileResponse.IsFailure)
 					{
@@ -119,7 +119,7 @@ public class MoviesSpreadsheetImporter(
 
 				if (!string.IsNullOrWhiteSpace(movieItem.FranchiseName))
 				{
-					var franchiseResponse = await _franchiseService.GetByNameAsync(movieItem.FranchiseName);
+					var franchiseResponse = await franchiseService.GetByNameAsync(movieItem.FranchiseName);
 
 					if (franchiseResponse.IsFailure)
 					{
@@ -132,7 +132,7 @@ public class MoviesSpreadsheetImporter(
 					movieItem.FranchiseId = franchiseResponse.Data!.Id;
 				}
 
-				var movieImdbAPIResponse = await _imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
+				var movieImdbAPIResponse = await imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
 
 				if (movieImdbAPIResponse.IsFailure)
 				{
@@ -142,7 +142,7 @@ public class MoviesSpreadsheetImporter(
 					continue;
 				}
 
-				var movieByImdbIdResponse = await _service.GetByImdbIdAsync(movieItem.ImdbId);
+				var movieByImdbIdResponse = await service.GetByImdbIdAsync(movieItem.ImdbId);
 
 				Result<string>? responseCreateOrUpdate = null;
 
@@ -170,7 +170,7 @@ public class MoviesSpreadsheetImporter(
 						FranchiseId = movieItem.FranchiseId
                     };
 
-					responseCreateOrUpdate = await _service.UpdateAsync(updateMovieDto);									
+					responseCreateOrUpdate = await service.UpdateAsync(updateMovieDto);									
 				}
 				else
 				{
@@ -195,7 +195,7 @@ public class MoviesSpreadsheetImporter(
 						FranchiseId = movieItem.FranchiseId
                     };
 
-					responseCreateOrUpdate = await _service.CreateAsync(createMovieDto);
+					responseCreateOrUpdate = await service.CreateAsync(createMovieDto);
 				}
 
 				if (responseCreateOrUpdate.IsSuccess)
@@ -231,8 +231,9 @@ public class MoviesSpreadsheetImporter(
 					ErrorList: [.. errorList],
 					ProgressCount: 100);
 
-				_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
+				cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
 			}
 		}
 	}
 }
+

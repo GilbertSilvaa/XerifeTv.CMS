@@ -1,16 +1,16 @@
-﻿using System.Security.Cryptography;
+using System.Security.Cryptography;
 using System.Text;
 using XerifeTv.CMS.Modules.User.Interfaces;
 
 namespace XerifeTv.CMS.Modules.User.Services;
 
-public sealed class HashPassword(IConfiguration _configuration) : IHashPassword
+public sealed class HashPassword(IConfiguration configuration) : IHashPassword
 {
     private const int keySize = 55;
     private const int interations = 450000;
     private readonly HashAlgorithmName hashAlgorithm = HashAlgorithmName.SHA256;
     private readonly byte[] salt = Encoding.UTF8.GetBytes(
-      _configuration["Hash:Salt"] ?? string.Empty);
+      configuration["Hash:Salt"] ?? string.Empty);
 
     public string Encrypt(string password)
     {

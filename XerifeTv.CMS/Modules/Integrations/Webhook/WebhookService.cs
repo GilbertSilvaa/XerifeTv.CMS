@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Request;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
@@ -6,13 +6,31 @@ using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Integrations.Webhook;
 
-public sealed class WebhookService(IWebhookRepository _repository) : IWebhookService
+public sealed class WebhookService(IWebhookRepository repository) : IWebhookService
 {
+    public async Task<Result<GetWebhookResponseDto>> GetAsync(string id)
+    {
+        try
+        {
+            var response = await repository.GetAsync(id);
+
+            if (response == null)
+                return Result<GetWebhookResponseDto>.Failure(new Error("404", "webhook não encontrado"));
+
+            return Result<GetWebhookResponseDto>.Success(GetWebhookResponseDto.FromEntity(response));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<GetWebhookResponseDto>.Failure(error);
+        }
+    }
+
     public async Task<Result<PagedList<GetWebhookResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
-            var response = await _repository.GetAsync(currentPage, limit);
+            var response = await repository.GetAsync(currentPage, limit);
 
             var result = new PagedList<GetWebhookResponseDto>(
                 response.CurrentPage,
@@ -33,7 +51,7 @@ public sealed class WebhookService(IWebhookRepository _repository) : IWebhookSer
         try
         {
             var entity = dto.ToEntity();
-            var response = await _repository.CreateAsync(entity);
+            var response = await repository.CreateAsync(entity);
 
             return Result<string>.Success(response);
         }
@@ -49,13 +67,13 @@ public sealed class WebhookService(IWebhookRepository _repository) : IWebhookSer
         try
         {
             var entity = dto.ToEntity();
-            var response = await _repository.GetAsync(entity.Id);
+            var response = await repository.GetAsync(entity.Id);
 
             if (response is null)
                 return Result<string>.Failure(new Error("404", "Webhook não encontrado"));
 
             entity.CreateAt = response.CreateAt;
-            await _repository.UpdateAsync(entity);
+            await repository.UpdateAsync(entity);
             return Result<string>.Success(entity.Id);
         }
         catch (Exception ex)
@@ -69,12 +87,12 @@ public sealed class WebhookService(IWebhookRepository _repository) : IWebhookSer
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response is null)
                 return Result<bool>.Failure(new Error("404", "Webhook não encontrado"));
 
-            await _repository.DeleteAsync(id);
+            await repository.DeleteAsync(id);
             return Result<bool>.Success(true);
         }
         catch (Exception ex)
@@ -88,7 +106,7 @@ public sealed class WebhookService(IWebhookRepository _repository) : IWebhookSer
     {
         try
         {
-            var response = await _repository.GetByTriggerEventAsync(@event, includeDisabled);
+            var response = await repository.GetByTriggerEventAsync(@event, includeDisabled);
             return Result<IEnumerable<WebhookEntity>>.Success(response);
         }
         catch (Exception ex)
@@ -98,3 +116,4 @@ public sealed class WebhookService(IWebhookRepository _repository) : IWebhookSer
         }
     }
 }
+

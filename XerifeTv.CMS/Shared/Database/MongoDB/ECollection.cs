@@ -11,4 +11,5 @@ public enum ECollection
     WEBHOOKS,
     MEDIA_DELIVERY_PROFILES,
     CONTENT_API_SETTINGS,
+    AUDIT_LOGS
 }

@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
@@ -11,9 +11,9 @@ using Error = XerifeTv.CMS.Modules.Common.Error;
 namespace XerifeTv.CMS.Modules.BackgroundJobQueue.Services;
 
 public class BackgroundJobQueueService(
-    IStorageFilesService _storageFilesService,
-    IBackgroundJobQueueRepository _repository,
-    IUserService _userService) : IBackgroundJobQueueService
+    IStorageFilesService storageFilesService,
+    IBackgroundJobQueueRepository repository,
+    IUserService userService) : IBackgroundJobQueueService
 {
     private readonly string[] _acceptedExtensions = [".xlsx", ".xls"];
 
@@ -29,12 +29,12 @@ public class BackgroundJobQueueService(
             var jobGuidId = Guid.NewGuid();
 
             using var stream = dto.SpreadsheetFile.OpenReadStream();
-            var uploadSpreadsheetResult = await _storageFilesService.UploadFileAsync(stream, $"{jobGuidId}{fileExtension}", "jobqueuefiles");
+            var uploadSpreadsheetResult = await storageFilesService.UploadFileAsync(stream, $"{jobGuidId}{fileExtension}", "jobqueuefiles");
 
             if (uploadSpreadsheetResult.IsFailure)
                 return Result<AddJobQueueResponseDto>.Failure(uploadSpreadsheetResult.Error);
 
-            var userResult = await _userService.GetByUsernameAsync(dto.RequestedByUsername);
+            var userResult = await userService.GetByUsernameAsync(dto.RequestedByUsername);
 
             if (userResult.IsFailure)
                 return Result<AddJobQueueResponseDto>.Failure(userResult.Error);
@@ -46,7 +46,7 @@ public class BackgroundJobQueueService(
                 spreadsheetFileUrl: uploadSpreadsheetResult.Data ?? string.Empty,
                 userId: userResult?.Data?.Id ?? string.Empty);
 
-            var resultId = await _repository.CreateAsync(backgroundJob);
+            var resultId = await repository.CreateAsync(backgroundJob);
 
             return Result<AddJobQueueResponseDto>.Success(new AddJobQueueResponseDto(resultId));
         }
@@ -61,7 +61,7 @@ public class BackgroundJobQueueService(
     {
         try
         {
-            var userResult = await _userService.GetByUsernameAsync(dto.RequestedByUsername);
+            var userResult = await userService.GetByUsernameAsync(dto.RequestedByUsername);
 
             if (userResult.IsFailure)
                 return Result<AddJobQueueResponseDto>.Failure(userResult.Error);
@@ -71,7 +71,7 @@ public class BackgroundJobQueueService(
                 seriesImdbId: dto.SeriesImdbId,
                 userId: userResult?.Data?.Id ?? string.Empty);
 
-            var resultId = await _repository.CreateAsync(backgroundJob);
+            var resultId = await repository.CreateAsync(backgroundJob);
 
             return Result<AddJobQueueResponseDto>.Success(new AddJobQueueResponseDto(resultId));
         }
@@ -88,7 +88,7 @@ public class BackgroundJobQueueService(
         {
             var backgroundJob = BackgroundJobEntity.Create(type);
 
-            var resultId = await _repository.CreateAsync(backgroundJob);
+            var resultId = await repository.CreateAsync(backgroundJob);
 
             return Result<AddJobQueueResponseDto>.Success(new AddJobQueueResponseDto(resultId));
         }
@@ -105,7 +105,7 @@ public class BackgroundJobQueueService(
         {
             var backgroundJob = BackgroundJobEntity.Create(type, dispatchWebhooksEntityId);
 
-            var resultId = await _repository.CreateAsync(backgroundJob);
+            var resultId = await repository.CreateAsync(backgroundJob);
 
             return Result<AddJobQueueResponseDto>.Success(new AddJobQueueResponseDto(resultId));
         }
@@ -122,7 +122,7 @@ public class BackgroundJobQueueService(
         {
             if (dto.ResponsibleUsername is string username)
             {
-                var userResult = await _userService.GetByUsernameAsync(username);
+                var userResult = await userService.GetByUsernameAsync(username);
 
                 if (userResult.IsFailure)
                     return Result<PagedList<GetBackgroundJobResponseDto>>.Failure(userResult.Error);
@@ -130,7 +130,7 @@ public class BackgroundJobQueueService(
                 dto.ResponsibleUserId = userResult?.Data?.Id ?? string.Empty;
             }
 
-            var response = await _repository.GetByFilterAsync(dto);
+            var response = await repository.GetByFilterAsync(dto);
 
             var result = new PagedList<GetBackgroundJobResponseDto>(
                 response.CurrentPage,
@@ -150,12 +150,12 @@ public class BackgroundJobQueueService(
     {
         try
         {
-            var response = await _repository.GetAsync(dto.Id);
+            var response = await repository.GetAsync(dto.Id);
 
             if (response == null)
                 return Result<string>.Failure(new Error("404", "Background Job não encontrado"));
 
-            await _repository.UpdateAsync(response.Update(dto));
+            await repository.UpdateAsync(response.Update(dto));
 
             return Result<string>.Success(response.Id);
         }
@@ -170,12 +170,12 @@ public class BackgroundJobQueueService(
     {
         try
         {
-            var entity = await _repository.GetAsync(id);
+            var entity = await repository.GetAsync(id);
 
             if (entity == null)
                 return Result<bool>.Failure(new Error("404", "Background Job não encontrado"));
 
-            await _repository.DeleteAsync(id);
+            await repository.DeleteAsync(id);
 
             return Result<bool>.Success(true);
         }
@@ -190,17 +190,17 @@ public class BackgroundJobQueueService(
     {
         try
         {
-            var userResult = await _userService.GetByUsernameAsync(username);
+            var userResult = await userService.GetByUsernameAsync(username);
 
             if (userResult.IsFailure)
                 return Result<IEnumerable<GetJobsToNotifyResponseDto>>.Failure(userResult.Error);
 
-            var response = await _repository.GetCompletedOrFailedJobsNotNotifiedAsync(userResult.Data?.Id ?? string.Empty);
+            var response = await repository.GetCompletedOrFailedJobsNotNotifiedAsync(userResult.Data?.Id ?? string.Empty);
 
             foreach (var jobEntity in response)
             {
                 jobEntity.UserNotify();
-                await _repository.UpdateAsync(jobEntity);
+                await repository.UpdateAsync(jobEntity);
             }
 
             return Result<IEnumerable<GetJobsToNotifyResponseDto>>
@@ -213,3 +213,4 @@ public class BackgroundJobQueueService(
         }
     }
 }
+

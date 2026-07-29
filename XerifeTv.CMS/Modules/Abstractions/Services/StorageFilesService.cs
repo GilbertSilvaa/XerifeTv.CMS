@@ -4,17 +4,12 @@ using XerifeTv.CMS.Modules.Common;
 
 namespace XerifeTv.CMS.Modules.Abstractions.Services;
 
-public class StorageFilesService : IStorageFilesService
+public class StorageFilesService(IConfiguration configuration) : IStorageFilesService
 {
     private readonly string[] _acceptedExtensions = [".vtt", ".xlsx", ".xls"];
-    private readonly Client? _client = default;
-
-    public StorageFilesService(IConfiguration _configuration)
-    {
-        _client = new Client(
-          _configuration["Supabase:Url"]!,
-          _configuration["Supabase:Key"]);
-    }
+    private readonly Client? _client = new(
+        configuration["Supabase:Url"]!,
+        configuration["Supabase:Key"]);
 
     public async Task<Result<string>> UploadFileAsync(Stream fileStream, string fileName, string bucketName)
     {

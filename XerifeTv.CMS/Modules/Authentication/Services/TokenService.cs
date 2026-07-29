@@ -1,4 +1,4 @@
-﻿using Microsoft.IdentityModel.Tokens;
+using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -7,14 +7,14 @@ using XerifeTv.CMS.Modules.User.Enums;
 
 namespace XerifeTv.CMS.Modules.Authentication.Services;
 
-public class TokenService(IConfiguration _configuration) : ITokenService
+public class TokenService(IConfiguration configuration) : ITokenService
 {
     public string GenerateToken(string username, EUserRole userRole)
     {
-        var key = _configuration["Jwt:Key"] ?? string.Empty;
+        var key = configuration["Jwt:Key"] ?? string.Empty;
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-        var issuer = _configuration["Jwt:Issuer"];
-        var audience = _configuration["Jwt:Audience"];
+        var issuer = configuration["Jwt:Issuer"];
+        var audience = configuration["Jwt:Audience"];
 
         var signInCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
 
@@ -24,7 +24,7 @@ public class TokenService(IConfiguration _configuration) : ITokenService
             new Claim(ClaimTypes.Role, userRole.ToString().ToLower()),
         };
 
-        _ = int.TryParse(_configuration["Jwt:ExpirationTimeInMinutes"], out int expireTimeInMinutes);
+        _ = int.TryParse(configuration["Jwt:ExpirationTimeInMinutes"], out int expireTimeInMinutes);
 
         var tokenOptions = new JwtSecurityToken(
             issuer,
@@ -38,15 +38,15 @@ public class TokenService(IConfiguration _configuration) : ITokenService
 
     public string GenerateRefreshToken(string username)
     {
-        var key = _configuration["Jwt:Key"] ?? string.Empty;
+        var key = configuration["Jwt:Key"] ?? string.Empty;
         var secretKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key));
-        var issuer = _configuration["Jwt:Issuer"];
-        var audience = _configuration["Jwt:Audience"];
+        var issuer = configuration["Jwt:Issuer"];
+        var audience = configuration["Jwt:Audience"];
 
         var signInCredentials = new SigningCredentials(secretKey, SecurityAlgorithms.HmacSha256);
         var tokenClaims = new[] { new Claim(ClaimTypes.Name, username) };
 
-        _ = int.TryParse(_configuration["Jwt:RefreshExpirationTimeInMinutes"], out var expireTimeInMinutes);
+        _ = int.TryParse(configuration["Jwt:RefreshExpirationTimeInMinutes"], out var expireTimeInMinutes);
 
         var tokenOptions = new JwtSecurityToken(
             issuer,
@@ -63,7 +63,7 @@ public class TokenService(IConfiguration _configuration) : ITokenService
         if (string.IsNullOrWhiteSpace(token))
             return (false, null);
 
-        var tokenValidationParams = GetTokenValidationParameters(_configuration);
+        var tokenValidationParams = GetTokenValidationParameters(configuration);
         var validTokenResult = await new JwtSecurityTokenHandler().ValidateTokenAsync(token, tokenValidationParams);
 
         if (!validTokenResult.IsValid)
@@ -75,9 +75,9 @@ public class TokenService(IConfiguration _configuration) : ITokenService
         return (true, userName);
     }
 
-    public static TokenValidationParameters GetTokenValidationParameters(IConfiguration _configuration)
+    public static TokenValidationParameters GetTokenValidationParameters(IConfiguration configuration)
     {
-        var tokenKey = Encoding.UTF8.GetBytes(_configuration["Jwt:Key"] ?? string.Empty);
+        var tokenKey = Encoding.UTF8.GetBytes(configuration["Jwt:Key"] ?? string.Empty);
 
         return new TokenValidationParameters
         {
@@ -85,10 +85,11 @@ public class TokenService(IConfiguration _configuration) : ITokenService
             ValidateAudience = true,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            ValidIssuer = _configuration["Jwt:Issuer"],
-            ValidAudience = _configuration["Jwt:Audience"],
+            ValidIssuer = configuration["Jwt:Issuer"],
+            ValidAudience = configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(tokenKey),
             ClockSkew = TimeSpan.FromMinutes(5)
         };
     }
 }
+

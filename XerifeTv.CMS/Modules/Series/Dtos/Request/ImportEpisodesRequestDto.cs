@@ -1,3 +1,3 @@
 ﻿namespace XerifeTv.CMS.Modules.Series.Dtos.Request;
 
-public record ImportEpisodesRequestDto(string SeriesId);
+public record ImportEpisodesRequestDto(string SeriesId, string SeriesTitle);

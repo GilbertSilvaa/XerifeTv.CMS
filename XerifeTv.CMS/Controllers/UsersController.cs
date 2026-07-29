@@ -2,18 +2,21 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Authentication.Dtos.Request;
 using XerifeTv.CMS.Modules.Authentication.Interfaces;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
 using XerifeTv.CMS.Modules.User.Interfaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
 
 public class UsersController(
-	IUserService _userService, 
-	IAuthService _authService,
-	IConfiguration _configuration,
-	ILogger<UsersController> _logger) : Controller
+	IUserService userService, 
+	IAuthService authService,
+	IConfiguration configuration,
+	ILogger<UsersController> logger,
+	IAuditLogService auditLogService) : Controller
 {
 	private readonly CookieOptions _cookieOptions = new()
 	{
@@ -26,9 +29,9 @@ public class UsersController(
 	[Authorize(Roles = "admin")]
 	public async Task<IActionResult> Index()
 	{
-		var response = await _userService.GetAsync(1, 20);
+		var response = await userService.GetAsync(1, 20);
 
-		_logger.LogInformation($"{User.Identity?.Name} accessed the users page");
+		logger.LogInformation($"{User.Identity?.Name} accessed the users page");
 
 		if (response.IsSuccess)
 			return View(response.Data?.Items);
@@ -42,7 +45,7 @@ public class UsersController(
 		if (User.Identity != null && User.Identity.IsAuthenticated)
 			return RedirectToAction("Index", "Home");
 
-		ViewBag.GoogleClientId = _configuration["OAuth2Google:ClientId"];
+		ViewBag.GoogleClientId = configuration["OAuth2Google:ClientId"];
 
 		return View();
 	}
@@ -51,20 +54,20 @@ public class UsersController(
 	[AllowAnonymous]
 	public async Task<IActionResult> SignIn(LoginRequestDto dto)
 	{
-		var response = await _authService.LoginAsync(dto);
+		var response = await authService.LoginAsync(dto);
 
 		if (response.IsFailure)
 		{
 			TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty);
-			ViewBag.GoogleClientId = _configuration["OAuth2Google:ClientId"];
-			_logger.LogInformation("There was an unsuccessful login attempt");
+			ViewBag.GoogleClientId = configuration["OAuth2Google:ClientId"];
+			logger.LogInformation("There was an unsuccessful login attempt");
 			return View();
 		}
 
 		Response.Cookies.Append("token", response.Data?.Token ?? string.Empty, _cookieOptions);
 		Response.Cookies.Append("refreshToken", response.Data?.RefreshToken ?? string.Empty, _cookieOptions);
 
-		_logger.LogInformation($"{User.Identity?.Name} logged into the system");
+		logger.LogInformation($"{User.Identity?.Name} logged into the system");
 
 		return RedirectToAction("Index", "Home");
 	}
@@ -85,17 +88,17 @@ public class UsersController(
 		if (User.Identity != null && User.Identity.IsAuthenticated)
 			return RedirectToAction("Index", "Home");
 
-		var response = await _userService.SendEmailResetPasswordAsync(email);
+		var response = await userService.SendEmailResetPasswordAsync(email);
 
 		if (response.IsFailure)
 		{
 			TempData["Notification"] = MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty);
-			_logger.LogInformation($"{email} tried to send password reset email and failed");
+			logger.LogInformation($"{email} tried to send password reset email and failed");
 			return View();
 		}
 
 		TempData["Notification"] = MessageViewHelper.SuccessJson("Email enviado com sucesso");
-		_logger.LogInformation($"{email} tried to send password reset email");
+		logger.LogInformation($"{email} tried to send password reset email");
 
 		return View(model: email);
 	}
@@ -106,7 +109,7 @@ public class UsersController(
 		if (User.Identity != null && User.Identity.IsAuthenticated)
 			return RedirectToAction("Index", "Home");
 
-		var response = await _userService.ValidateResetPasswordGuidAsync(new Guid(code));
+		var response = await userService.ValidateResetPasswordGuidAsync(new Guid(code));
 
 		if (response.IsFailure)
 		{
@@ -130,7 +133,7 @@ public class UsersController(
 			return RedirectToAction("ResetPassword", new { code = dto.CodeGuid });
 		}
 
-		var response = await _userService.ResetPasswordAsync(dto);
+		var response = await userService.ResetPasswordAsync(dto);
 
 		if (response.IsFailure)
 		{
@@ -146,7 +149,7 @@ public class UsersController(
 	[AllowAnonymous]
 	public IActionResult Logout()
 	{
-		_logger.LogInformation($"{User.Identity?.Name} logged out of the system");
+		logger.LogInformation($"{User.Identity?.Name} logged out of the system");
 
 		Response.Cookies.Delete("token");
 		Response.Cookies.Delete("refreshToken");
@@ -157,13 +160,16 @@ public class UsersController(
 	[Authorize(Roles = "admin")]
 	public async Task<IActionResult> Register(RegisterUserRequestDto dto)
 	{
-		var response = await _userService.RegisterAsync(dto);
+		var response = await userService.RegisterAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 		  : MessageViewHelper.SuccessJson($"Usuário {dto.UserName} cadastrado com sucesso");
 
-		_logger.LogInformation($"{User.Identity?.Name} registered a new user");
+		logger.LogInformation($"{User.Identity?.Name} registered a new user");
+
+		if (response.IsSuccess)
+			await this.AddAuditLogAsync(auditLogService, "User", response.Data ?? string.Empty, $"adicionou o usuário {dto.UserName}");
 
 		return RedirectToAction("Index");
 	}
@@ -172,26 +178,33 @@ public class UsersController(
 	[Authorize(Roles = "admin")]
 	public async Task<IActionResult> Update(UpdateUserRequestDto dto)
 	{
-		var response = await _userService.UpdateAsync(dto);
+		var response = await userService.UpdateAsync(dto);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 		  : MessageViewHelper.SuccessJson($"Usuário {dto.UserName} atualizado com sucesso");
 
-		_logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
+		logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
+
+		if (response.IsSuccess)
+			await this.AddAuditLogAsync(auditLogService, "User", dto.Id, $"atualizou o usuário {dto.UserName}");
+
 		return RedirectToAction("Index");
 	}
 
 	[Authorize(Roles = "admin")]
 	public async Task<IActionResult> Delete(string id)
 	{
-		var response = await _userService.DeleteAsync(id);
+		var response = await userService.DeleteAsync(id);
 
 		TempData["Notification"] = response.IsFailure
 		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
 		  : MessageViewHelper.SuccessJson("Usuário deletado com sucesso");
 
-		_logger.LogInformation($"{User.Identity?.Name} removed user with id = {id}");
+		logger.LogInformation($"{User.Identity?.Name} removed user with id = {id}");
+
+		if (response.IsSuccess)
+			await this.AddAuditLogAsync(auditLogService, "User", id, $"removeu o usuário {id}");
 
 		return RedirectToAction("Index");
 	}
@@ -199,7 +212,7 @@ public class UsersController(
 	[AllowAnonymous]
 	public IActionResult UserUnauthorized()
 	{
-		_logger.LogInformation($"{User.Identity?.Name} tried to access a page for which he is not authorized");
+		logger.LogInformation($"{User.Identity?.Name} tried to access a page for which he is not authorized");
 
 		return View();
 	}
@@ -212,7 +225,7 @@ public class UsersController(
 		if (string.IsNullOrEmpty(refreshToken))
 			return RedirectToAction("SignIn");
 
-		var response = await _authService.TryRefreshSessionAsync(refreshToken);
+		var response = await authService.TryRefreshSessionAsync(refreshToken);
 
 		if (response.IsFailure)
 			return RedirectToAction("SignIn");
@@ -233,3 +246,4 @@ public class UsersController(
 		return RedirectToAction("SignIn");
 	}
 }
+

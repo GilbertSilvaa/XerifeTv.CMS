@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Authentication.Dtos.Request;
+using XerifeTv.CMS.Modules.Authentication.Dtos.Request;
 using XerifeTv.CMS.Modules.Authentication.Dtos.Response;
 using XerifeTv.CMS.Modules.Authentication.Enums;
 using XerifeTv.CMS.Modules.Authentication.Interfaces;
@@ -8,15 +8,15 @@ using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.Authentication.Services;
 
-public class BasicLoginStrategy(IUserService _userService, ITokenService _tokenService) : ILoginStrategy
+public class BasicLoginStrategy(IUserService userService, ITokenService tokenService) : ILoginStrategy
 {
 	public async Task<Result<LoginResponseDto>> AuthenticateAsync(LoginRequestDto dto)
 	{
 		try
 		{
 			var response = RegexHelper.IsValidEmail(dto.UserNameOrEmail)
-				? await _userService.GetByEmailAsync(dto.UserNameOrEmail)
-				: await _userService.GetByUsernameAsync(dto.UserNameOrEmail);
+				? await userService.GetByEmailAsync(dto.UserNameOrEmail)
+				: await userService.GetByUsernameAsync(dto.UserNameOrEmail);
 
 			if (response.IsFailure)
 				return Result<LoginResponseDto>.Failure(response.Error);
@@ -26,7 +26,7 @@ public class BasicLoginStrategy(IUserService _userService, ITokenService _tokenS
 			if (userResult.Blocked)
 				return Result<LoginResponseDto>.Failure(new Error("403", "Usuário bloqueado"));
 
-			var isPasswordCorrectResponse = await _userService.IsPasswordCorrect(userResult.Id, dto.Password);
+			var isPasswordCorrectResponse = await userService.IsPasswordCorrect(userResult.Id, dto.Password);
 
 			if (isPasswordCorrectResponse.IsFailure)
 				return Result<LoginResponseDto>.Failure(isPasswordCorrectResponse.Error);
@@ -36,8 +36,8 @@ public class BasicLoginStrategy(IUserService _userService, ITokenService _tokenS
 
 			return Result<LoginResponseDto>.Success(
 				new LoginResponseDto(
-					_tokenService.GenerateToken(userResult.UserName, userResult.Role),
-					_tokenService.GenerateRefreshToken(userResult.UserName)));
+					tokenService.GenerateToken(userResult.UserName, userResult.Role),
+					tokenService.GenerateRefreshToken(userResult.UserName)));
 		}
 		catch (Exception ex)
 		{
@@ -49,3 +49,4 @@ public class BasicLoginStrategy(IUserService _userService, ITokenService _tokenS
 	public bool CanHandle(ELoginProvider loginProvider)
 		=> loginProvider == ELoginProvider.Basic;
 }
+

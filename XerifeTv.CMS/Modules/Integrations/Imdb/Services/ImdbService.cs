@@ -1,10 +1,10 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Dtos;
 
 namespace XerifeTv.CMS.Modules.Integrations.Imdb.Services;
 
-public class ImdbService(IConfiguration _configuration) : IImdbService
+public class ImdbService(IConfiguration configuration) : IImdbService
 {
     public async Task<Result<GetAllResultsByImdbIdResponseDto?>> GetAllResultsByImdbIdAsync(string imdbId)
     {
@@ -12,7 +12,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
         {
             var client = new HttpClient();
             var url = $"https://api.themoviedb.org/3/find/{imdbId}";
-            var tmdbKey = _configuration["Tmdb:Key"];
+            var tmdbKey = configuration["Tmdb:Key"];
 
             var response = await client.GetAsync($"{url}?api_key={tmdbKey}&external_source=imdb_id&language=pt-BR");
 
@@ -42,7 +42,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
         {
             var client = new HttpClient();
             var url = $"https://api.themoviedb.org/3/movie/{imdbId}";
-            var tmdbKey = _configuration["Tmdb:Key"];
+            var tmdbKey = configuration["Tmdb:Key"];
 
             var response = await client.GetAsync($"{url}?api_key={tmdbKey}&language=pt-BR&page=1");
 
@@ -81,7 +81,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
 
             var client = new HttpClient();
             var url = $"https://api.themoviedb.org/3/tv/{seriesResult.Id}";
-            var tmdbKey = _configuration["Tmdb:Key"];
+            var tmdbKey = configuration["Tmdb:Key"];
 
             var response = await client.GetAsync($"{url}?api_key={tmdbKey}&language=pt-BR");
 
@@ -115,7 +115,7 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
 
             var client = new HttpClient();
             var url = $"https://api.themoviedb.org/3/tv/{seriesResult.Data?.Id}/season/{season}";
-            var tmdbKey = _configuration["Tmdb:Key"];
+            var tmdbKey = configuration["Tmdb:Key"];
 
             var response = await client.GetAsync($"{url}?api_key={tmdbKey}&language=pt-BR");
 
@@ -139,3 +139,4 @@ public class ImdbService(IConfiguration _configuration) : IImdbService
         }
     }
 }
+

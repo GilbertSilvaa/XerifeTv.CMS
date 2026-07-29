@@ -9,14 +9,14 @@ using XerifeTv.CMS.Modules.Common;
 namespace XerifeTv.CMS.Modules.Channel;
 
 public sealed class ChannelService(
-    IChannelRepository _repository,
-    IBackgroundJobQueueService _backgroundJobQueueService) : IChannelService
+    IChannelRepository repository,
+    IBackgroundJobQueueService backgroundJobQueueService) : IChannelService
 {
     public async Task<Result<PagedList<GetChannelResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
-            var response = await _repository.GetAsync(currentPage, limit);
+            var response = await repository.GetAsync(currentPage, limit);
 
             var result = new PagedList<GetChannelResponseDto>(
               response.CurrentPage,
@@ -36,7 +36,7 @@ public sealed class ChannelService(
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response is null)
                 return Result<GetChannelResponseDto?>
@@ -57,7 +57,7 @@ public sealed class ChannelService(
         try
         {
             var entity = dto.ToEntity();
-            var titleSpec = new UniqueTitleSpecification(_repository);
+            var titleSpec = new UniqueTitleSpecification(repository);
 
             if (!await titleSpec.IsSatisfiedByAsync(entity))
             {
@@ -65,8 +65,8 @@ public sealed class ChannelService(
                 return Result<string>.Failure(new Error("409", errorMessage));
             }
 
-            var response = await _repository.CreateAsync(entity);
-            await _backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.CHANNELS, response!);
+            var response = await repository.CreateAsync(entity);
+            await backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.CHANNELS, response!);
 
             return Result<string>.Success(response);
         }
@@ -82,12 +82,12 @@ public sealed class ChannelService(
         try
         {
             var entity = dto.ToEntity();
-            var response = await _repository.GetAsync(entity.Id);
+            var response = await repository.GetAsync(entity.Id);
 
             if (response is null)
                 return Result<string>.Failure(new Error("404", "Conteúdo não encontrado"));
 
-            var titleSpec = new UniqueTitleSpecification(_repository);
+            var titleSpec = new UniqueTitleSpecification(repository);
 
             if (!await titleSpec.IsSatisfiedByAsync(entity))
             {
@@ -96,7 +96,7 @@ public sealed class ChannelService(
             }
 
             entity.CreateAt = response.CreateAt;
-            await _repository.UpdateAsync(entity);
+            await repository.UpdateAsync(entity);
             return Result<string>.Success(entity.Id);
         }
         catch (Exception ex)
@@ -110,12 +110,12 @@ public sealed class ChannelService(
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response is null)
                 return Result<bool>.Failure(new Error("404", "Conteúdo não encontrado"));
 
-            await _repository.DeleteAsync(id);
+            await repository.DeleteAsync(id);
             return Result<bool>.Success(true);
         }
         catch (Exception ex)
@@ -129,7 +129,7 @@ public sealed class ChannelService(
     {
         try
         {
-            var response = await _repository.GetByFilterAsync(dto);
+            var response = await repository.GetByFilterAsync(dto);
 
             var result = new PagedList<GetChannelResponseDto>(
               response.CurrentPage,
@@ -145,3 +145,4 @@ public sealed class ChannelService(
         }
     }
 }
+

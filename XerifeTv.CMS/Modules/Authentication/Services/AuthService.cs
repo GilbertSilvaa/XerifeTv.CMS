@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Authentication.Dtos.Request;
+using XerifeTv.CMS.Modules.Authentication.Dtos.Request;
 using XerifeTv.CMS.Modules.Authentication.Dtos.Response;
 using XerifeTv.CMS.Modules.Authentication.Interfaces;
 using XerifeTv.CMS.Modules.Common;
@@ -7,15 +7,15 @@ using XerifeTv.CMS.Modules.User.Interfaces;
 namespace XerifeTv.CMS.Modules.Authentication.Services;
 
 public class AuthService(
-    IUserService _userService,
-    ITokenService _tokenService,
-	IEnumerable<ILoginStrategy> _loginStrategies) : IAuthService
+    IUserService userService,
+    ITokenService tokenService,
+	IEnumerable<ILoginStrategy> loginStrategies) : IAuthService
 {
     public async Task<Result<LoginResponseDto>> LoginAsync(LoginRequestDto dto)
     {
         try
         {
-			var loginStrategy = _loginStrategies.FirstOrDefault(s => s.CanHandle(dto.Provider));
+			var loginStrategy = loginStrategies.FirstOrDefault(s => s.CanHandle(dto.Provider));
 
             if (loginStrategy == null)
                 return Result<LoginResponseDto>.Failure(new Error("400", "Login provider not supported"));
@@ -33,12 +33,12 @@ public class AuthService(
     {
         try
         {
-            var (isValid, userName) = await _tokenService.ValidateTokenAsync(refreshToken);
+            var (isValid, userName) = await tokenService.ValidateTokenAsync(refreshToken);
 
             if (!isValid)
                 return Result<(string?, string?)>.Failure(new Error("401", "Token inválido"));
 
-            var response = await _userService.GetByUsernameAsync(userName!);
+            var response = await userService.GetByUsernameAsync(userName!);
 
             if (response.IsFailure)
                 return Result<(string? newToken, string? newRefreshToken)>.Failure(response.Error);
@@ -49,8 +49,8 @@ public class AuthService(
                 return Result<(string?, string?)>.Failure(new Error("403", "Usuário bloqueado"));
 
             return Result<(string?, string?)>.Success((
-                _tokenService.GenerateToken(userResult.UserName, userResult.Role),
-                _tokenService.GenerateRefreshToken(userResult.UserName)));
+                tokenService.GenerateToken(userResult.UserName, userResult.Role),
+                tokenService.GenerateRefreshToken(userResult.UserName)));
         }
         catch (Exception ex)
         {
@@ -59,3 +59,4 @@ public class AuthService(
         }
     }
 }
+

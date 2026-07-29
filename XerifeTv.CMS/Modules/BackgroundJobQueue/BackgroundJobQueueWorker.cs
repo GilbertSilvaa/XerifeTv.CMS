@@ -1,4 +1,4 @@
-﻿
+
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
@@ -10,8 +10,8 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 namespace XerifeTv.CMS.Modules.BackgroundJobQueue;
 
 public class BackgroundJobQueueWorker(
-    IServiceProvider _serviceProvider,
-    ILogger<BackgroundJobQueueWorker> _logger) : BackgroundService
+    IServiceProvider serviceProvider,
+    ILogger<BackgroundJobQueueWorker> logger) : BackgroundService
 {
     private const int MaxConcurrentJobs = 2;
     private readonly SemaphoreSlim _semaphore = new(MaxConcurrentJobs);
@@ -31,7 +31,7 @@ public class BackgroundJobQueueWorker(
     {
         try
         {
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = serviceProvider.CreateScope();
             var backgroundJobQueueService = scope.ServiceProvider.GetRequiredService<IBackgroundJobQueueService>();
             var jobsProcessorStrategies = scope.ServiceProvider.GetServices<IBackgroundJobProcessorStrategy>();
 
@@ -70,7 +70,7 @@ public class BackgroundJobQueueWorker(
                 }
                 catch (Exception ex)
                 {
-                    _logger.Log(LogLevel.Error, ex.InnerException?.Message ?? ex.Message);
+                    logger.Log(LogLevel.Error, ex.InnerException?.Message ?? ex.Message);
                 }
                 finally
                 {
@@ -84,7 +84,7 @@ public class BackgroundJobQueueWorker(
         }
         catch (Exception ex)
         {
-            _logger.Log(LogLevel.Error, ex.InnerException?.Message ?? ex.Message);
+            logger.Log(LogLevel.Error, ex.InnerException?.Message ?? ex.Message);
         }
     }
 }
