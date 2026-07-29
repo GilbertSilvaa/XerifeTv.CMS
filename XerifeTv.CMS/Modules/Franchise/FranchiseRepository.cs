@@ -6,8 +6,8 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.Franchise;
 
-public sealed class FranchiseRepository(IOptions<DBSettings> options)
-    : BaseRepository<Franchise>(ECollection.FRANCHISES, options), IFranchiseRepository
+public sealed class FranchiseRepository(IOptions<DBSettings> options, IMongoClient mongoClient)
+    : BaseRepository<Franchise>(ECollection.FRANCHISES, options, mongoClient), IFranchiseRepository
 {
     public async Task<IEnumerable<Franchise>> GetAllAsync()
     {

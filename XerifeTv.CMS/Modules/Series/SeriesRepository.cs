@@ -12,8 +12,8 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.Series;
 
-public sealed class SeriesRepository(IOptions<DBSettings> options)
-  : BaseRepository<SeriesEntity>(ECollection.SERIES, options), ISeriesRepository
+public sealed class SeriesRepository(IOptions<DBSettings> options, IMongoClient mongoClient)
+  : BaseRepository<SeriesEntity>(ECollection.SERIES, options, mongoClient), ISeriesRepository
 {
     public override async Task<PagedList<SeriesEntity>> GetAsync(int currentPage, int limit)
     {

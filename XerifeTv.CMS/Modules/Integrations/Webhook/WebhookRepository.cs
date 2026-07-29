@@ -7,8 +7,8 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.Integrations.Webhook;
 
-public sealed class WebhookRepository(IOptions<DBSettings> options)
-    : BaseRepository<WebhookEntity>(ECollection.WEBHOOKS, options), IWebhookRepository
+public sealed class WebhookRepository(IOptions<DBSettings> options, IMongoClient mongoClient)
+    : BaseRepository<WebhookEntity>(ECollection.WEBHOOKS, options, mongoClient), IWebhookRepository
 {
     public async Task<IEnumerable<WebhookEntity>> GetByTriggerEventAsync(EWebhookTriggerEvent @event, bool includeDisabled = false)
     {

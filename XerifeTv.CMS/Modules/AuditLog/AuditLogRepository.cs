@@ -6,9 +6,9 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.AuditLog;
 
-public class AuditLogRepository(IOptions<DBSettings> dbSettings) : IAuditLogRepository
+public class AuditLogRepository(IOptions<DBSettings> dbSettings, IMongoClient mongoClient) : IAuditLogRepository
 {
-    protected readonly IMongoCollection<AuditLogEntity> _collection = new MongoClient(dbSettings.Value.ConnectionString)
+    protected readonly IMongoCollection<AuditLogEntity> _collection = mongoClient
         .GetDatabase(dbSettings.Value.DatabaseName)
         .GetCollection<AuditLogEntity>(ECollection.AUDIT_LOGS.ToString());
 

@@ -6,8 +6,8 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.Content;
 
-public class ContentSettingsRepository(IOptions<DBSettings> dbSettings)
-    : BaseRepository<ContentSettingsEntity>(ECollection.CONTENT_API_SETTINGS, dbSettings), IContentSettingsRepository
+public class ContentSettingsRepository(IOptions<DBSettings> dbSettings, IMongoClient mongoClient)
+    : BaseRepository<ContentSettingsEntity>(ECollection.CONTENT_API_SETTINGS, dbSettings, mongoClient), IContentSettingsRepository
 {
     public async Task CreateOrUpdateAsync(ContentSettingsEntity contentSettings)
     {

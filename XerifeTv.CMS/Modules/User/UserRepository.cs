@@ -6,8 +6,8 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.User;
 
-public sealed class UserRepository(IOptions<DBSettings> options)
-  : BaseRepository<UserEntity>(ECollection.USERS, options), IUserRepository
+public sealed class UserRepository(IOptions<DBSettings> options, IMongoClient mongoClient)
+  : BaseRepository<UserEntity>(ECollection.USERS, options, mongoClient), IUserRepository
 {
     public async Task<UserEntity?> GetByUsernameAsync(string userName)
       => await _collection

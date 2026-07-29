@@ -12,8 +12,8 @@ using XerifeTv.CMS.Modules.Common.Dtos;
 
 namespace XerifeTv.CMS.Modules.Channel;
 
-public sealed class ChannelRepository(IOptions<DBSettings> options)
-  : BaseRepository<ChannelEntity>(ECollection.CHANNELS, options), IChannelRepository
+public sealed class ChannelRepository(IOptions<DBSettings> options, IMongoClient mongoClient)
+  : BaseRepository<ChannelEntity>(ECollection.CHANNELS, options, mongoClient), IChannelRepository
 {
     public async Task<PagedList<ChannelEntity>> GetByFilterAsync(GetChannelsByFilterRequestDto dto)
     {

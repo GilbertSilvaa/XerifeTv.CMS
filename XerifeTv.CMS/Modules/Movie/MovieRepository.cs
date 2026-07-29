@@ -12,8 +12,8 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.Movie;
 
-public sealed class MovieRepository(IOptions<DBSettings> options)
-  : BaseRepository<MovieEntity>(ECollection.MOVIES, options), IMovieRepository
+public sealed class MovieRepository(IOptions<DBSettings> options, IMongoClient mongoClient)
+  : BaseRepository<MovieEntity>(ECollection.MOVIES, options, mongoClient), IMovieRepository
 {
     public async Task<PagedList<MovieEntity>> GetByFilterAsync(GetMoviesByFilterRequestDto dto)
     {
