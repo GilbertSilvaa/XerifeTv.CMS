@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
 using XerifeTv.CMS.Modules.Movie;
@@ -11,20 +11,20 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 namespace XerifeTv.CMS.Modules.Content.Services;
 
 public class ContentV2Service(
-    IMovieRepository _movieRepository,
-    ISeriesRepository _seriesRepository,
-    IContentSettingsRepository _contentSettingsRepository,
-    IConfiguration _configuration) : IContentV2Service
+    IMovieRepository movieRepository,
+    ISeriesRepository seriesRepository,
+    IContentSettingsRepository contentSettingsRepository,
+    IConfiguration configuration) : IContentV2Service
 {
     public async Task<Result<IEnumerable<MovieContentV2ResponseDto>>> GetMoviesAsync(int limit)
     {
         try
         {
-            var movies = await _movieRepository.GetAsync(currentPage: 1, limit);
+            var movies = await movieRepository.GetAsync(currentPage: 1, limit);
 
             return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(
                 movies.Items.Select(
-                    i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
+                    i => MovieContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)));
         }
         catch (Exception ex)
         {
@@ -36,7 +36,7 @@ public class ContentV2Service(
     {
         try
         {
-            var series = await _seriesRepository.GetAsync(currentPage: 1, limit);
+            var series = await seriesRepository.GetAsync(currentPage: 1, limit);
 
             return Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>.Success(series.Items.Select(SeriesSummaryContentV2ResponseDto.FromEntity));
         }
@@ -50,13 +50,13 @@ public class ContentV2Service(
     {
         try
         {
-            var movie = await _movieRepository.GetAsync(id);
+            var movie = await movieRepository.GetAsync(id);
 
             if (movie is null || movie.Disabled)
                 return Result<MovieContentV2ResponseDto?>.Failure(new("404", "Conteúdo não encontrado"));
 
             return Result<MovieContentV2ResponseDto?>.Success(
-                MovieContentV2ResponseDto.FromEntity(movie, _configuration["SecuritySettings:ContentEncryptionKey"]!));
+                MovieContentV2ResponseDto.FromEntity(movie, configuration["SecuritySettings:ContentEncryptionKey"]!));
         }
         catch (Exception ex)
         {
@@ -68,7 +68,7 @@ public class ContentV2Service(
     {
         try
         {
-            var series = await _seriesRepository.GetAsync(id);
+            var series = await seriesRepository.GetAsync(id);
 
             if (series is null || series.Disabled)
                 return Result<SeriesSummaryContentV2ResponseDto?>.Failure(new("404", "Conteúdo não encontrado"));
@@ -85,7 +85,7 @@ public class ContentV2Service(
     {
         try
         {
-            var movies = await _movieRepository.GetByFilterAsync(new(
+            var movies = await movieRepository.GetByFilterAsync(new(
                 filter: EMovieSearchFilter.CATEGORY,
                 order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
                 search: category,
@@ -100,7 +100,7 @@ public class ContentV2Service(
                 totalPageCount: movies.TotalPageCount,
                 items: [new ItemsByCategory<MovieContentV2ResponseDto>(
                     category,
-                    moviesByCategory.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)))
+                    moviesByCategory.Select(i => MovieContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)))
                 ]));
         }
         catch (Exception ex)
@@ -113,7 +113,7 @@ public class ContentV2Service(
     {
         try
         {
-            var series = await _seriesRepository.GetByFilterAsync(new(
+            var series = await seriesRepository.GetByFilterAsync(new(
                 filter: ESeriesSearchFilter.CATEGORY,
                 search: category,
                 limitResults: pageSize,
@@ -137,11 +137,11 @@ public class ContentV2Service(
     {
         try
         {
-            var seriesResult = await _seriesRepository.GetEpisodesBySeasonAsync(seriesId, seasonNumber, false);
+            var seriesResult = await seriesRepository.GetEpisodesBySeasonAsync(seriesId, seasonNumber, false);
 
             return Result<IEnumerable<EpisodeContentV2ResponseDto>>.Success(
                 seriesResult?.Episodes.Select(
-                    i => EpisodeContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
+                    i => EpisodeContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
         }
         catch (Exception ex)
         {
@@ -153,14 +153,14 @@ public class ContentV2Service(
     {
         try
         {
-            var contentSettings = await _contentSettingsRepository.GetContentSettingsAsync();
+            var contentSettings = await contentSettingsRepository.GetContentSettingsAsync();
 
             if (contentSettings?.MovieCategoriesDistribution != null && contentSettings.MovieCategoriesDistribution.Count > 0)
             {
                 return Result<string[]>.Success([.. contentSettings.MovieCategoriesDistribution.Take(limit)]);
             }
 
-            var moviesCategoriesResult = await _movieRepository.GetCategoriesWithCountAsync();
+            var moviesCategoriesResult = await movieRepository.GetCategoriesWithCountAsync();
             return Result<string[]>.Success([.. moviesCategoriesResult.Where(c => c.Count >= 10).Take(limit).Select(c => c.Category)]);
         }
         catch (Exception ex)
@@ -173,14 +173,14 @@ public class ContentV2Service(
     {
         try
         {
-            var contentSettings = await _contentSettingsRepository.GetContentSettingsAsync();
+            var contentSettings = await contentSettingsRepository.GetContentSettingsAsync();
 
             if (contentSettings?.SeriesCategoriesDistribution != null && contentSettings.SeriesCategoriesDistribution.Count > 0)
             {
                 return Result<string[]>.Success([.. contentSettings.SeriesCategoriesDistribution.Take(limit)]);
             }
 
-            var seriesCategoriesResult = await _seriesRepository.GetCategoriesWithCountAsync();
+            var seriesCategoriesResult = await seriesRepository.GetCategoriesWithCountAsync();
             return Result<string[]>.Success([.. seriesCategoriesResult.Where(c => c.Count >= 10).Take(limit).Select(c => c.Category)]);
         }
         catch (Exception ex)
@@ -193,10 +193,10 @@ public class ContentV2Service(
     {
         try
         {
-            var recommendedMovies = await _movieRepository.GetMoviesRecommendedByMovieIdAsync(movieId, 15);
+            var recommendedMovies = await movieRepository.GetMoviesRecommendedByMovieIdAsync(movieId, 15);
 
             return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(
-                recommendedMovies?.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
+                recommendedMovies?.Select(i => MovieContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
         }
         catch (Exception ex)
         {
@@ -208,7 +208,7 @@ public class ContentV2Service(
     {
         try
         {
-            var recommendedSeries = await _seriesRepository.GetSeriesRecommendedBySeriesIdAsync(seriesId, 15);
+            var recommendedSeries = await seriesRepository.GetSeriesRecommendedBySeriesIdAsync(seriesId, 15);
 
             return Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>.Success(
                 recommendedSeries?.Select(SeriesSummaryContentV2ResponseDto.FromEntity) ?? []);
@@ -223,7 +223,7 @@ public class ContentV2Service(
     {
         try
         {
-            var seriesResult = await _seriesRepository.GetByFilterAsync(new(
+            var seriesResult = await seriesRepository.GetByFilterAsync(new(
                 filter: ESeriesSearchFilter.TITLE,
                 search: searchTerm,
                 limitResults: limit,
@@ -242,7 +242,7 @@ public class ContentV2Service(
     {
         try
         {
-            var moviesResult = await _movieRepository.GetByFilterAsync(new(
+            var moviesResult = await movieRepository.GetByFilterAsync(new(
                 filter: EMovieSearchFilter.TITLE,
                 order: EMovieOrderFilter.TITLE,
                 search: searchTerm,
@@ -251,7 +251,7 @@ public class ContentV2Service(
                 isIncludeDisabled: false));
 
             return Result<IEnumerable<MovieContentV2ResponseDto>>.Success(
-                moviesResult.Items.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
+                moviesResult.Items.Select(i => MovieContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)));
         }
         catch (Exception ex)
         {
@@ -273,7 +273,7 @@ public class ContentV2Service(
 
             if (isMovieFeatured)
             {
-                var moviesResult = await _movieRepository.GetByFilterAsync(new(
+                var moviesResult = await movieRepository.GetByFilterAsync(new(
                     filter: EMovieSearchFilter.TITLE,
                     order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
                     search: string.Empty,
@@ -282,11 +282,11 @@ public class ContentV2Service(
                     isIncludeDisabled: false));
 
                 featuredContent = moviesResult.Items.Select(
-                    i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)).FirstOrDefault();
+                    i => MovieContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)).FirstOrDefault();
             }
             else
             {
-                var seriesResult = await _seriesRepository.GetByFilterAsync(new(
+                var seriesResult = await seriesRepository.GetByFilterAsync(new(
                      filter: ESeriesSearchFilter.TITLE,
                      search: string.Empty,
                      limitResults: 1,
@@ -318,14 +318,14 @@ public class ContentV2Service(
     {
         try
         {
-            var moviesByCategories = await _movieRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
+            var moviesByCategories = await movieRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
 
             return Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>.Success(new(
                 currentPage: page,
                 totalPageCount: moviesByCategories.Count(),
                 items: moviesByCategories.Select(c => new ItemsByCategory<MovieContentV2ResponseDto>(
                     c.Category,
-                    c.Items.Select(i => MovieContentV2ResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!))))));
+                    c.Items.Select(i => MovieContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!))))));
         }
         catch (Exception ex)
         {
@@ -340,7 +340,7 @@ public class ContentV2Service(
     {
         try
         {
-            var seriesByCategories = await _seriesRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
+            var seriesByCategories = await seriesRepository.GetGroupByCategoryAsync(new(categories, page, pageSize));
 
             return Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>.Success(new(
                 currentPage: page,
@@ -355,3 +355,4 @@ public class ContentV2Service(
         }
     }
 }
+

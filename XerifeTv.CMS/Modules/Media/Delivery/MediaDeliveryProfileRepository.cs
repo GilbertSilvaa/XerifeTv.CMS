@@ -6,10 +6,9 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.Media.Delivery;
 
-public class MediaDeliveryProfileRepository : BaseRepository<MediaDeliveryProfileEntity>, IMediaDeliveryProfileRepository
+public class MediaDeliveryProfileRepository(IOptions<DBSettings> dbSettings)
+    : BaseRepository<MediaDeliveryProfileEntity>(ECollection.MEDIA_DELIVERY_PROFILES, dbSettings), IMediaDeliveryProfileRepository
 {
-    public MediaDeliveryProfileRepository(IOptions<DBSettings> dbSettings) : base(ECollection.MEDIA_DELIVERY_PROFILES, dbSettings) { }
-
     public async Task<IEnumerable<MediaDeliveryProfileEntity>> GetAsync(bool isIncludeDisabled = false)
     {
         return await _collection.Find(r => (isIncludeDisabled) || (!isIncludeDisabled && !r.IsDisabled))

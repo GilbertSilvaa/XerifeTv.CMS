@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Common.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook;
@@ -15,21 +15,21 @@ using XerifeTv.CMS.Views.Settings.Models;
 namespace XerifeTv.CMS.Controllers;
 
 public class SettingsController(
-    IUserService _userService,
-    IWebhookService _webhookService,
-    IMediaDeliveryProfileService _mediaDeliveryProfileService,
-    ILogger<SettingsController> _logger) : Controller
+    IUserService userService,
+    IWebhookService webhookService,
+    IMediaDeliveryProfileService mediaDeliveryProfileService,
+    ILogger<SettingsController> logger) : Controller
 {
     [Authorize]
     public async Task<IActionResult> Index()
     {
-        var userResponse = await _userService.GetByUsernameAsync(User.Identity?.Name ?? string.Empty);
+        var userResponse = await userService.GetByUsernameAsync(User.Identity?.Name ?? string.Empty);
         if (userResponse.IsFailure) return RedirectToAction("Logout", "Users");
 
-        var webhooksResponse = await _webhookService.GetAsync(currentPage: 1, limit: 50);
+        var webhooksResponse = await webhookService.GetAsync(currentPage: 1, limit: 50);
         if (webhooksResponse.IsFailure) return RedirectToAction("Index", "Home");
 
-        var mediaDeliveryProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: true);
+        var mediaDeliveryProfilesResponse = await mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: true);
         if (mediaDeliveryProfilesResponse.IsFailure) return RedirectToAction("Index", "Home");
 
         SettingsModelView model = new(userResponse.Data!, webhooksResponse.Data?.Items ?? [], mediaDeliveryProfilesResponse.Data ?? []);
@@ -50,13 +50,13 @@ public class SettingsController(
             Blocked = null
         };
 
-        var response = await _userService.UpdateAsync(updateUserRequestDto);
+        var response = await userService.UpdateAsync(updateUserRequestDto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson("Perfil atualizado com sucesso");
 
-        _logger.LogInformation($"{User.Identity?.Name} updated your own profile");
+        logger.LogInformation($"{User.Identity?.Name} updated your own profile");
 
         return Redirect(Url.Action("Index") + "#profile");
     }
@@ -71,13 +71,13 @@ public class SettingsController(
             return Redirect(Url.Action("Index") + "#password");
         }
 
-        var response = await _userService.UpdatePasswordAsync(dto);
+        var response = await userService.UpdatePasswordAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson("Senha atualizada com sucesso");
 
-        _logger.LogInformation($"{User.Identity?.Name} updated your password");
+        logger.LogInformation($"{User.Identity?.Name} updated your password");
 
         return Redirect(Url.Action("Index") + "#password");
     }
@@ -86,7 +86,7 @@ public class SettingsController(
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> RegisterWebhook(CreateWebhookRequestDto dto)
     {
-        var response = await _webhookService.CreateAsync(dto);
+        var response = await webhookService.CreateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -99,7 +99,7 @@ public class SettingsController(
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> UpdateWebhook(UpdateWebhookRequestDto dto)
     {
-        var response = await _webhookService.UpdateAsync(dto);
+        var response = await webhookService.UpdateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
@@ -111,7 +111,7 @@ public class SettingsController(
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> DeleteWebhook(string id)
     {
-        var response = await _webhookService.DeleteAsync(id);
+        var response = await webhookService.DeleteAsync(id);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)

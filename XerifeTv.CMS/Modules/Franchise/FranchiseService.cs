@@ -8,15 +8,15 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 namespace XerifeTv.CMS.Modules.Franchise;
 
 public class FranchiseService(
-    IFranchiseRepository _repository,
-    IMovieRepository _movieRepository,
-    ISeriesRepository _seriesRepository) : IFranchiseService
+    IFranchiseRepository repository,
+    IMovieRepository movieRepository,
+    ISeriesRepository seriesRepository) : IFranchiseService
 {
     public async Task<Result<IEnumerable<GetFranchiseResponseDto>>> GetAllAsync()
     {
         try
         {
-            var response = await _repository.GetAllAsync();
+            var response = await repository.GetAllAsync();
 
             return Result<IEnumerable<GetFranchiseResponseDto>>.Success(
                 response.Select(GetFranchiseResponseDto.FromEntity));
@@ -32,7 +32,7 @@ public class FranchiseService(
     {
         try
         {
-            var response = await _repository.SearchByNameAsync(search);
+            var response = await repository.SearchByNameAsync(search);
 
             return Result<IEnumerable<GetFranchiseResponseDto>>.Success(
                 response.Select(GetFranchiseResponseDto.FromEntity));
@@ -48,7 +48,7 @@ public class FranchiseService(
     {
         try
         {
-            var response = await _repository.GetByNameAsync(name);
+            var response = await repository.GetByNameAsync(name);
 
             if (response == null)
                 return Result<GetFranchiseResponseDto?>.Failure(
@@ -67,7 +67,7 @@ public class FranchiseService(
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response == null)
                 return Result<GetFranchiseResponseDto?>.Failure(
@@ -91,13 +91,13 @@ public class FranchiseService(
                 return Result<GetFranchiseResponseDto>.Failure(
                     new Error("400", "Nome da franquia obrigatório"));
 
-            var existingFranchise = await _repository.GetByNameAsync(dto.Name);
+            var existingFranchise = await repository.GetByNameAsync(dto.Name);
             if (existingFranchise != null)
                 return Result<GetFranchiseResponseDto>.Failure(
                     new Error("409", "Já existe uma franquia com este nome"));
 
             var entity = dto.ToEntity();
-            await _repository.CreateAsync(entity);
+            await repository.CreateAsync(entity);
 
             return Result<GetFranchiseResponseDto>.Success(
                 GetFranchiseResponseDto.FromEntity(entity));
@@ -121,18 +121,18 @@ public class FranchiseService(
                 return Result<GetFranchiseResponseDto>.Failure(
                     new Error("400", "Nome da franquia obrigatório"));
 
-            var existingFranchise = await _repository.GetAsync(dto.Id);
+            var existingFranchise = await repository.GetAsync(dto.Id);
             if (existingFranchise == null)
                 return Result<GetFranchiseResponseDto>.Failure(
                     new Error("404", "Franquia não encontrada"));
 
-            var duplicatedFranchise = await _repository.GetByNameAsync(dto.Name, dto.Id);
+            var duplicatedFranchise = await repository.GetByNameAsync(dto.Name, dto.Id);
             if (duplicatedFranchise != null)
                 return Result<GetFranchiseResponseDto>.Failure(
                     new Error("409", "Já existe uma franquia com este nome"));
 
             existingFranchise.Name = dto.Name.Trim();
-            await _repository.UpdateAsync(existingFranchise);
+            await repository.UpdateAsync(existingFranchise);
 
             return Result<GetFranchiseResponseDto>.Success(
                 GetFranchiseResponseDto.FromEntity(existingFranchise));
@@ -148,18 +148,18 @@ public class FranchiseService(
     {
         try
         {
-            var existingFranchise = await _repository.GetAsync(id);
+            var existingFranchise = await repository.GetAsync(id);
             if (existingFranchise == null)
                 return Result<bool>.Failure(new Error("404", "Franquia não encontrada"));
 
-            var moviesCount = await _movieRepository.CountByFranchiseIdAsync(id);
-            var seriesCount = await _seriesRepository.CountByFranchiseIdAsync(id);
+            var moviesCount = await movieRepository.CountByFranchiseIdAsync(id);
+            var seriesCount = await seriesRepository.CountByFranchiseIdAsync(id);
 
             if (moviesCount > 0 || seriesCount > 0)
                 return Result<bool>.Failure(
                     new Error("409", "Não foi possível excluir! A franquia está vinculada a outros filmes ou séries"));
 
-            await _repository.DeleteAsync(id);
+            await repository.DeleteAsync(id);
             return Result<bool>.Success(true);
         }
         catch (Exception ex)
@@ -169,3 +169,4 @@ public class FranchiseService(
         }
     }
 }
+

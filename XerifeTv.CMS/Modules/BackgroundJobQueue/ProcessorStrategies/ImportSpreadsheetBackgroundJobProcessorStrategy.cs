@@ -9,18 +9,12 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 
 namespace XerifeTv.CMS.Modules.BackgroundJobQueue.ProcessorStrategies;
 
-public sealed class ImportSpreadsheetBackgroundJobProcessorStrategy : IBackgroundJobProcessorStrategy
+public sealed class ImportSpreadsheetBackgroundJobProcessorStrategy(
+    IServiceProvider serviceProvider) : IBackgroundJobProcessorStrategy
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public ImportSpreadsheetBackgroundJobProcessorStrategy(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public async Task ProcessJobAsync(GetBackgroundJobResponseDto job)
     {
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var backgroundJobQueueService = scope.ServiceProvider.GetRequiredService<IBackgroundJobQueueService>();
 
         Type serviceType = typeof(IMovieService);

@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
@@ -12,9 +12,9 @@ namespace XerifeTv.CMS.Controllers.ContentAPI;
 [Route("Api/Content")]
 [ApiController]
 public class ContentV1Controller(
-	IContentV1Service _service, 
-	ILogger<ContentV1Controller> _logger,
-    ICacheService _cacheService) : ControllerBase
+	IContentV1Service service, 
+	ILogger<ContentV1Controller> logger,
+    ICacheService cacheService) : ControllerBase
 {
 	[HttpGet]
 	[Route("Movies")]
@@ -23,10 +23,10 @@ public class ContentV1Controller(
 		int? currentPage = 1,
 		int? limit = 10)
 	{
-		_logger.LogInformation("Request Content API /Movies");
+		logger.LogInformation("Request Content API /Movies");
 
         var cacheKey = $"moviesGroupByCategory-{NormalizeCsv(categories)}-{currentPage}-{limit}";
-        var responseCache = _cacheService.GetValue<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>(cacheKey);
+        var responseCache = cacheService.GetValue<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>(cacheKey);
 
         if (responseCache != null) return Ok(responseCache);
 
@@ -35,11 +35,11 @@ public class ContentV1Controller(
 		  currentPage ?? 1,
 		  limit ?? 5);
 
-		var response = await _service.GetMoviesGroupByCategoryAsync(_dto);
+		var response = await service.GetMoviesGroupByCategoryAsync(_dto);
 
 		if (response.IsFailure) return BadRequest();
 
-        _cacheService.SetValue(cacheKey, response.Data);
+        cacheService.SetValue(cacheKey, response.Data);
 
         return Ok(response.Data);
 	}
@@ -51,18 +51,18 @@ public class ContentV1Controller(
 		int? currentPage, 
 		int? limit)
 	{
-		_logger.LogInformation("Request Content API /Movies/{category}", category);
+		logger.LogInformation("Request Content API /Movies/{category}", category);
 
         var cacheKey = $"moviesByCategory-{category}-{currentPage}-{limit}";
-        var responseCache = _cacheService.GetValue<PagedList<GetMovieContentResponseDto>>(cacheKey);
+        var responseCache = cacheService.GetValue<PagedList<GetMovieContentResponseDto>>(cacheKey);
 
 		if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesByCategoryAsync(new GetContentsRequestDto(category, currentPage, limit));
+        var response = await service.GetMoviesByCategoryAsync(new GetContentsRequestDto(category, currentPage, limit));
 
         if (response.IsFailure) return BadRequest();
 
-        _cacheService.SetValue(cacheKey, response.Data);
+        cacheService.SetValue(cacheKey, response.Data);
 
         return Ok(response.Data);
 	}
@@ -74,10 +74,10 @@ public class ContentV1Controller(
 		int? currentPage = 1, 
 		int? limit = 10)
 	{
-		_logger.LogInformation("Request Content API /Series");
+		logger.LogInformation("Request Content API /Series");
 
         var cacheKey = $"seriesGroupByCategory-{NormalizeCsv(categories)}-{currentPage}-{limit}";
-        var responseCache = _cacheService.GetValue<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>(cacheKey);
+        var responseCache = cacheService.GetValue<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>(cacheKey);
 
         if (responseCache != null) return Ok(responseCache);
 
@@ -86,11 +86,11 @@ public class ContentV1Controller(
 		  currentPage ?? 1,
 		  limit ?? 5);
 
-		var response = await _service.GetSeriesGroupByCategoryAsync(_dto);
+		var response = await service.GetSeriesGroupByCategoryAsync(_dto);
 
         if (response.IsFailure) return BadRequest();
 
-        _cacheService.SetValue(cacheKey, response.Data);
+        cacheService.SetValue(cacheKey, response.Data);
 
         return Ok(response.Data);
 	}
@@ -102,18 +102,18 @@ public class ContentV1Controller(
 		int? currentPage, 
 		int? limit)
 	{
-		_logger.LogInformation("Request Content API /Series/{category}", category);
+		logger.LogInformation("Request Content API /Series/{category}", category);
 
         var cacheKey = $"seriesGroupByCategory-{category}-{currentPage}-{limit}";
-        var responseCache = _cacheService.GetValue<IEnumerable<GetSeriesContentResponseDto>>(cacheKey);
+        var responseCache = cacheService.GetValue<IEnumerable<GetSeriesContentResponseDto>>(cacheKey);
 
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesByCategoryAsync(new GetContentsRequestDto(category, currentPage, limit));
+        var response = await service.GetSeriesByCategoryAsync(new GetContentsRequestDto(category, currentPage, limit));
 
         if (response.IsFailure) return BadRequest();
 
-        _cacheService.SetValue(cacheKey, response.Data);
+        cacheService.SetValue(cacheKey, response.Data);
 
         return Ok(response.Data);
 	}
@@ -122,18 +122,18 @@ public class ContentV1Controller(
 	[Route("Series/Episodes/{serieId}/{season}")]
 	public async Task<ActionResult<IEnumerable<Episode>>> SeriesEpisodes(string serieId, int season)
 	{
-		_logger.LogInformation("Request Content API /Series/Episodes/{serieId}/{season}", serieId, season);
+		logger.LogInformation("Request Content API /Series/Episodes/{serieId}/{season}", serieId, season);
 
         var cacheKey = $"episodesSeriesBySeason-{serieId}-{season}";
-        var responseCache = _cacheService.GetValue<IEnumerable<Episode>>(cacheKey);
+        var responseCache = cacheService.GetValue<IEnumerable<Episode>>(cacheKey);
 
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetEpisodesSeriesBySeasonAsync(serieId, season);
+        var response = await service.GetEpisodesSeriesBySeasonAsync(serieId, season);
 
         if (response.IsFailure) return BadRequest();
 
-        _cacheService.SetValue(cacheKey, response.Data);
+        cacheService.SetValue(cacheKey, response.Data);
 
         return Ok(response.Data);
 	}
@@ -145,10 +145,10 @@ public class ContentV1Controller(
 		int? currentPage = 1, 
 		int? limit = 10)
 	{
-		_logger.LogInformation("Request Content API /Channels");
+		logger.LogInformation("Request Content API /Channels");
 
         var cacheKey = $"channelsGroupByCategory-{NormalizeCsv(categories)}-{currentPage}-{limit}";
-        var responseCache = _cacheService.GetValue<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>(cacheKey);
+        var responseCache = cacheService.GetValue<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>(cacheKey);
 
         if (responseCache != null) return Ok(responseCache);
 
@@ -157,11 +157,11 @@ public class ContentV1Controller(
 		  currentPage ?? 1,
 		  limit ?? 5);
 
-		var response = await _service.GetChannelsGroupByCategoryAsync(_dto);
+		var response = await service.GetChannelsGroupByCategoryAsync(_dto);
 
         if (response.IsFailure) return BadRequest();
 
-        _cacheService.SetValue(cacheKey, response.Data);
+        cacheService.SetValue(cacheKey, response.Data);
 
         return Ok(response.Data);
 	}
@@ -173,18 +173,18 @@ public class ContentV1Controller(
 		int? currentPage, 
 		int? limit)
 	{
-		_logger.LogInformation("Request Content API /Search/{title}", title);
+		logger.LogInformation("Request Content API /Search/{title}", title);
 
         var cacheKey = $"contentsByTitle-{title}-{currentPage}-{limit}";
-		var responseCache = _cacheService.GetValue<GetContentsByNameResponseDto>(cacheKey);
+		var responseCache = cacheService.GetValue<GetContentsByNameResponseDto>(cacheKey);
 
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetContentsByTitleAsync(new(title, currentPage, limit));
+        var response = await service.GetContentsByTitleAsync(new(title, currentPage, limit));
 
         if (response.IsFailure) return BadRequest();
 
-        _cacheService.SetValue(cacheKey, response.Data);
+        cacheService.SetValue(cacheKey, response.Data);
 
         return Ok(response.Data);
     }

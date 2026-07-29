@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Enums;
@@ -18,12 +18,12 @@ namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
 public class MoviesController(
-  IMovieService _service,
-  IImdbService _imdbService,
-  ILogger<MoviesController> _logger,
-  ISpreadsheetBatchImporter<IMovieService> _spreadsheetBatchImporter,
-  IMediaDeliveryProfileService _mediaDeliveryProfileService,
-  IFranchiseService _franchiseService) : Controller
+  IMovieService service,
+  IImdbService imdbService,
+  ILogger<MoviesController> logger,
+  ISpreadsheetBatchImporter<IMovieService> spreadsheetBatchImporter,
+  IMediaDeliveryProfileService mediaDeliveryProfileService,
+  IFranchiseService franchiseService) : Controller
 {
     private const int limitResultsPage = 20;
 
@@ -31,11 +31,11 @@ public class MoviesController(
     {
         Result<PagedList<GetMovieResponseDto>>? result;
 
-        _logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
+        logger.LogInformation($"{User.Identity?.Name} accessed the movies page");
 
         if (filter is EMovieSearchFilter && !string.IsNullOrEmpty(search))
         {
-            result = await _service.GetByFilterAsync(
+            result = await service.GetByFilterAsync(
                 new GetMoviesByFilterRequestDto(
                     filter,
                     EMovieOrderFilter.TITLE,
@@ -49,7 +49,7 @@ public class MoviesController(
         }
         else
         {
-            result = await _service.GetAsync(currentPage ?? 1, limitResultsPage);
+            result = await service.GetAsync(currentPage ?? 1, limitResultsPage);
         }
 
         if (result.IsSuccess)
@@ -72,17 +72,17 @@ public class MoviesController(
         IEnumerable<GetFranchiseResponseDto> franchises = [];
         string? selectedFranchiseName = null;
 
-        var mediaProfilesResponse = await _mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
+        var mediaProfilesResponse = await mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
         if (mediaProfilesResponse.IsSuccess) mediaDeliveryProfiles = mediaProfilesResponse.Data ?? [];
 
         if (id is not null)
         {
-            var response = await _service.GetAsync(id);
+            var response = await service.GetAsync(id);
             if (response.IsSuccess)
             {
                 if (!string.IsNullOrWhiteSpace(response.Data?.FranchiseId))
                 {
-                    var franchiseResponse = await _franchiseService.GetAsync(response.Data.FranchiseId);
+                    var franchiseResponse = await franchiseService.GetAsync(response.Data.FranchiseId);
                     if (franchiseResponse.IsSuccess && franchiseResponse.Data is not null)
                     {
                         selectedFranchiseName = franchiseResponse.Data.Name;
@@ -100,13 +100,13 @@ public class MoviesController(
     [Authorize(Roles = "admin, common")]
     public async Task<IActionResult> Create(CreateMovieRequestDto dto)
     {
-        var response = await _service.CreateAsync(dto);
+        var response = await service.CreateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} cadastrado com sucesso");
 
-        _logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
+        logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
 
         return RedirectToAction("Index");
     }
@@ -114,13 +114,13 @@ public class MoviesController(
     [Authorize(Roles = "admin, common")]
     public async Task<IActionResult> Update(UpdateMovieRequestDto dto)
     {
-        var response = await _service.UpdateAsync(dto);
+        var response = await service.UpdateAsync(dto);
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson($"Filme {dto.ImdbId} atualizado com sucesso");
 
-        _logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
+        logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
 
         return RedirectToAction("Index");
     }
@@ -130,13 +130,13 @@ public class MoviesController(
     {
         if (id is not null)
         {
-            var response = await _service.DeleteAsync(id);
+            var response = await service.DeleteAsync(id);
 
             TempData["Notification"] = response.IsFailure
               ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
               : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
 
-            _logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
+            logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
         }
 
         return RedirectToAction("Index");
@@ -147,7 +147,7 @@ public class MoviesController(
     {
         if (string.IsNullOrEmpty(imdbId)) return BadRequest();
 
-        var response = await _imdbService.GetMovieByImdbIdAsync(imdbId);
+        var response = await imdbService.GetMovieByImdbIdAsync(imdbId);
 
         return response.IsFailure ? BadRequest() : Ok(response.Data);
     }
@@ -158,7 +158,7 @@ public class MoviesController(
     {
         if (file is null || file.Length == 0) return BadRequest();
 
-        var response = await _spreadsheetBatchImporter.ImportAsync(file);
+        var response = await spreadsheetBatchImporter.ImportAsync(file);
 
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
@@ -170,7 +170,7 @@ public class MoviesController(
     [HttpGet]
     public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
     {
-        var response = await _spreadsheetBatchImporter.MonitorImportAsync(importId);
+        var response = await spreadsheetBatchImporter.MonitorImportAsync(importId);
 
         if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
             TempData["Notification"] = MessageViewHelper
@@ -182,3 +182,4 @@ public class MoviesController(
         return BadRequest(response.Error.Description ?? string.Empty);
     }
 }
+

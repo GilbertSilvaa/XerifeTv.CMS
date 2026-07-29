@@ -4,27 +4,19 @@ using XerifeTv.CMS.Modules.User.Interfaces;
 
 namespace XerifeTv.CMS.Modules.User.Services;
 
-public class EmailService : IEmailService
+public class EmailService(IConfiguration configuration) : IEmailService
 {
-    private readonly SmtpClient _smtpClient;
-    private readonly string? _fromEmail;
-    private readonly IConfiguration _configuration;
-
-    public EmailService(IConfiguration configuration)
+    private readonly string? _fromEmail = configuration["EmailSettings:From"];
+    private readonly SmtpClient _smtpClient = new("smtp.gmail.com")
     {
-        _configuration = configuration;
-        _fromEmail = _configuration["EmailSettings:From"];
-        _smtpClient = new SmtpClient("smtp.gmail.com")
-        {
-            Port = 587,
-            Credentials = new NetworkCredential(_fromEmail, _configuration["EmailSettings:Password"]),
-            EnableSsl = true
-        };
-    }
+        Port = 587,
+        Credentials = new NetworkCredential(configuration["EmailSettings:From"], configuration["EmailSettings:Password"]),
+        EnableSsl = true
+    };
 
     public async Task SendEmailResetPasswordAsync(string toEmail, string resetCode)
     {
-        var resetLink = _configuration["baseUrl"] + $"/Users/ResetPassword?code={resetCode.ToString()}";
+        var resetLink = configuration["baseUrl"] + $"/Users/ResetPassword?code={resetCode.ToString()}";
 
         var mailMessage = new MailMessage()
         {

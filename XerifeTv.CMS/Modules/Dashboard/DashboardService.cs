@@ -11,9 +11,9 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 namespace XerifeTv.CMS.Modules.Dashboard;
 
 public sealed class DashboardService(
-  IMovieRepository _movieRepository,
-  ISeriesRepository _seriesRepository,
-  IChannelRepository _channelRepository) : IDashboardService
+  IMovieRepository movieRepository,
+  ISeriesRepository seriesRepository,
+  IChannelRepository channelRepository) : IDashboardService
 {
     public async Task<Result<GetDashboardDataRequestDto>> GetAsync()
     {
@@ -22,12 +22,12 @@ public sealed class DashboardService(
         var endDate = today;
 
         var responseCounts = await Task.WhenAll([
-            _movieRepository.CountAsync(),
-            _seriesRepository.CountAsync(),
-            _channelRepository.CountAsync(),
-            _movieRepository.CountByDateRangeAsync(startDate, endDate),
-            _seriesRepository.CountByDateRangeAsync(startDate, endDate),
-            _channelRepository.CountByDateRangeAsync(startDate, endDate),
+            movieRepository.CountAsync(),
+            seriesRepository.CountAsync(),
+            channelRepository.CountAsync(),
+            movieRepository.CountByDateRangeAsync(startDate, endDate),
+            seriesRepository.CountByDateRangeAsync(startDate, endDate),
+            channelRepository.CountByDateRangeAsync(startDate, endDate),
         ]);
 
         var culture = new CultureInfo("pt-BR");
@@ -52,9 +52,9 @@ public sealed class DashboardService(
 
         var countsByMothsResponses = await Task.WhenAll(rangesLast6Months.Select(range =>
             Task.WhenAll(
-                _movieRepository.CountByDateRangeAsync(range.Start, range.End),
-                _seriesRepository.CountByDateRangeAsync(range.Start, range.End),
-                _channelRepository.CountByDateRangeAsync(range.Start, range.End)
+                movieRepository.CountByDateRangeAsync(range.Start, range.End),
+                seriesRepository.CountByDateRangeAsync(range.Start, range.End),
+                channelRepository.CountByDateRangeAsync(range.Start, range.End)
             )
         ));
 
@@ -69,7 +69,7 @@ public sealed class DashboardService(
 
         const int latestContentLimit = 6;
 
-        var lastMoviesAdded = await _movieRepository.GetByFilterAsync(new(
+        var lastMoviesAdded = await movieRepository.GetByFilterAsync(new(
             EMovieSearchFilter.TITLE,
             EMovieOrderFilter.REGISTRATION_DATE_DESC,
             search: "",
@@ -77,14 +77,14 @@ public sealed class DashboardService(
             currentPage: 1,
             isIncludeDisabled: true));
 
-        var lastSeriesAdded = await _seriesRepository.GetByFilterAsync(new(
+        var lastSeriesAdded = await seriesRepository.GetByFilterAsync(new(
             ESeriesSearchFilter.TITLE,
             search: "",
             limitResults: latestContentLimit,
             currentPage: 1,
             isIncludeDisabled: true));
 
-        var lastChannelsAdded = await _channelRepository.GetAsync(currentPage: 1, latestContentLimit);
+        var lastChannelsAdded = await channelRepository.GetAsync(currentPage: 1, latestContentLimit);
 
         List<LatestContentDto> lastContentsAdded = [];
 
@@ -117,3 +117,4 @@ public sealed class DashboardService(
         return Result<GetDashboardDataRequestDto>.Success(result);
     }
 }
+

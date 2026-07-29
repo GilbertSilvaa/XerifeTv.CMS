@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Channel.Dtos.Request;
+using XerifeTv.CMS.Modules.Channel.Dtos.Request;
 using XerifeTv.CMS.Modules.Channel.Enums;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
@@ -17,21 +17,21 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 namespace XerifeTv.CMS.Modules.Content.Services;
 
 public sealed class ContentV1Service(
-  IMovieRepository _movieRepository,
-  ISeriesRepository _seriesRepository,
-  IChannelRepository _channelRepository,
-  IConfiguration _configuration) : IContentV1Service
+  IMovieRepository movieRepository,
+  ISeriesRepository seriesRepository,
+  IChannelRepository channelRepository,
+  IConfiguration configuration) : IContentV1Service
 {
     const int limitTotalResult = 50;
 
     public async Task<Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>> GetMoviesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
     {
-        var response = await _movieRepository.GetGroupByCategoryAsync(dto);
+        var response = await movieRepository.GetGroupByCategoryAsync(dto);
 
         var result = response.Select(x =>
           new ItemsByCategory<GetMovieContentResponseDto>(
               x.Category,
-              x.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!))))
+              x.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!))))
           .OrderBy(x => x.Category);
 
         return Result<IEnumerable<ItemsByCategory<GetMovieContentResponseDto>>>
@@ -40,7 +40,7 @@ public sealed class ContentV1Service(
 
     public async Task<Result<PagedList<GetMovieContentResponseDto>>> GetMoviesByCategoryAsync(GetContentsRequestDto dto)
     {
-        var response = await _movieRepository.GetByFilterAsync(
+        var response = await movieRepository.GetByFilterAsync(
                 new GetMoviesByFilterRequestDto(
                     filter: EMovieSearchFilter.CATEGORY,
                     order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
@@ -52,14 +52,14 @@ public sealed class ContentV1Service(
         var result = new PagedList<GetMovieContentResponseDto>(
           response.CurrentPage,
           response.TotalPageCount,
-          response.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
+          response.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)));
 
         return Result<PagedList<GetMovieContentResponseDto>>.Success(result);
     }
 
     public async Task<Result<IEnumerable<ItemsByCategory<GetSeriesContentResponseDto>>>> GetSeriesGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
     {
-        var response = await _seriesRepository.GetGroupByCategoryAsync(dto);
+        var response = await seriesRepository.GetGroupByCategoryAsync(dto);
 
         var result = response.Select(x =>
           new ItemsByCategory<GetSeriesContentResponseDto>(
@@ -72,7 +72,7 @@ public sealed class ContentV1Service(
 
     public async Task<Result<IEnumerable<GetSeriesContentResponseDto>>> GetSeriesByCategoryAsync(GetContentsRequestDto dto)
     {
-        var response = await _seriesRepository.GetByFilterAsync(
+        var response = await seriesRepository.GetByFilterAsync(
             new GetSeriesByFilterRequestDto(
                 filter: ESeriesSearchFilter.CATEGORY,
                 search: dto.Search,
@@ -86,13 +86,13 @@ public sealed class ContentV1Service(
 
     public async Task<Result<IEnumerable<Episode>>> GetEpisodesSeriesBySeasonAsync(string serieId, int season)
     {
-        var response = await _seriesRepository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled: false);
+        var response = await seriesRepository.GetEpisodesBySeasonAsync(serieId, season, includeDisabled: false);
 
         List<Episode> episodes = [];
 
         foreach (var episode in response?.Episodes ?? [])
         {
-            episode.SetUrlResolverPath(_configuration["SecuritySettings:ContentEncryptionKey"]!);
+            episode.SetUrlResolverPath(configuration["SecuritySettings:ContentEncryptionKey"]!);
             episodes.Add(episode);
         }
 
@@ -101,11 +101,11 @@ public sealed class ContentV1Service(
 
     public async Task<Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>> GetChannelsGroupByCategoryAsync(GetGroupByCategoryRequestDto dto)
     {
-        var response = await _channelRepository.GetGroupByCategoryAsync(dto);
+        var response = await channelRepository.GetGroupByCategoryAsync(dto);
 
         var result = response.Select(x =>
           new ItemsByCategory<GetChannelContentResponseDto>(
-            x.Category, x.Items.Select(i => GetChannelContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!))))
+            x.Category, x.Items.Select(i => GetChannelContentResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!))))
           .OrderBy(x => x.Category);
 
         return Result<IEnumerable<ItemsByCategory<GetChannelContentResponseDto>>>
@@ -114,7 +114,7 @@ public sealed class ContentV1Service(
 
     public async Task<Result<GetContentsByNameResponseDto>> GetContentsByTitleAsync(GetContentsRequestDto dto)
     {
-        var moviesTask = _movieRepository.GetByFilterAsync(
+        var moviesTask = movieRepository.GetByFilterAsync(
             new GetMoviesByFilterRequestDto(
                 filter: EMovieSearchFilter.TITLE,
                 order: EMovieOrderFilter.TITLE,
@@ -123,7 +123,7 @@ public sealed class ContentV1Service(
                 currentPage: dto.CurrentPage,
                 isIncludeDisabled: false));
 
-        var seriesTask = _seriesRepository.GetByFilterAsync(
+        var seriesTask = seriesRepository.GetByFilterAsync(
             new GetSeriesByFilterRequestDto(
                 filter: ESeriesSearchFilter.TITLE,
                 search: dto.Search,
@@ -131,7 +131,7 @@ public sealed class ContentV1Service(
                 currentPage: dto.CurrentPage,
                 isIncludeDisabled: false));
 
-        var channelsTask = _channelRepository.GetByFilterAsync(
+        var channelsTask = channelRepository.GetByFilterAsync(
             new GetChannelsByFilterRequestDto(
                 filter: EChannelSearchFilter.TITLE,
                 search: dto.Search,
@@ -142,9 +142,9 @@ public sealed class ContentV1Service(
         await Task.WhenAll(moviesTask, seriesTask, channelsTask);
 
         var response = new GetContentsByNameResponseDto(
-            moviesTask.Result.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)),
+            moviesTask.Result.Items.Select(i => GetMovieContentResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)),
             seriesTask.Result.Items.Select(GetSeriesContentResponseDto.FromEntity),
-            channelsTask.Result.Items.Select(i => GetChannelContentResponseDto.FromEntity(i, _configuration["SecuritySettings:ContentEncryptionKey"]!)));
+            channelsTask.Result.Items.Select(i => GetChannelContentResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)));
 
         return Result<GetContentsByNameResponseDto>.Success(response);
     }

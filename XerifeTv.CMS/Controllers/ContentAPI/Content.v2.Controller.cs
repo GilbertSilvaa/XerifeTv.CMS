@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using System.Net;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Content;
@@ -10,25 +10,25 @@ namespace XerifeTv.CMS.Controllers.ContentAPI;
 [Route("Api/Content/v2")]
 [ApiController]
 public class ContentV2Controller(
-    IContentV2Service _service,
-    ILogger<ContentV2Controller> _logger,
-    ICacheService _cacheService) : ControllerBase
+    IContentV2Service service,
+    ILogger<ContentV2Controller> logger,
+    ICacheService cacheService) : ControllerBase
 {
     [HttpGet]
     [Route("movies")]
     public async Task<IActionResult> Movies()
     {
-        _logger.LogInformation("Request Content API v2 /movies");
+        logger.LogInformation("Request Content API v2 /movies");
 
         var cacheKey = "content_v2_movies";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesAsync(ContentConstants.DefaultPageSizeMin);
+        var response = await service.GetMoviesAsync(ContentConstants.DefaultPageSizeMin);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -39,17 +39,17 @@ public class ContentV2Controller(
     [Route("series")]
     public async Task<IActionResult> Series()
     {
-        _logger.LogInformation("Request Content API v2 /series");
+        logger.LogInformation("Request Content API v2 /series");
 
         var cacheKey = "content_v2_series";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesAsync(ContentConstants.DefaultPageSizeMin);
+        var response = await service.GetSeriesAsync(ContentConstants.DefaultPageSizeMin);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -60,19 +60,19 @@ public class ContentV2Controller(
     [Route("movies/{id}")]
     public async Task<IActionResult> MovieById(string id)
     {
-        _logger.LogInformation("Request Content API v2 /movies/{id}", id);
+        logger.LogInformation("Request Content API v2 /movies/{id}", id);
 
         var cacheKey = $"content_v2_movie_{id}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMovieByIdAsync(id);
+        var response = await service.GetMovieByIdAsync(id);
 
         if (response.IsSuccess)
         {
             if (response.Data is null) return NotFound();
 
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -86,19 +86,19 @@ public class ContentV2Controller(
     [Route("series/{id}")]
     public async Task<IActionResult> SeriesById(string id)
     {
-        _logger.LogInformation("Request Content API v2 /series/{id}", id);
+        logger.LogInformation("Request Content API v2 /series/{id}", id);
 
         var cacheKey = $"content_v2_series_{id}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesByIdAsync(id);
+        var response = await service.GetSeriesByIdAsync(id);
 
         if (response.IsSuccess)
         {
             if (response.Data is null) return NotFound();
 
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -112,13 +112,13 @@ public class ContentV2Controller(
     [Route("series/{seriesId}/seasons/{seasonNumber}/episodes")]
     public async Task<IActionResult> EpisodesBySeriesIdAndSeason(string seriesId, int seasonNumber)
     {
-        _logger.LogInformation("Request Content API v2 /series/{seriesId}/season/{seasonNumber}/episodes", seriesId, seasonNumber);
+        logger.LogInformation("Request Content API v2 /series/{seriesId}/season/{seasonNumber}/episodes", seriesId, seasonNumber);
 
         var cacheKey = $"content_v2_episodes_{seriesId}_{seasonNumber}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetEpisodesBySeriesIdAndSeasonAsync(seriesId, seasonNumber);
+        var response = await service.GetEpisodesBySeriesIdAndSeasonAsync(seriesId, seasonNumber);
 
         if (response.IsSuccess)
         {
@@ -129,7 +129,7 @@ public class ContentV2Controller(
                 episodes = response.Data
             };
 
-            _cacheService.SetValue(cacheKey, result);
+            cacheService.SetValue(cacheKey, result);
             return Ok(result);
         }
 
@@ -140,17 +140,17 @@ public class ContentV2Controller(
     [Route("movies/categories")]
     public async Task<IActionResult> MoviesCategories()
     {
-        _logger.LogInformation("Request Content API v2 /movies/categories");
+        logger.LogInformation("Request Content API v2 /movies/categories");
 
         var cacheKey = "content_v2_movies_categories";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
+        var response = await service.GetMoviesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -161,17 +161,17 @@ public class ContentV2Controller(
     [Route("series/categories")]
     public async Task<IActionResult> SeriesCategories()
     {
-        _logger.LogInformation("Request Content API v2 /series/categories");
+        logger.LogInformation("Request Content API v2 /series/categories");
 
         var cacheKey = "content_v2_series_categories";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
+        var response = await service.GetSeriesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -182,18 +182,18 @@ public class ContentV2Controller(
     [Route("movies/category/{category}")]
     public async Task<IActionResult> MoviesByCategory(string category, int page = 1, int pageSize = 10)
     {
-        _logger.LogInformation("Request Content API v2 /movies/category/{category} page={page} pageSize={pageSize}", category, page, pageSize);
+        logger.LogInformation("Request Content API v2 /movies/category/{category} page={page} pageSize={pageSize}", category, page, pageSize);
 
         var norm = NormalizeCsv(category);
         var cacheKey = $"content_v2_movies_by_category-{norm}-{page}-{pageSize}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesByCategoryAsync(category, page, pageSize);
+        var response = await service.GetMoviesByCategoryAsync(category, page, pageSize);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -204,18 +204,18 @@ public class ContentV2Controller(
     [Route("series/category/{category}")]
     public async Task<IActionResult> SeriesByCategory(string category, int page = 1, int pageSize = 10)
     {
-        _logger.LogInformation("Request Content API v2 /series/category/{category} page={page} pageSize={pageSize}", category, page, pageSize);
+        logger.LogInformation("Request Content API v2 /series/category/{category} page={page} pageSize={pageSize}", category, page, pageSize);
 
         var norm = NormalizeCsv(category);
         var cacheKey = $"content_v2_series_by_category-{norm}-{page}-{pageSize}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesByCategoryAsync(category, page, pageSize);
+        var response = await service.GetSeriesByCategoryAsync(category, page, pageSize);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -226,17 +226,17 @@ public class ContentV2Controller(
     [Route("movies/{movieId}/recommended")]
     public async Task<IActionResult> MoviesRecommended(string movieId)
     {
-        _logger.LogInformation("Request Content API v2 /movies/{movieId}/recommended", movieId);
+        logger.LogInformation("Request Content API v2 /movies/{movieId}/recommended", movieId);
 
         var cacheKey = $"content_v2_movies_recommended_{movieId}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesRecommendedAsync(movieId);
+        var response = await service.GetMoviesRecommendedAsync(movieId);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -247,16 +247,16 @@ public class ContentV2Controller(
     [Route("series/{seriesId}/recommended")]
     public async Task<IActionResult> SeriesRecommended(string seriesId)
     {
-        _logger.LogInformation("Request Content API v2 /series/{seriesId}/recommended", seriesId);
+        logger.LogInformation("Request Content API v2 /series/{seriesId}/recommended", seriesId);
 
         var cacheKey = $"content_v2_series_recommended_{seriesId}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesRecommendedAsync(seriesId);
+        var response = await service.GetSeriesRecommendedAsync(seriesId);
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -267,14 +267,14 @@ public class ContentV2Controller(
     [Route("search")]
     public async Task<IActionResult> Search(string term)
     {
-        _logger.LogInformation("Request Content API v2 /search term={term}", term);
+        logger.LogInformation("Request Content API v2 /search term={term}", term);
 
         var cacheKey = $"content_v2_search_{term}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var moviesResponse = await _service.GetMoviesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
-        var seriesResponse = await _service.GetSeriesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
+        var moviesResponse = await service.GetMoviesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
+        var seriesResponse = await service.GetSeriesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
 
         if (moviesResponse.IsSuccess && seriesResponse.IsSuccess)
         {
@@ -284,7 +284,7 @@ public class ContentV2Controller(
                 series = seriesResponse.Data
             };
 
-            _cacheService.SetValue(cacheKey, result);
+            cacheService.SetValue(cacheKey, result);
             return Ok(result);
         }
 
@@ -295,13 +295,13 @@ public class ContentV2Controller(
     [Route("home")]
     public async Task<IActionResult> Home()
     {
-        _logger.LogInformation("Request Content API v2 /home");
+        logger.LogInformation("Request Content API v2 /home");
 
         var cacheKey = "content_v2_home";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetHomeContentAsync();
+        var response = await service.GetHomeContentAsync();
 
         if (response.IsSuccess)
         {
@@ -313,7 +313,7 @@ public class ContentV2Controller(
                 seriesCategories = response.Data?.SeriesCategores
             };
 
-            _cacheService.SetValue(cacheKey, result);
+            cacheService.SetValue(cacheKey, result);
             return Ok(result);
         }
 
@@ -324,18 +324,18 @@ public class ContentV2Controller(
     [Route("movies/categories/groups")]
     public async Task<IActionResult> MoviesByCategories([FromQuery] List<string> categories, int page = 1, int pageSize = 10)
     {
-        _logger.LogInformation("Request Content API v2 /movies/categories/groups categories={categories}", string.Join(", ", categories));
+        logger.LogInformation("Request Content API v2 /movies/categories/groups categories={categories}", string.Join(", ", categories));
 
         var norm = NormalizeCsv(string.Join('_', categories));
         var cacheKey = $"content_v2_movies_by_categories-{norm}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetMoviesByCategoriesListAsync(categories, page, pageSize);
+        var response = await service.GetMoviesByCategoriesListAsync(categories, page, pageSize);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 
@@ -346,18 +346,18 @@ public class ContentV2Controller(
     [Route("series/categories/groups")]
     public async Task<IActionResult> SeriesByCategories([FromQuery] List<string> categories, int page = 1, int pageSize = 10)
     {
-        _logger.LogInformation("Request Content API v2 /series/categories/groups categories={categories}", string.Join(", ", categories));
+        logger.LogInformation("Request Content API v2 /series/categories/groups categories={categories}", string.Join(", ", categories));
 
         var norm = NormalizeCsv(string.Join('_', categories));
         var cacheKey = $"content_v2_series_by_categories-{norm}";
-        var responseCache = _cacheService.GetValue<object>(cacheKey);
+        var responseCache = cacheService.GetValue<object>(cacheKey);
         if (responseCache != null) return Ok(responseCache);
 
-        var response = await _service.GetSeriesByCategoriesListAsync(categories, page, pageSize);
+        var response = await service.GetSeriesByCategoriesListAsync(categories, page, pageSize);
 
         if (response.IsSuccess)
         {
-            _cacheService.SetValue(cacheKey, response.Data);
+            cacheService.SetValue(cacheKey, response.Data);
             return Ok(response.Data);
         }
 

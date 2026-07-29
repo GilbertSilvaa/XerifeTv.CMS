@@ -1,4 +1,4 @@
-﻿using XerifeTv.CMS.Modules.Abstractions.Exceptions;
+using XerifeTv.CMS.Modules.Abstractions.Exceptions;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Dtos.Request;
 using XerifeTv.CMS.Modules.Channel.Dtos.Response;
@@ -10,16 +10,16 @@ using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 namespace XerifeTv.CMS.Modules.Channel.Importers;
 
 public class ChannelsSpreadsheetImporter(
-	IChannelService _service,
-	ICacheService _cacheService,
-	ISpreadsheetReaderService _spreadsheetReaderService,
-    IMediaDeliveryProfileService _mediaDeliveryProfileService) : ISpreadsheetBatchImporter<IChannelService>
+	IChannelService service,
+	ICacheService cacheService,
+	ISpreadsheetReaderService spreadsheetReaderService,
+    IMediaDeliveryProfileService mediaDeliveryProfileService) : ISpreadsheetBatchImporter<IChannelService>
 {
 	public async Task<Result<string>> ImportAsync(IFormFile file)
 	{
 		var importId = Guid.NewGuid().ToString();
 		var emptyDto = new ImportSpreadsheetResponseDto(0, 0, 0, 0, [], 0);
-		_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
+		cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
 
 		_ = HandleImportAsync(file, importId);
 
@@ -29,7 +29,7 @@ public class ChannelsSpreadsheetImporter(
 
 	public async Task<Result<ImportSpreadsheetResponseDto>> MonitorImportAsync(string importId)
 	{
-		var response = _cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+		var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
 
 		if (response == null)
 			return Result<ImportSpreadsheetResponseDto>.Failure(
@@ -61,7 +61,7 @@ public class ChannelsSpreadsheetImporter(
 			int failCount = 0;
 			ICollection<string> errorList = [];
 
-			var spreadsheetResult = _spreadsheetReaderService.Read(expectedColluns, stream);
+			var spreadsheetResult = spreadsheetReaderService.Read(expectedColluns, stream);
 			ICollection<SpreadsheetChannelResponseDto> channelList = [];
 
 			void UpdateProgress()
@@ -75,7 +75,7 @@ public class ChannelsSpreadsheetImporter(
 					ErrorList: [.. errorList],
 					ProgressCount: progressCount);
 
-				_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
+				cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
 			}
 
 			foreach (var item in spreadsheetResult)
@@ -97,7 +97,7 @@ public class ChannelsSpreadsheetImporter(
 			{
                 if (!string.IsNullOrWhiteSpace(channelItem.MediaDeliveryProfileName))
                 {
-                    var mediaProfileResponse = await _mediaDeliveryProfileService.GetByNameAsync(channelItem.MediaDeliveryProfileName);
+                    var mediaProfileResponse = await mediaDeliveryProfileService.GetByNameAsync(channelItem.MediaDeliveryProfileName);
 
                     if (mediaProfileResponse.IsFailure)
                     {
@@ -121,7 +121,7 @@ public class ChannelsSpreadsheetImporter(
 					MediaRoute = channelItem.MediaRoute
 				};
 
-				var response = await _service.CreateAsync(createChannelDto);
+				var response = await service.CreateAsync(createChannelDto);
 
 				if (response.IsSuccess)
 				{
@@ -156,8 +156,9 @@ public class ChannelsSpreadsheetImporter(
 					ErrorList: [.. errorList],
 					ProgressCount: 100);
 
-				_cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
+				cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
 			}
 		}
 	}
 }
+

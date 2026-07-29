@@ -7,16 +7,13 @@ using XerifeTv.CMS.Modules.Common;
 
 namespace XerifeTv.CMS.Modules.Abstractions.Repositories;
 
-public abstract class BaseRepository<T> : IBaseRepository<T> where T : BaseEntity
+public abstract class BaseRepository<T>(
+    ECollection collection,
+    IOptions<DBSettings> dbSettings) : IBaseRepository<T> where T : BaseEntity
 {
-    protected readonly IMongoCollection<T> _collection;
-
-    public BaseRepository(ECollection collection, IOptions<DBSettings> dbSettings)
-    {
-        var _mongoClient = new MongoClient(dbSettings.Value.ConnectionString);
-        var _mongoDB = _mongoClient.GetDatabase(dbSettings.Value.DatabaseName);
-        _collection = _mongoDB.GetCollection<T>(collection.ToString());
-    }
+    protected readonly IMongoCollection<T> _collection = new MongoClient(dbSettings.Value.ConnectionString)
+        .GetDatabase(dbSettings.Value.DatabaseName)
+        .GetCollection<T>(collection.ToString());
 
     public virtual async Task<PagedList<T>> GetAsync(int currentPage, int limit)
     {

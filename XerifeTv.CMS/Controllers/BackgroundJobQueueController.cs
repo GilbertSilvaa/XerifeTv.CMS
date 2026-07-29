@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
@@ -12,7 +12,7 @@ using XerifeTv.CMS.Views.BackgroundJobQueue.Models;
 namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
-public class BackgroundJobQueueController(IBackgroundJobQueueService _service, IUserService _userService) : Controller
+public class BackgroundJobQueueController(IBackgroundJobQueueService service, IUserService userService) : Controller
 {
     private const int limitResultsPage = 15;
 
@@ -25,11 +25,11 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
         if (User.IsInRole("admin"))
         {
             usernameSearch = username ?? User.Identity?.Name;
-            var usersResult = await _userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
+            var usersResult = await userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
             if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => u.Role != EUserRole.VISITOR) ?? [];
         }
 
-        var jobsResult = await _service.GetByFilterAsync(new GetBackgroundJobsByFilterRequestDto(
+        var jobsResult = await service.GetByFilterAsync(new GetBackgroundJobsByFilterRequestDto(
             order: EBackgroundJobOrderFilter.REGISTRATION_DATE_DESC,
             limitResults: limitResultsPage,
             currentPage: currentPage ?? 1,
@@ -59,7 +59,7 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
     public async Task<IActionResult> AddJobInQueueSpreadsheetRegisters(AddSpreadsheetJobQueueRequestDto dto)
     {
         dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
-        var response = await _service.AddJobInQueueAsync(dto);
+        var response = await service.AddJobInQueueAsync(dto);
 
         if (response.IsFailure) return BadRequest(response.Error.Description);
 
@@ -75,7 +75,7 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
     public async Task<IActionResult> AddJobInQueueImportEpisodesSeries(AddImportEpisodesJobQueueRequestDto dto)
     {
         dto.RequestedByUsername = User?.Identity?.Name ?? string.Empty;
-        var response = await _service.AddJobInQueueAsync(dto);
+        var response = await service.AddJobInQueueAsync(dto);
 
         if (response.IsFailure) return BadRequest(response.Error.Description);
 
@@ -100,7 +100,7 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
         {
             while (!linked.IsCancellationRequested)
             {
-                var response = await _service.GetJobsToNotifyAsync(username: User?.Identity?.Name ?? string.Empty);
+                var response = await service.GetJobsToNotifyAsync(username: User?.Identity?.Name ?? string.Empty);
 
                 var payload = $"data: {JsonSerializer.Serialize(response.Data)}\n\n";
                 await Response.WriteAsync(payload, linked.Token);
@@ -112,3 +112,4 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService _service, I
         catch (OperationCanceledException) { }
     }
 }
+

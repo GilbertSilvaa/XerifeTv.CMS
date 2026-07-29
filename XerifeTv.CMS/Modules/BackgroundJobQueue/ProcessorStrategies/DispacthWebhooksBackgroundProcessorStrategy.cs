@@ -16,24 +16,15 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 
 namespace XerifeTv.CMS.Modules.BackgroundJobQueue.ProcessorStrategies;
 
-public class DispacthWebhooksBackgroundProcessorStrategy : IBackgroundJobProcessorStrategy
+public class DispacthWebhooksBackgroundProcessorStrategy(
+    IServiceProvider serviceProvider,
+    ILogger<DispacthWebhooksBackgroundProcessorStrategy> logger) : IBackgroundJobProcessorStrategy
 {
-    private readonly IServiceProvider _serviceProvider;
-    private readonly ILogger<DispacthWebhooksBackgroundProcessorStrategy> _logger;
-
-    public DispacthWebhooksBackgroundProcessorStrategy(
-        IServiceProvider serviceProvider,
-        ILogger<DispacthWebhooksBackgroundProcessorStrategy> logger)
-    {
-        _serviceProvider = serviceProvider;
-        _logger = logger;
-    }
-
     public async Task ProcessJobAsync(GetBackgroundJobResponseDto job)
     {
         const int MAX_RETRY_ATTEMPTS = 5;
 
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var backgroundJobQueueService = scope.ServiceProvider.GetRequiredService<IBackgroundJobQueueService>();
         var webhookService = scope.ServiceProvider.GetRequiredService<IWebhookService>();
 
@@ -49,7 +40,7 @@ public class DispacthWebhooksBackgroundProcessorStrategy : IBackgroundJobProcess
 
         if (webhooksResult.IsFailure)
         {
-            _logger.LogError("Failed to retrieve webhooks for event {Event}: {Error}", webhookTriggerEvent, webhooksResult.Error);
+            logger.LogError("Failed to retrieve webhooks for event {Event}: {Error}", webhookTriggerEvent, webhooksResult.Error);
             return;
         }
 
@@ -108,13 +99,13 @@ public class DispacthWebhooksBackgroundProcessorStrategy : IBackgroundJobProcess
                         break;
                     }
 
-                    _logger.LogWarning("Retrying webhook {WebhookName}, attempt {Attempt}/{MaxAttempts}", webhook.Name, attempt, MAX_RETRY_ATTEMPTS);
+                    logger.LogWarning("Retrying webhook {WebhookName}, attempt {Attempt}/{MaxAttempts}", webhook.Name, attempt, MAX_RETRY_ATTEMPTS);
 
                     await Task.Delay(TimeSpan.FromSeconds(attempt * 6));
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error executing webhook {WebhookName} on attempt {Attempt}", webhook.Name, attempt);
+                    logger.LogError(ex, "Error executing webhook {WebhookName} on attempt {Attempt}", webhook.Name, attempt);
 
                     if (attempt == MAX_RETRY_ATTEMPTS) break;
                 }
@@ -211,7 +202,7 @@ public class DispacthWebhooksBackgroundProcessorStrategy : IBackgroundJobProcess
 
             if (!response.IsSuccessStatusCode)
             {
-                _logger.LogError(
+                logger.LogError(
                     """
                     Webhook execution failed
                     Webhook: {WebhookName}
@@ -239,13 +230,13 @@ public class DispacthWebhooksBackgroundProcessorStrategy : IBackgroundJobProcess
                 return Result<bool>.Failure(new Error(response.StatusCode.ToString(), "Webhook returned a non-success status code"));
             }
 
-            _logger.LogInformation("Webhook {WebhookName} executed successfully with status code {StatusCode}", webhook.Name, (int)response.StatusCode);
+            logger.LogInformation("Webhook {WebhookName} executed successfully with status code {StatusCode}", webhook.Name, (int)response.StatusCode);
 
             return Result<bool>.Success(true);
         }
         catch (Exception ex)
         {
-            _logger.LogError(
+            logger.LogError(
                 ex,
                 """
                 Exception while executing webhook

@@ -11,21 +11,15 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 
 namespace XerifeTv.CMS.Modules.BackgroundJobQueue.ProcessorStrategies;
 
-public class CalculateCategoryDistributionBackgroundJobProcessorStrategy : IBackgroundJobProcessorStrategy
+public class CalculateCategoryDistributionBackgroundJobProcessorStrategy(
+    IServiceProvider serviceProvider) : IBackgroundJobProcessorStrategy
 {
-    private readonly IServiceProvider _serviceProvider;
-
-    public CalculateCategoryDistributionBackgroundJobProcessorStrategy(IServiceProvider serviceProvider)
-    {
-        _serviceProvider = serviceProvider;
-    }
-
     public async Task ProcessJobAsync(GetBackgroundJobResponseDto job)
     {
         int pageSizeContent = ContentConstants.DefaultPageSizeContent;
         int pageSizeMin = ContentConstants.DefaultPageSizeMin;
 
-        using var scope = _serviceProvider.CreateScope();
+        using var scope = serviceProvider.CreateScope();
         var backgroundJobQueueService = scope.ServiceProvider.GetRequiredService<IBackgroundJobQueueService>();
         var contentSettingsRepository = scope.ServiceProvider.GetRequiredService<IContentSettingsRepository>();
 

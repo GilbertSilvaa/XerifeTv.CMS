@@ -1,9 +1,8 @@
-﻿using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
+using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
-using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
@@ -12,16 +11,15 @@ using XerifeTv.CMS.Modules.Movie.Specifications;
 namespace XerifeTv.CMS.Modules.Movie;
 
 public sealed class MovieService(
-    IMovieRepository _repository,
-    IWebhookService _webhookService,
-    IFranchiseService _franchiseService,
-    IBackgroundJobQueueService _backgroundJobQueueService) : IMovieService
+    IMovieRepository repository,
+    IFranchiseService franchiseService,
+    IBackgroundJobQueueService backgroundJobQueueService) : IMovieService
 {
     public async Task<Result<PagedList<GetMovieResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try
         {
-            var response = await _repository.GetAsync(currentPage, limit);
+            var response = await repository.GetAsync(currentPage, limit);
 
             var result = new PagedList<GetMovieResponseDto>(
               response.CurrentPage,
@@ -41,7 +39,7 @@ public sealed class MovieService(
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response is null)
                 return Result<GetMovieResponseDto?>
@@ -61,7 +59,7 @@ public sealed class MovieService(
     {
         try
         {
-            var response = await _repository.GetByImdbIdAsync(imdbId);
+            var response = await repository.GetByImdbIdAsync(imdbId);
 
             if (response is null)
                 return Result<GetMovieResponseDto?>
@@ -82,16 +80,16 @@ public sealed class MovieService(
         try
         {
             var entity = dto.ToEntity();
-            var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
+            var imdbIdSpec = new UniqueImdbIdSpecification(repository);
 
             if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
                 return Result<string>.Failure(
                   new Error("409", $"Filme não cadastrado. Imdb ID {entity.ImdbId} duplicado"));
 
-            var response = await _repository.CreateAsync(entity);
+            var response = await repository.CreateAsync(entity);
 
-            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
-            await _backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.MOVIES, response!);
+            await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
+            await backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.MOVIES, response!);
 
             return Result<string>.Success(response);
         }
@@ -107,20 +105,20 @@ public sealed class MovieService(
         try
         {
             var entity = dto.ToEntity();
-            var response = await _repository.GetAsync(entity.Id);
+            var response = await repository.GetAsync(entity.Id);
 
             if (response is null)
                 return Result<string>.Failure(new Error("404", "Conteúdo não encontrado"));
 
-            var imdbIdSpec = new UniqueImdbIdSpecification(_repository);
+            var imdbIdSpec = new UniqueImdbIdSpecification(repository);
 
             if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
                 return Result<string>.Failure(
                   new Error("409", $"Filme não atualizado. Imdb ID {entity.ImdbId} duplicado"));
 
             entity.CreateAt = response.CreateAt;
-            await _repository.UpdateAsync(entity);
-            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
+            await repository.UpdateAsync(entity);
+            await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
 
             return Result<string>.Success(entity.Id);
         }
@@ -135,13 +133,13 @@ public sealed class MovieService(
     {
         try
         {
-            var response = await _repository.GetAsync(id);
+            var response = await repository.GetAsync(id);
 
             if (response is null)
                 return Result<bool>.Failure(new Error("404", "Conteúdo não encontrado"));
 
-            await _repository.DeleteAsync(id);
-            await _backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
+            await repository.DeleteAsync(id);
+            await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
 
             return Result<bool>.Success(true);
         }
@@ -158,7 +156,7 @@ public sealed class MovieService(
         {
             if (dto.Filter == Enums.EMovieSearchFilter.FRANCHISE)
             {
-                var franchiseResult = await _franchiseService.GetByNameAsync(dto.Search);
+                var franchiseResult = await franchiseService.GetByNameAsync(dto.Search);
 
                 if (franchiseResult.IsFailure)
                     return Result<PagedList<GetMovieResponseDto>>.Success(new PagedList<GetMovieResponseDto>(0, 0, []));
@@ -166,7 +164,7 @@ public sealed class MovieService(
                 dto.Search = franchiseResult.Data!.Id;
             }
 
-            var response = await _repository.GetByFilterAsync(dto);
+            var response = await repository.GetByFilterAsync(dto);
 
             var result = new PagedList<GetMovieResponseDto>(
               response.CurrentPage,
@@ -182,3 +180,4 @@ public sealed class MovieService(
         }
     }
 }
+

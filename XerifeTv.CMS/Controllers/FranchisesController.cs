@@ -8,8 +8,8 @@ namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
 public class FranchisesController(
-    IFranchiseService _service,
-    ILogger<FranchisesController> _logger) : Controller
+    IFranchiseService service,
+    ILogger<FranchisesController> logger) : Controller
 {
     [HttpGet]
     public async Task<IActionResult> Search(string? term)
@@ -17,7 +17,7 @@ public class FranchisesController(
         if (string.IsNullOrWhiteSpace(term) || term.Trim().Length < 2)
             return Ok(Enumerable.Empty<GetFranchiseResponseDto>());
 
-        var response = await _service.SearchByNameAsync(term ?? string.Empty);
+        var response = await service.SearchByNameAsync(term ?? string.Empty);
 
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
@@ -29,12 +29,12 @@ public class FranchisesController(
     [HttpPost]
     public async Task<IActionResult> Create(CreateFranchiseRequestDto dto)
     {
-        var response = await _service.CreateAsync(dto);
+        var response = await service.CreateAsync(dto);
 
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
 
-        _logger.LogInformation($"{User.Identity?.Name} created franchise {dto.Name}");
+        logger.LogInformation($"{User.Identity?.Name} created franchise {dto.Name}");
 
         return Ok(response.Data);
     }
@@ -43,12 +43,12 @@ public class FranchisesController(
     [HttpPost]
     public async Task<IActionResult> Update(UpdateFranchiseRequestDto dto)
     {
-        var response = await _service.UpdateAsync(dto);
+        var response = await service.UpdateAsync(dto);
 
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
 
-        _logger.LogInformation($"{User.Identity?.Name} updated franchise {dto.Id}");
+        logger.LogInformation($"{User.Identity?.Name} updated franchise {dto.Id}");
 
         return Ok(response.Data);
     }
@@ -57,13 +57,14 @@ public class FranchisesController(
     [HttpPost]
     public async Task<IActionResult> Delete(string id)
     {
-        var response = await _service.DeleteAsync(id);
+        var response = await service.DeleteAsync(id);
 
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
 
-        _logger.LogInformation($"{User.Identity?.Name} deleted franchise {id}");
+        logger.LogInformation($"{User.Identity?.Name} deleted franchise {id}");
 
         return Ok();
     }
 }
+
