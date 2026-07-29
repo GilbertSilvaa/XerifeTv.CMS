@@ -1,4 +1,8 @@
+using Microsoft.Extensions.Options;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using System.Globalization;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Dashboard.Dtos.Response;
@@ -7,15 +11,18 @@ using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
+using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.Dashboard;
 
 public sealed class DashboardService(
   IMovieRepository movieRepository,
   ISeriesRepository seriesRepository,
-  IChannelRepository channelRepository) : IDashboardService
+  IChannelRepository channelRepository,
+  IAuditLogService auditLogService,
+  IOptions<DBSettings> dbSettings) : IDashboardService
 {
-    public async Task<Result<GetDashboardDataRequestDto>> GetAsync()
+    public async Task<Result<GetDashboardDataRequestDto>> GetAsync(string? userName = null)
     {
         var today = DateTime.Today;
         var startDate = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
@@ -103,7 +110,16 @@ public sealed class DashboardService(
             lastContentsAdded.AddRange(lastChannelsAdded.Items.Select(c => new LatestContentDto(c.Title, c.CreateAt, ELatestContentType.CHANNEL)));
         }
 
+        var auditLogsResponse = userName is not null
+            ? await auditLogService.GetAsync(userName, currentPage: 1, latestContentLimit)
+            : await auditLogService.GetAsync(currentPage: 1, latestContentLimit);
+
+        List<LatestSystemActionDto> lastSystemActions = auditLogsResponse.IsSuccess && auditLogsResponse.Data?.Items is not null
+            ? [.. auditLogsResponse.Data.Items.Select(x => new LatestSystemActionDto(x.UserName, x.Description, x.CreateAt))]
+            : [];
+
         var result = new GetDashboardDataRequestDto(
+            LatestSystemActions: lastSystemActions,
             MonthlyContentCounts: [.. countsTotalContentByMonths.Select(x => new MonthlyContentCountDto(x.MothName, x.Count))],
             LatestContents: [.. lastContentsAdded.OrderByDescending(c => c.PublishAt).Take(latestContentLimit)],
             NumberOfMoviesTotal: responseCounts[0],
@@ -111,10 +127,24 @@ public sealed class DashboardService(
             NumberOfChannelsTotal: responseCounts[2],
             NumberOfMoviesAddedCurrentMonth: responseCounts[3],
             NumberOfSeriesAddedCurrentMonth: responseCounts[4],
-            NumberOfChannelsAddedCurrentMonth: responseCounts[5]
+            NumberOfChannelsAddedCurrentMonth: responseCounts[5],
+            DataBaseSizeInMb: await GetDatabaseSizeInMbAsync()
         );
 
         return Result<GetDashboardDataRequestDto>.Success(result);
+    }
+
+    private async Task<double> GetDatabaseSizeInMbAsync()
+    {
+        var database = new MongoClient(dbSettings.Value.ConnectionString)
+        .GetDatabase(dbSettings.Value.DatabaseName);
+
+        var stats = await database.RunCommandAsync<BsonDocument>(
+            new BsonDocument("dbStats", 1));
+
+        var storageSizeBytes = stats["storageSize"].ToInt64();
+
+        return storageSizeBytes / 1024d / 1024d;
     }
 }
 

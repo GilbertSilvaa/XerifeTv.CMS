@@ -10,12 +10,12 @@ public class HomeController(IDashboardService service, ILogger<HomeController> l
 {
     public async Task<IActionResult> Index()
     {
-        var response = await service.GetAsync();
+        var response = await service.GetAsync(!User.IsInRole("admin") ? User.Identity?.Name : null);
 
         logger.LogInformation($"{User.Identity?.Name} accessed the dashboard page");
 
         if (response.IsSuccess) return View(response.Data);
 
-        return View(new GetDashboardDataRequestDto([], []));
+        return View(new GetDashboardDataRequestDto([], [], []));
     }
 }

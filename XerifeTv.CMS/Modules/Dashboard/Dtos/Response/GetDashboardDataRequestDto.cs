@@ -1,6 +1,7 @@
 namespace XerifeTv.CMS.Modules.Dashboard.Dtos.Response;
 
 public record class GetDashboardDataRequestDto(
+    List<LatestSystemActionDto> LatestSystemActions,
     List<MonthlyContentCountDto> MonthlyContentCounts,
     List<LatestContentDto> LatestContents,
     int NumberOfMoviesTotal = 0,
@@ -8,7 +9,10 @@ public record class GetDashboardDataRequestDto(
     int NumberOfChannelsTotal = 0,
     int NumberOfMoviesAddedCurrentMonth = 0,
     int NumberOfSeriesAddedCurrentMonth = 0,
-    int NumberOfChannelsAddedCurrentMonth = 0);
+    int NumberOfChannelsAddedCurrentMonth = 0,
+    double DataBaseSizeInMb = 0);
+
+public record LatestSystemActionDto(string UserName, string ActionDescription, DateTime ActionDate);
 
 public record MonthlyContentCountDto(string MonthName, int Count);
 
