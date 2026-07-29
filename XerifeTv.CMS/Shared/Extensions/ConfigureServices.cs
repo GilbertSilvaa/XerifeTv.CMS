@@ -1,5 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
+using MongoDB.Driver;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Services;
 using XerifeTv.CMS.Modules.AuditLog;
@@ -36,6 +38,7 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 using XerifeTv.CMS.Modules.User;
 using XerifeTv.CMS.Modules.User.Interfaces;
 using XerifeTv.CMS.Modules.User.Services;
+using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Shared.Extensions;
 
@@ -55,6 +58,12 @@ public static class ConfigureServices
 
     private static IServiceCollection AddRepositories(this IServiceCollection services)
     {
+        services.AddSingleton<IMongoClient>(sp =>
+        {
+            var dbSettings = sp.GetRequiredService<IOptions<DBSettings>>().Value;
+            return new MongoClient(dbSettings.ConnectionString);
+        });
+
         services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<ISeriesRepository, SeriesRepository>();
         services.AddScoped<IChannelRepository, ChannelRepository>();
