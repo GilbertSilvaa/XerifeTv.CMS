@@ -9,8 +9,8 @@ using XerifeTv.CMS.Shared.Database.MongoDB;
 
 namespace XerifeTv.CMS.Modules.BackgroundJobQueue;
 
-public class BackgroundJobQueueRepository(IOptions<DBSettings> options)
-	: BaseRepository<BackgroundJobEntity>(ECollection.BACKGROUND_JOB_QUEUE, options), IBackgroundJobQueueRepository
+public class BackgroundJobQueueRepository(IOptions<DBSettings> options, IMongoClient mongoClient)
+	: BaseRepository<BackgroundJobEntity>(ECollection.BACKGROUND_JOB_QUEUE, options, mongoClient), IBackgroundJobQueueRepository
 {
 	public async Task<PagedList<BackgroundJobEntity>> GetByFilterAsync(GetBackgroundJobsByFilterRequestDto dto)
 	{

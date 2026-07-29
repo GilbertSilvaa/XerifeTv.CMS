@@ -9,43 +9,44 @@ namespace XerifeTv.CMS.Modules.Abstractions.Repositories;
 
 public abstract class BaseRepository<T>(
     ECollection collection,
-    IOptions<DBSettings> dbSettings) : IBaseRepository<T> where T : BaseEntity
+    IOptions<DBSettings> dbSettings,
+    IMongoClient mongoClient) : IBaseRepository<T> where T : BaseEntity
 {
-    protected readonly IMongoCollection<T> _collection = new MongoClient(dbSettings.Value.ConnectionString)
+    protected readonly IMongoCollection<T> _collection = mongoClient
         .GetDatabase(dbSettings.Value.DatabaseName)
         .GetCollection<T>(collection.ToString());
 
-	public virtual async Task<PagedList<T>> GetAsync(int currentPage, int limit)
-	{
-		var count = await _collection.CountDocumentsAsync(_ => true);
-		var items = await _collection.Find(_ => true)
-		  .SortByDescending(r => r.CreateAt)
-		  .Skip(limit * (currentPage - 1))
-		  .Limit(limit)
-		  .ToListAsync();
+    public virtual async Task<PagedList<T>> GetAsync(int currentPage, int limit)
+    {
+        var count = await _collection.CountDocumentsAsync(_ => true);
+        var items = await _collection.Find(_ => true)
+          .SortByDescending(r => r.CreateAt)
+          .Skip(limit * (currentPage - 1))
+          .Limit(limit)
+          .ToListAsync();
 
-		var totalPages = (int)Math.Ceiling(count / (decimal)limit);
+        var totalPages = (int)Math.Ceiling(count / (decimal)limit);
 
-		return new PagedList<T>(currentPage, totalPages, items);
-	}
+        return new PagedList<T>(currentPage, totalPages, items);
+    }
 
-	public virtual async Task<T?> GetAsync(string id)
-	  => await _collection.Find(r => r.Id == id).FirstOrDefaultAsync();
+    public virtual async Task<T?> GetAsync(string id)
+      => await _collection.Find(r => r.Id == id).FirstOrDefaultAsync();
 
-	public virtual async Task<string> CreateAsync(T entity)
-	{
-		await _collection.InsertOneAsync(entity);
-		return entity.Id;
-	}
+    public virtual async Task<string> CreateAsync(T entity)
+    {
+        await _collection.InsertOneAsync(entity);
+        return entity.Id;
+    }
 
-	public virtual async Task UpdateAsync(T entity)
-	{
-		entity.UpdateAt = DateTime.UtcNow;
-		await _collection.ReplaceOneAsync(r => r.Id == entity.Id, entity);
-	}
+    public virtual async Task UpdateAsync(T entity)
+    {
+        entity.UpdateAt = DateTime.UtcNow;
+        await _collection.ReplaceOneAsync(r => r.Id == entity.Id, entity);
+    }
 
-	public virtual async Task DeleteAsync(string id)
-	  => await _collection.DeleteOneAsync(r => r.Id == id);
+    public virtual async Task DeleteAsync(string id)
+      => await _collection.DeleteOneAsync(r => r.Id == id);
 
     public async Task<int> CountAsync()
       => (int)await _collection.CountDocumentsAsync(_ => true);
