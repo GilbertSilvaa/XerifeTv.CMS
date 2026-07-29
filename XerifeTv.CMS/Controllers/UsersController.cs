@@ -2,9 +2,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Authentication.Dtos.Request;
 using XerifeTv.CMS.Modules.Authentication.Interfaces;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
 using XerifeTv.CMS.Modules.User.Interfaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
@@ -13,7 +15,8 @@ public class UsersController(
 	IUserService userService, 
 	IAuthService authService,
 	IConfiguration configuration,
-	ILogger<UsersController> logger) : Controller
+	ILogger<UsersController> logger,
+	IAuditLogService auditLogService) : Controller
 {
 	private readonly CookieOptions _cookieOptions = new()
 	{
@@ -165,6 +168,9 @@ public class UsersController(
 
 		logger.LogInformation($"{User.Identity?.Name} registered a new user");
 
+		if (response.IsSuccess)
+			await this.AddAuditLogAsync(auditLogService, "User", response.Data ?? string.Empty, $"adicionou o usuário {dto.UserName}");
+
 		return RedirectToAction("Index");
 	}
 
@@ -179,6 +185,10 @@ public class UsersController(
 		  : MessageViewHelper.SuccessJson($"Usuário {dto.UserName} atualizado com sucesso");
 
 		logger.LogInformation($"{User.Identity?.Name} updated user {dto.Id}");
+
+		if (response.IsSuccess)
+			await this.AddAuditLogAsync(auditLogService, "User", dto.Id, $"atualizou o usuário {dto.UserName}");
+
 		return RedirectToAction("Index");
 	}
 
@@ -192,6 +202,9 @@ public class UsersController(
 		  : MessageViewHelper.SuccessJson("Usuário deletado com sucesso");
 
 		logger.LogInformation($"{User.Identity?.Name} removed user with id = {id}");
+
+		if (response.IsSuccess)
+			await this.AddAuditLogAsync(auditLogService, "User", id, $"removeu o usuário {id}");
 
 		return RedirectToAction("Index");
 	}

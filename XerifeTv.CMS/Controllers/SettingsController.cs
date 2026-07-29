@@ -1,14 +1,12 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using XerifeTv.CMS.Modules.Common.Enums;
-using XerifeTv.CMS.Modules.Integrations.Webhook;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Request;
-using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response;
-using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Interfaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.Settings.Models;
 
@@ -18,6 +16,7 @@ public class SettingsController(
     IUserService userService,
     IWebhookService webhookService,
     IMediaDeliveryProfileService mediaDeliveryProfileService,
+    IAuditLogService auditLogService,
     ILogger<SettingsController> logger) : Controller
 {
     [Authorize]
@@ -56,6 +55,15 @@ public class SettingsController(
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson("Perfil atualizado com sucesso");
 
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(
+                auditLogService,
+                "User",
+                response.Data ?? string.Empty,
+                $"atualizou o perfil de usuário");
+        }
+
         logger.LogInformation($"{User.Identity?.Name} updated your own profile");
 
         return Redirect(Url.Action("Index") + "#profile");
@@ -77,6 +85,15 @@ public class SettingsController(
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson("Senha atualizada com sucesso");
 
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(
+                auditLogService,
+                "User",
+                response.Data ?? string.Empty,
+                $"atualizou a senha de usuário");
+        }
+
         logger.LogInformation($"{User.Identity?.Name} updated your password");
 
         return Redirect(Url.Action("Index") + "#password");
@@ -92,6 +109,15 @@ public class SettingsController(
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson("Webhook cadastrado com sucesso");
 
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(
+                auditLogService,
+                "Webhook",
+                response.Data ?? string.Empty,
+                $"adicionou o webhook {dto.Name}");
+        }
+
         return Redirect(Url.Action("Index") + "#webhook");
     }
 
@@ -105,17 +131,44 @@ public class SettingsController(
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson("Webhook atualizado com sucesso");
 
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(
+                auditLogService,
+                "Webhook",
+                response.Data ?? string.Empty,
+                $"atualizou o webhook {dto.Name}");
+        }
+
         return Redirect(Url.Action("Index") + "#webhook");
     }
 
     [Authorize(Roles = "admin")]
     public async Task<IActionResult> DeleteWebhook(string id)
     {
-        var response = await webhookService.DeleteAsync(id);
+        if (id is not null)
+        {
+            var webhookResponse = await webhookService.GetAsync(id);
+            var name = webhookResponse.IsSuccess && webhookResponse.Data is not null
+                ? webhookResponse.Data.Name
+                : id;
 
-        TempData["Notification"] = response.IsFailure
-          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-          : MessageViewHelper.SuccessJson("Webhook deletado com sucesso");
+            var response = await webhookService.DeleteAsync(id);
+
+            TempData["Notification"] = response.IsFailure
+              ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+              : MessageViewHelper.SuccessJson("Webhook deletado com sucesso");
+
+            if (response.IsSuccess)
+            {
+                await this.AddAuditLogAsync(
+                    auditLogService,
+                    "Webhook",
+                    id,
+                    $"removeu o webhook {name}");
+            }
+        }
+
 
         return Redirect(Url.Action("Index") + "#webhook");
     }

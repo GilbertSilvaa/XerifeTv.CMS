@@ -8,6 +8,24 @@ namespace XerifeTv.CMS.Modules.Integrations.Webhook;
 
 public sealed class WebhookService(IWebhookRepository repository) : IWebhookService
 {
+    public async Task<Result<GetWebhookResponseDto>> GetAsync(string id)
+    {
+        try
+        {
+            var response = await repository.GetAsync(id);
+
+            if (response == null)
+                return Result<GetWebhookResponseDto>.Failure(new Error("404", "webhook não encontrado"));
+
+            return Result<GetWebhookResponseDto>.Success(GetWebhookResponseDto.FromEntity(response));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<GetWebhookResponseDto>.Failure(error);
+        }
+    }
+
     public async Task<Result<PagedList<GetWebhookResponseDto>>> GetAsync(int currentPage, int limit)
     {
         try

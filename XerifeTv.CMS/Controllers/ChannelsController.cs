@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Dtos.Request;
 using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Enums;
@@ -8,6 +9,7 @@ using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.Channels.Models;
 
@@ -18,7 +20,8 @@ public class ChannelsController(
   IChannelService service,
   ILogger<ChannelsController> logger,
   ISpreadsheetBatchImporter<IChannelService> spreadsheetBatchImporter,
-  IMediaDeliveryProfileService mediaDeliveryProfileService) : Controller
+  IMediaDeliveryProfileService mediaDeliveryProfileService,
+  IAuditLogService auditLogService) : Controller
 {
     private const int limitResultsPage = 20;
 
@@ -86,6 +89,9 @@ public class ChannelsController(
 
         logger.LogInformation($"{User.Identity?.Name} registered the channel {dto.Title}");
 
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Channel", response.Data ?? string.Empty, $"adicionou o canal {dto.Title}");
+
         return RedirectToAction("Index");
     }
 
@@ -100,6 +106,9 @@ public class ChannelsController(
 
         logger.LogInformation($"{User.Identity?.Name} updated the channel {dto.Title}");
 
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Channel", dto.Id, $"atualizou o canal {dto.Title}");
+
         return RedirectToAction("Index");
     }
 
@@ -108,6 +117,11 @@ public class ChannelsController(
     {
         if (id is not null)
         {
+            var channelResponse = await service.GetAsync(id);
+            var title = channelResponse.IsSuccess && channelResponse.Data is not null
+                ? channelResponse.Data.Title
+                : id;
+
             var response = await service.DeleteAsync(id);
 
             TempData["Notification"] = response.IsFailure
@@ -115,6 +129,9 @@ public class ChannelsController(
               : MessageViewHelper.SuccessJson($"Canal deletado com sucesso");
 
             logger.LogInformation($"{User.Identity?.Name} removed the channel with id = {id}");
+
+            if (response.IsSuccess)
+                await this.AddAuditLogAsync(auditLogService, "Channel", id, $"removeu o canal {title}");
         }
 
         return RedirectToAction("Index");
@@ -130,6 +147,8 @@ public class ChannelsController(
 
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
+
+        await this.AddAuditLogAsync(auditLogService, "Channel", file.FileName, $"iniciou a importação de canais da planilha {file.FileName}");
 
         return Ok(response.Data);
     }

@@ -7,6 +7,7 @@ namespace XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 
 public interface IWebhookService
 {
+    Task<Result<GetWebhookResponseDto>> GetAsync(string id);
     Task<Result<PagedList<GetWebhookResponseDto>>> GetAsync(int currentPage, int limit);
     Task<Result<string>> CreateAsync(CreateWebhookRequestDto dto);
     Task<Result<string>> UpdateAsync(UpdateWebhookRequestDto dto);

@@ -13,6 +13,8 @@ using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.Movies.Models;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
+using XerifeTv.CMS.Shared.Extensions;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -23,7 +25,8 @@ public class MoviesController(
   ILogger<MoviesController> logger,
   ISpreadsheetBatchImporter<IMovieService> spreadsheetBatchImporter,
   IMediaDeliveryProfileService mediaDeliveryProfileService,
-  IFranchiseService franchiseService) : Controller
+  IFranchiseService franchiseService,
+  IAuditLogService auditLogService) : Controller
 {
     private const int limitResultsPage = 20;
 
@@ -108,6 +111,9 @@ public class MoviesController(
 
         logger.LogInformation($"{User.Identity?.Name} registered the movie {dto.Title}");
 
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Movie", response.Data ?? string.Empty, $"adicionou o filme {dto.Title}");
+
         return RedirectToAction("Index");
     }
 
@@ -122,6 +128,9 @@ public class MoviesController(
 
         logger.LogInformation($"{User.Identity?.Name} updated the movie {dto.Title}");
 
+        if (response.IsSuccess)
+            await this.AddAuditLogAsync(auditLogService, "Movie", dto.Id, $"atualizou o filme {dto.Title}");
+
         return RedirectToAction("Index");
     }
 
@@ -130,6 +139,11 @@ public class MoviesController(
     {
         if (id is not null)
         {
+            var movieResponse = await service.GetAsync(id);
+            var title = movieResponse.IsSuccess && movieResponse.Data is not null
+                ? movieResponse.Data.Title
+                : id;
+
             var response = await service.DeleteAsync(id);
 
             TempData["Notification"] = response.IsFailure
@@ -137,6 +151,9 @@ public class MoviesController(
               : MessageViewHelper.SuccessJson($"Filme deletado com sucesso");
 
             logger.LogInformation($"{User.Identity?.Name} removed the movie with id = {id}");
+
+            if (response.IsSuccess)
+                await this.AddAuditLogAsync(auditLogService, "Movie", id, $"removeu o filme {title}");
         }
 
         return RedirectToAction("Index");
@@ -162,6 +179,8 @@ public class MoviesController(
 
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
+
+        await this.AddAuditLogAsync(auditLogService, "Movie", file.FileName, $"iniciou a importação de filmes da planilha {file.FileName}");
 
         return Ok(response.Data);
     }

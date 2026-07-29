@@ -1,18 +1,23 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.User.Enums;
 using XerifeTv.CMS.Modules.User.Interfaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.BackgroundJobQueue.Models;
 
 namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
-public class BackgroundJobQueueController(IBackgroundJobQueueService service, IUserService userService) : Controller
+public class BackgroundJobQueueController(
+    IBackgroundJobQueueService service,
+    IUserService userService,
+    IAuditLogService auditLogService) : Controller
 {
     private const int limitResultsPage = 15;
 
@@ -63,6 +68,20 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService service, IU
 
         if (response.IsFailure) return BadRequest(response.Error.Description);
 
+        string spreadsheetTypename = dto.Type switch
+        {
+            EBackgroundJobType.REGISTER_SPREADSHEET_MOVIES => "filmes",
+            EBackgroundJobType.REGISTER_SPREADSHEET_SERIES => "séries",
+            EBackgroundJobType.REGISTER_SPREADSHEET_CHANNELS => "canais",
+            _ => "desconhecido"
+        };
+
+        await this.AddAuditLogAsync(
+            auditLogService,
+            "BackgroundJob",
+            response.Data?.JobId ?? string.Empty,
+            $"adicionou a planilha de {spreadsheetTypename} ({dto.SpreadsheetFile?.FileName}) na fila de processamento");
+
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson($"Processo adicionado a fila com sucesso");
@@ -78,6 +97,12 @@ public class BackgroundJobQueueController(IBackgroundJobQueueService service, IU
         var response = await service.AddJobInQueueAsync(dto);
 
         if (response.IsFailure) return BadRequest(response.Error.Description);
+
+        await this.AddAuditLogAsync(
+            auditLogService,
+            "BackgroundJob",
+            response.Data?.JobId ?? string.Empty,
+            $"adicionou a importação de episódios da série {dto.SeriesTitle} na fila de processamento");
 
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)

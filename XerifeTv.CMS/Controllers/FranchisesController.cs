@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Franchise.Dtos.Request;
+using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
+using XerifeTv.CMS.Shared.Extensions;
 
 namespace XerifeTv.CMS.Controllers;
 
 [Authorize]
 public class FranchisesController(
     IFranchiseService service,
+    IAuditLogService auditLogService,
     ILogger<FranchisesController> logger) : Controller
 {
     [HttpGet]
@@ -34,6 +37,12 @@ public class FranchisesController(
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
 
+        await this.AddAuditLogAsync(
+            auditLogService,
+            "Franchise",
+            response.Data?.Id ?? string.Empty,
+            $"adicionou a franquia {dto.Name}");
+
         logger.LogInformation($"{User.Identity?.Name} created franchise {dto.Name}");
 
         return Ok(response.Data);
@@ -48,6 +57,12 @@ public class FranchisesController(
         if (response.IsFailure)
             return BadRequest(response.Error.Description ?? string.Empty);
 
+        await this.AddAuditLogAsync(
+            auditLogService,
+            "Franchise",
+            response.Data?.Id ?? string.Empty,
+            $"atualizou a franquia {dto.Name}");
+
         logger.LogInformation($"{User.Identity?.Name} updated franchise {dto.Id}");
 
         return Ok(response.Data);
@@ -57,12 +72,26 @@ public class FranchisesController(
     [HttpPost]
     public async Task<IActionResult> Delete(string id)
     {
-        var response = await service.DeleteAsync(id);
+        if (id is not null)
+        {
+            var franchiseResponse = await service.GetAsync(id);
+            var name = franchiseResponse.IsSuccess && franchiseResponse.Data is not null
+                ? franchiseResponse.Data.Name
+                : id;
 
-        if (response.IsFailure)
-            return BadRequest(response.Error.Description ?? string.Empty);
+            var response = await service.DeleteAsync(id);
 
-        logger.LogInformation($"{User.Identity?.Name} deleted franchise {id}");
+            if (response.IsFailure)
+                return BadRequest(response.Error.Description ?? string.Empty);
+
+            await this.AddAuditLogAsync(
+                auditLogService,
+                "Franchise",
+                id,
+                $"removeu a franquia {name}");
+
+            logger.LogInformation($"{User.Identity?.Name} deleted franchise {id}");
+        }
 
         return Ok();
     }

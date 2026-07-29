@@ -160,7 +160,7 @@
 
         function remove(id) {
             if (!confirm('Deseja realmente excluir o episódio?')) return;
-            location.href = `/Series/DeleteEpisode?serieId=@Model?.EpisodesDto?.SerieId&id=${id}`;
+            location.href = `/Series/DeleteEpisode?serieId=@Model?.EpisodesDto?.SerieId&id=${id}&serieTitle=@Model?.EpisodesDto?.SerieTitle`;
         }
 
         function uploadSubtitleFile() {
@@ -197,6 +197,7 @@
                 const formDataBackgroundJob = new FormData();
                 formDataBackgroundJob.append('seriesId', '@Model?.EpisodesDto?.SerieId');
                 formDataBackgroundJob.append('seriesImdbId', '@Model?.EpisodesDto?.SerieImdbId');
+                formDataBackgroundJob.append('seriesTitle', '@Model?.EpisodesDto?.SerieTitle');
 
                 await fetch(`/BackgroundJobQueue/AddJobInQueueImportEpisodesSeries`, {
                     method: 'POST',
@@ -214,6 +215,7 @@
             try {
                 const formData = new FormData();
                 formData.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                formData.append('seriesTitle', '@Model?.EpisodesDto?.SerieTitle');
 
                 var response = await fetch('/Series/ImportEpisodesByImdbId', {
                     method: 'POST',

@@ -2,6 +2,8 @@
 using Microsoft.OpenApi;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Services;
+using XerifeTv.CMS.Modules.AuditLog;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Authentication.Interfaces;
 using XerifeTv.CMS.Modules.Authentication.Services;
 using XerifeTv.CMS.Modules.BackgroundJobQueue;
@@ -39,114 +41,117 @@ namespace XerifeTv.CMS.Shared.Extensions;
 
 public static class ConfigureServices
 {
-	public static IServiceCollection AddConfiguration(
-	  this IServiceCollection services, IConfiguration _configuration)
-	{
-		services
-		  .AddAuthAuthorization(_configuration)
-		  .AddRepositories()
-		  .AddServices()
-		  .AddSwagger();
-
-		return services;
-	}
-
-	private static IServiceCollection AddRepositories(this IServiceCollection services)
-	{
-		services.AddScoped<IMovieRepository, MovieRepository>();
-		services.AddScoped<ISeriesRepository, SeriesRepository>();
-		services.AddScoped<IChannelRepository, ChannelRepository>();
-		services.AddScoped<IFranchiseRepository, FranchiseRepository>();
-		services.AddScoped<IUserRepository, UserRepository>();
-		services.AddScoped<IWebhookRepository, WebhookRepository>();
-		services.AddScoped<IMediaDeliveryProfileRepository, MediaDeliveryProfileRepository>();
-		services.AddScoped<IContentSettingsRepository, ContentSettingsRepository>();
+    public static IServiceCollection AddConfiguration(
+      this IServiceCollection services, IConfiguration _configuration)
+    {
+        services
+          .AddAuthAuthorization(_configuration)
+          .AddRepositories()
+          .AddServices()
+          .AddSwagger();
 
         return services;
-	}
+    }
 
-	private static IServiceCollection AddServices(this IServiceCollection services)
-	{
-		services.AddScoped<IMovieService, MovieService>();
-		services.AddScoped<ISeriesService, SeriesService>();
-		services.AddScoped<IChannelService, ChannelService>();
-		services.AddScoped<IFranchiseService, FranchiseService>();
-		services.AddScoped<IDashboardService, DashboardService>();
-		services.AddScoped<IContentV1Service, ContentV1Service>();
+    private static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
+        services.AddScoped<IMovieRepository, MovieRepository>();
+        services.AddScoped<ISeriesRepository, SeriesRepository>();
+        services.AddScoped<IChannelRepository, ChannelRepository>();
+        services.AddScoped<IFranchiseRepository, FranchiseRepository>();
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IWebhookRepository, WebhookRepository>();
+        services.AddScoped<IMediaDeliveryProfileRepository, MediaDeliveryProfileRepository>();
+        services.AddScoped<IContentSettingsRepository, ContentSettingsRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+
+        return services;
+    }
+
+    private static IServiceCollection AddServices(this IServiceCollection services)
+    {
+        services.AddScoped<IMovieService, MovieService>();
+        services.AddScoped<ISeriesService, SeriesService>();
+        services.AddScoped<IChannelService, ChannelService>();
+        services.AddScoped<IFranchiseService, FranchiseService>();
+        services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IContentV1Service, ContentV1Service>();
         services.AddScoped<IContentV2Service, ContentV2Service>();
         services.AddScoped<IUserService, UserService>();
-		services.AddScoped<ITokenService, TokenService>();
-		services.AddScoped<IAuthService, AuthService>();
-		services.AddSingleton<ICacheService, CacheService>();
-		services.AddScoped<IStorageFilesService, StorageFilesService>();
-		services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
-		services.AddScoped<IHashPassword, HashPassword>();
-		services.AddScoped<IEmailService, EmailService>();
-		services.AddScoped<ISpreadsheetBatchImporter<IMovieService>, MoviesSpreadsheetImporter>();
-		services.AddScoped<ISpreadsheetBatchImporter<IChannelService>, ChannelsSpreadsheetImporter>();
-		services.AddScoped<ISpreadsheetBatchImporter<ISeriesService>, SeriesSpreadsheetImporter>();
-		services.AddScoped<IEpisodesImporter, EpisodesImdbImporter>();
-		services.AddScoped<IImdbService, ImdbService>();
-		services.AddScoped<IBackgroundJobQueueRepository, BackgroundJobQueueRepository>();
-		services.AddScoped<IBackgroundJobQueueService, BackgroundJobQueueService>();
-		services.AddScoped<ILoginStrategy, BasicLoginStrategy>();
-		services.AddScoped<ILoginStrategy, GoogleLoginStrategy>();
-		services.AddScoped<IWebhookService, WebhookService>();
+        services.AddScoped<ITokenService, TokenService>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddSingleton<ICacheService, CacheService>();
+        services.AddScoped<IStorageFilesService, StorageFilesService>();
+        services.AddScoped<ISpreadsheetReaderService, SpreadsheetReaderService>();
+        services.AddScoped<IHashPassword, HashPassword>();
+        services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<ISpreadsheetBatchImporter<IMovieService>, MoviesSpreadsheetImporter>();
+        services.AddScoped<ISpreadsheetBatchImporter<IChannelService>, ChannelsSpreadsheetImporter>();
+        services.AddScoped<ISpreadsheetBatchImporter<ISeriesService>, SeriesSpreadsheetImporter>();
+        services.AddScoped<IEpisodesImporter, EpisodesImdbImporter>();
+        services.AddScoped<IImdbService, ImdbService>();
+        services.AddScoped<IBackgroundJobQueueRepository, BackgroundJobQueueRepository>();
+        services.AddScoped<IBackgroundJobQueueService, BackgroundJobQueueService>();
+        services.AddScoped<ILoginStrategy, BasicLoginStrategy>();
+        services.AddScoped<ILoginStrategy, GoogleLoginStrategy>();
+        services.AddScoped<IWebhookService, WebhookService>();
 
-		services.AddScoped<IMediaDeliveryProfileService, MediaDeliveryProfileService>();
-		services.AddScoped<IMediaDeliveryUrlResolver, MediaDeliveryUrlResolver>();
-		services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenNoneStrategy>();
-		services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenStaticQueryStrategy>();
+        services.AddScoped<IMediaDeliveryProfileService, MediaDeliveryProfileService>();
+        services.AddScoped<IMediaDeliveryUrlResolver, MediaDeliveryUrlResolver>();
+        services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenNoneStrategy>();
+        services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenStaticQueryStrategy>();
         services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenSignedQueryStrategy>();
 
-		services.AddScoped<IBackgroundJobProcessorStrategy, ImportSpreadsheetBackgroundJobProcessorStrategy>();
-		services.AddScoped<IBackgroundJobProcessorStrategy, ImportEpisodesSeriesBackgroundJobProcessorStrategy>();
-		services.AddScoped<IBackgroundJobProcessorStrategy, CalculateCategoryDistributionBackgroundJobProcessorStrategy>();
-		services.AddScoped<IBackgroundJobProcessorStrategy, DispacthWebhooksBackgroundProcessorStrategy>();
+        services.AddScoped<IBackgroundJobProcessorStrategy, ImportSpreadsheetBackgroundJobProcessorStrategy>();
+        services.AddScoped<IBackgroundJobProcessorStrategy, ImportEpisodesSeriesBackgroundJobProcessorStrategy>();
+        services.AddScoped<IBackgroundJobProcessorStrategy, CalculateCategoryDistributionBackgroundJobProcessorStrategy>();
+        services.AddScoped<IBackgroundJobProcessorStrategy, DispacthWebhooksBackgroundProcessorStrategy>();
+
+        services.AddScoped<IAuditLogService, AuditLogService>();
 
         services.AddHostedService<BackgroundJobQueueWorker>();
 
-		return services;
-	}
+        return services;
+    }
 
-	private static IServiceCollection AddAuthAuthorization(
-	  this IServiceCollection services, IConfiguration _configuration)
-	{
-		services.AddAuthentication(options =>
-		{
-			options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-			options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-		})
-		.AddJwtBearer(options =>
-		{
-			options.TokenValidationParameters = TokenService.GetTokenValidationParameters(_configuration);
+    private static IServiceCollection AddAuthAuthorization(
+      this IServiceCollection services, IConfiguration _configuration)
+    {
+        services.AddAuthentication(options =>
+        {
+            options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = TokenService.GetTokenValidationParameters(_configuration);
 
-			options.Events = new JwtBearerEvents
-			{
-				OnMessageReceived = context =>
-				{
-					context.Token = context.Request.Cookies["Token"];
-					return Task.CompletedTask;
-				}
-			};
-		});
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    context.Token = context.Request.Cookies["Token"];
+                    return Task.CompletedTask;
+                }
+            };
+        });
 
-		services.AddAuthorization();
-		return services;
-	}
+        services.AddAuthorization();
+        return services;
+    }
 
-	public static IServiceCollection AddSwagger(this IServiceCollection services)
-	{
-		services.AddSwaggerGen(options =>
-		{
-			options.SwaggerDoc("v1", new OpenApiInfo
-			{
-				Version = "v1",
-				Title = "Content API",
-				Description = "content API documentation"
-			});
-		});
+    public static IServiceCollection AddSwagger(this IServiceCollection services)
+    {
+        services.AddSwaggerGen(options =>
+        {
+            options.SwaggerDoc("v1", new OpenApiInfo
+            {
+                Version = "v1",
+                Title = "Content API",
+                Description = "content API documentation"
+            });
+        });
 
-		return services;
-	}
+        return services;
+    }
 }

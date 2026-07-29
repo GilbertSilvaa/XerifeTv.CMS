@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Request;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Controllers;
@@ -13,7 +15,8 @@ public class MediaDeliveryProfilesController(
     IMediaDeliveryProfileService service,
     IMediaDeliveryUrlResolver urlResolver,
     ILogger<MediaDeliveryProfilesController> logger,
-    ICacheService cacheService, 
+    ICacheService cacheService,
+    IAuditLogService auditLogService,
     IConfiguration configuration) : Controller
 {
     public async Task<IActionResult> Create(CreateMediaDeliveryProfileRequestDto dto)
@@ -23,6 +26,15 @@ public class MediaDeliveryProfilesController(
         TempData["Notification"] = response.IsFailure
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson($"Perfil Entrega de Mídia cadastrado com sucesso");
+
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(
+                auditLogService,
+                "MediaDeliveryProfile",
+                response.Data ?? string.Empty,
+                $"adicionou o perfil de entrega de mídia {dto.Name}");
+        }
 
         logger.LogInformation($"{User.Identity?.Name} registered the media delivery profile {dto.Name}");
 
@@ -37,6 +49,15 @@ public class MediaDeliveryProfilesController(
           ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
           : MessageViewHelper.SuccessJson($"Perfil Entrega de Mídia atualizado com sucesso");
 
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(
+                auditLogService,
+                "MediaDeliveryProfile",
+                response.Data ?? string.Empty,
+                $"atualizou o perfil de entrega de mídia {dto.Name}");
+        }
+
         logger.LogInformation($"{User.Identity?.Name} updated the media delivery profile {dto.Name}");
 
         return Redirect(Url.Action("Index", "Settings") + "#media-delivery");
@@ -46,11 +67,25 @@ public class MediaDeliveryProfilesController(
     {
         if (id is not null)
         {
+            var mdpResponse = await service.GetAsync(id);
+            var name = mdpResponse.IsSuccess && mdpResponse.Data is not null
+                ? mdpResponse.Data.Name
+                : id;
+
             var response = await service.DeleteAsync(id);
 
             TempData["Notification"] = response.IsFailure
               ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
               : MessageViewHelper.SuccessJson($"Perfil Entrega de Mídia deletado com sucesso");
+
+            if (response.IsSuccess)
+            {
+                await this.AddAuditLogAsync(
+                    auditLogService,
+                    "MediaDeliveryProfile",
+                    id,
+                    $"removeu o perfil de entrega de mídia {name}");
+            }
 
             logger.LogInformation($"{User.Identity?.Name} removed the media delivery profile with id = {id}");
         }
@@ -73,7 +108,7 @@ public class MediaDeliveryProfilesController(
 
         if (response.IsFailure)
             return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
-        
+
         cacheService.SetValue<GetResolveUrlResponseDto?>(cacheKey, response.Data);
 
         return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
@@ -109,7 +144,7 @@ public class MediaDeliveryProfilesController(
 
         if (response.IsFailure)
             return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
-        
+
         cacheService.SetValue<GetResolveUrlResponseDto?>(cacheKey, response.Data);
 
         return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
