@@ -152,6 +152,20 @@ public sealed class SeriesRepository(IOptions<DBSettings> options, IMongoClient 
         return response;
     }
 
+    public async Task<Episode?> GetEpisodeBySeriesIdAndEpisodeIdAsync(string seriesId, string episodeId)
+    {
+        var filter = Builders<SeriesEntity>.Filter.Eq(s => s.Id, seriesId);
+
+        var projection = Builders<SeriesEntity>.Projection.Expression(
+            s => s.Episodes.FirstOrDefault(e => e.Id == episodeId)
+        );
+
+        return await _collection
+            .Find(filter)
+            .Project(projection)
+            .FirstOrDefaultAsync();
+    }
+
     public override async Task UpdateAsync(SeriesEntity entity)
     {
         var filter = Builders<SeriesEntity>.Filter.Eq(r => r.Id, entity.Id);

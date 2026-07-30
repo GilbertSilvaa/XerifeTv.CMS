@@ -68,7 +68,7 @@ public class BackgroundJobQueueService(
 
             var backgroundJob = BackgroundJobEntity.Create(
                 seriesId: dto.SeriesId,
-                seriesImdbId: dto.SeriesImdbId,
+                seriesTitle: dto.SeriesTitle,
                 userId: userResult?.Data?.Id ?? string.Empty);
 
             var resultId = await repository.CreateAsync(backgroundJob);

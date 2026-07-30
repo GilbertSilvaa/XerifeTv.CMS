@@ -29,55 +29,55 @@ public class SeriesController(
   IFranchiseService franchiseService,
   IAuditLogService auditLogService) : Controller
 {
-	private const int limitResultsPage = 20;
+    private const int limitResultsPage = 20;
 
-	public async Task<IActionResult> Index(int? currentPage, ESeriesSearchFilter? filter, string? search)
-	{
-		Result<PagedList<GetSeriesResponseDto>> result;
+    public async Task<IActionResult> Index(int? currentPage, ESeriesSearchFilter? filter, string? search)
+    {
+        Result<PagedList<GetSeriesResponseDto>> result;
 
-		logger.LogInformation($"{User.Identity?.Name} accessed the series page");
+        logger.LogInformation($"{User.Identity?.Name} accessed the series page");
 
-		if (filter is ESeriesSearchFilter && !string.IsNullOrEmpty(search))
-		{
-			result = await service.GetByFilterAsync(
-			  new GetSeriesByFilterRequestDto(
-				filter,
-				search,
-				limitResultsPage,
-				currentPage,
-				isIncludeDisabled: true));
+        if (filter is ESeriesSearchFilter && !string.IsNullOrEmpty(search))
+        {
+            result = await service.GetByFilterAsync(
+              new GetSeriesByFilterRequestDto(
+                filter,
+                search,
+                limitResultsPage,
+                currentPage,
+                isIncludeDisabled: true));
 
-			ViewBag.Search = search;
-			ViewBag.Filter = filter.ToString()?.ToLower();
-		}
-		else
-		{
-			result = await service.GetAsync(currentPage ?? 1, limitResultsPage);
-		}
+            ViewBag.Search = search;
+            ViewBag.Filter = filter.ToString()?.ToLower();
+        }
+        else
+        {
+            result = await service.GetAsync(currentPage ?? 1, limitResultsPage);
+        }
 
-		if (result.IsSuccess)
-		{
-			ViewBag.CurrentPage = result.Data?.CurrentPage;
-			ViewBag.TotalPages = result.Data?.TotalPageCount ?? 1;
-			ViewBag.HasNextPage = result.Data?.HasNext;
-			ViewBag.HasPrevPage = result.Data?.HasPrevious;
+        if (result.IsSuccess)
+        {
+            ViewBag.CurrentPage = result.Data?.CurrentPage;
+            ViewBag.TotalPages = result.Data?.TotalPageCount ?? 1;
+            ViewBag.HasNextPage = result.Data?.HasNext;
+            ViewBag.HasPrevPage = result.Data?.HasPrevious;
 
-			return View(result.Data?.Items);
-		}
+            return View(result.Data?.Items);
+        }
 
-		return View(Enumerable.Empty<GetSeriesResponseDto>());
-	}
+        return View(Enumerable.Empty<GetSeriesResponseDto>());
+    }
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Form(string? id)
-	{
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Form(string? id)
+    {
         IEnumerable<GetFranchiseResponseDto> franchises = [];
         string? selectedFranchiseName = null;
 
-		if (id is not null)
-		{
-			var response = await service.GetAsync(id);
-			if (response.IsSuccess)
+        if (id is not null)
+        {
+            var response = await service.GetAsync(id);
+            if (response.IsSuccess)
             {
                 if (!string.IsNullOrWhiteSpace(response.Data?.FranchiseId))
                 {
@@ -91,226 +91,253 @@ public class SeriesController(
 
                 return View(new SeriesFormModelView(response.Data, franchises, selectedFranchiseName));
             }
-		}
+        }
 
-		return View(new SeriesFormModelView(null, franchises, selectedFranchiseName));
-	}
+        return View(new SeriesFormModelView(null, franchises, selectedFranchiseName));
+    }
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Create(CreateSeriesRequestDto dto)
-	{
-		var response = await service.CreateAsync(dto);
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Create(CreateSeriesRequestDto dto)
+    {
+        var response = await service.CreateAsync(dto);
 
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Série {dto.ImdbId} cadastrada com sucesso");
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Série {dto.ImdbId} cadastrada com sucesso");
 
-		logger.LogInformation($"{User.Identity?.Name} registered the serie {dto.Title}");
+        logger.LogInformation($"{User.Identity?.Name} registered the serie {dto.Title}");
 
         if (response.IsSuccess)
             await this.AddAuditLogAsync(auditLogService, "Series", response.Data ?? string.Empty, $"adicionou a série {dto.Title}");
 
-		return RedirectToAction("Index");
-	}
+        return RedirectToAction("Index");
+    }
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Update(UpdateSeriesRequestDto dto)
-	{
-		var response = await service.UpdateAsync(dto);
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Update(UpdateSeriesRequestDto dto)
+    {
+        var response = await service.UpdateAsync(dto);
 
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Série {dto.ImdbId} atualizada com sucesso");
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Série {dto.ImdbId} atualizada com sucesso");
 
-		logger.LogInformation($"{User.Identity?.Name} updated the serie {dto.Title}");
+        logger.LogInformation($"{User.Identity?.Name} updated the serie {dto.Title}");
 
         if (response.IsSuccess)
             await this.AddAuditLogAsync(auditLogService, "Series", dto.Id, $"atualizou a série {dto.Title}");
 
-		return RedirectToAction("Index");
-	}
+        return RedirectToAction("Index");
+    }
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> Delete(string? id)
-	{
-		if (id is not null)
-		{
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> Delete(string? id)
+    {
+        if (id is not null)
+        {
             var seriesResponse = await service.GetAsync(id);
             var title = seriesResponse.IsSuccess && seriesResponse.Data is not null
                 ? seriesResponse.Data.Title
                 : id;
 
-			var response = await service.DeleteAsync(id);
+            var response = await service.DeleteAsync(id);
 
-			TempData["Notification"] = response.IsFailure
-			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-			  : MessageViewHelper.SuccessJson($"Série deletada com sucesso");
+            TempData["Notification"] = response.IsFailure
+              ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+              : MessageViewHelper.SuccessJson($"Série deletada com sucesso");
 
-			logger.LogInformation($"{User.Identity?.Name} removed the serie with id = {id}");
+            logger.LogInformation($"{User.Identity?.Name} removed the serie with id = {id}");
 
             if (response.IsSuccess)
                 await this.AddAuditLogAsync(auditLogService, "Series", id, $"removeu a série {title}");
-		}
+        }
 
-		return RedirectToAction("Index");
-	}
+        return RedirectToAction("Index");
+    }
 
-	public async Task<IActionResult> Episodes(string? id, int? seasonFilter)
-	{
-		if (id is null) return RedirectToAction("Index");
+    public async Task<IActionResult> Episodes(string? id, int? seasonFilter)
+    {
+        if (id is null) return RedirectToAction("Index");
 
-		ViewBag.SerieId = id;
-		ViewBag.SeasonFilter = seasonFilter;
+        ViewBag.SerieId = id;
+        ViewBag.SeasonFilter = seasonFilter;
 
-		var response = await service.GetEpisodesBySeasonAsync(id, seasonFilter ?? 1, includeDisabled: true);
+        var response = await service.GetEpisodesBySeasonAsync(id, seasonFilter ?? 1, includeDisabled: true);
 
-		if (response.IsSuccess)
-		{
-			ViewBag.NumberSeasons = response.Data?.NumberSeasons;
-			logger.LogInformation($"{User.Identity?.Name} accessed the series episodes with id = {id}");
+        if (response.IsSuccess)
+        {
+            ViewBag.NumberSeasons = response.Data?.NumberSeasons;
+            logger.LogInformation($"{User.Identity?.Name} accessed the series episodes with id = {id}");
 
             IEnumerable<GetMediaDeliveryProfileResponseDto> mediaDeliveryProfiles = [];
             var mediaProfilesResponse = await mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: false);
             if (mediaProfilesResponse.IsSuccess) mediaDeliveryProfiles = mediaProfilesResponse.Data ?? [];
 
             return View(new EpisodesModelView(response.Data, mediaDeliveryProfiles));
-		}
+        }
 
-		return RedirectToAction("Index");
-	}
+        return RedirectToAction("Index");
+    }
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> CreateEpisode(CreateEpisodeRequestDto dto)
-	{
-		var response = await service.CreateEpisodeAsync(dto);
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> CreateEpisode(CreateEpisodeRequestDto dto)
+    {
+        var response = await service.CreateEpisodeAsync(dto);
 
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Episódio T{dto.Season}:EP{dto.Number} cadastrado com sucesso");
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Episódio T{dto.Season}:EP{dto.Number} cadastrado com sucesso");
 
-		logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
-
-        if (response.IsSuccess)
-            await this.AddAuditLogAsync(auditLogService, "Episode", response.Data ?? string.Empty, $"adicionou o episódio {dto.Title}");
-
-		return RedirectToAction("Episodes", new { id = dto.SerieId, seasonFilter = dto.Season });
-	}
-
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> UpdateEpisode(UpdateEpisodeRequestDto dto)
-	{
-		var response = await service.UpdateEpisodeAsync(dto);
-
-		TempData["Notification"] = response.IsFailure
-		  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-		  : MessageViewHelper.SuccessJson($"Episódio T{dto.Season}:EP{dto.Number} atualizado com sucesso");
-
-		logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
+        logger.LogInformation($"{User.Identity?.Name} registered episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
 
         if (response.IsSuccess)
-            await this.AddAuditLogAsync(auditLogService, "Episode", dto.Id, $"atualizou o episódio {dto.Title}");
+        {
+            var seriesResponse = await service.GetAsync(dto.SerieId);
+            var seriesTitle = seriesResponse.IsSuccess && seriesResponse.Data is not null
+                ? seriesResponse.Data.Title
+                : dto.SerieId.ToString();
 
-		return RedirectToAction("Episodes", new { id = dto.SerieId, seasonFilter = dto.Season });
-	}
+            await this.AddAuditLogAsync(auditLogService, "Episode", response.Data ?? string.Empty, $"adicionou o episódio {dto.Title} na série {seriesTitle}");
+        }
 
-	[Authorize(Roles = "admin, common")]
-	public async Task<IActionResult> DeleteEpisode(string? serieId, string? id, string? serieTitle)
-	{
-		if (serieId is not null && id is not null)
-		{
-			var response = await service.DeleteEpisodeAsync(serieId, id);
+        return RedirectToAction("Episodes", new { id = dto.SerieId, seasonFilter = dto.Season });
+    }
 
-			TempData["Notification"] = response.IsFailure
-			  ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
-			  : MessageViewHelper.SuccessJson($"Episódio deletado com sucesso");
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> UpdateEpisode(UpdateEpisodeRequestDto dto)
+    {
+        var response = await service.UpdateEpisodeAsync(dto);
 
-			logger.LogInformation($"{User.Identity?.Name} deleted episode with id = {id} of the serie with id = {serieId}");
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson($"Episódio T{dto.Season}:EP{dto.Number} atualizado com sucesso");
+
+        logger.LogInformation($"{User.Identity?.Name} updated episode {dto.Number} of season {dto.Season} of the serie with id = {dto.SerieId}");
+
+        if (response.IsSuccess)
+        {
+            var seriesResponse = await service.GetAsync(dto.SerieId);
+            var seriesTitle = seriesResponse.IsSuccess && seriesResponse.Data is not null
+                ? seriesResponse.Data.Title
+                : dto.SerieId.ToString();
+
+            await this.AddAuditLogAsync(auditLogService, "Episode", dto.Id, $"atualizou o episódio {dto.Title} da série {seriesTitle}");
+        }
+
+        return RedirectToAction("Episodes", new { id = dto.SerieId, seasonFilter = dto.Season });
+    }
+
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> DeleteEpisode(string? serieId, string? id)
+    {
+        if (serieId is not null && id is not null)
+        {
+            var episodeResponse = await service.GetEpisodeBySeriesIdAndEpisodeIdAsync(serieId, id);
+            var episodeTitle = episodeResponse.IsSuccess && episodeResponse.Data is not null
+                ? episodeResponse.Data.Title
+                : id;
+
+            var response = await service.DeleteEpisodeAsync(serieId, id);
+
+            TempData["Notification"] = response.IsFailure
+              ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+              : MessageViewHelper.SuccessJson($"Episódio deletado com sucesso");
+
+            logger.LogInformation($"{User.Identity?.Name} deleted episode with id = {id} of the serie with id = {serieId}");
 
             if (response.IsSuccess)
-                await this.AddAuditLogAsync(auditLogService, "Episode", id, $"removeu um episódio da série {serieTitle}");
-		}
+            {
+                var seriesResponse = await service.GetAsync(serieId);
+                var seriesTitle = seriesResponse.IsSuccess && seriesResponse.Data is not null
+                    ? seriesResponse.Data.Title
+                    : serieId;
 
-		return RedirectToAction("Episodes", new { id = serieId });
-	}
 
-	[HttpGet]
-	public async Task<IActionResult> GetSeriesByImdbId(string imdbId)
-	{
-		if (string.IsNullOrEmpty(imdbId)) return BadRequest();
+                await this.AddAuditLogAsync(auditLogService, "Episode", id, $"removeu o episódio {episodeTitle} da série {seriesTitle}");
+            }
+        }
 
-		var response = await imdbService.GetSeriesByImdbIdAsync(imdbId);
+        return RedirectToAction("Episodes", new { id = serieId });
+    }
 
-		if (response.IsFailure) return BadRequest(response.Error.Description);
+    [HttpGet]
+    public async Task<IActionResult> GetSeriesByImdbId(string imdbId)
+    {
+        if (string.IsNullOrEmpty(imdbId)) return BadRequest();
 
-		return Ok(response.Data);
-	}
+        var response = await imdbService.GetSeriesByImdbIdAsync(imdbId);
 
-	[Authorize(Roles = "admin, common")]
-	[HttpPost]
-	public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
-	{
-		if (file is null || file.Length == 0) return BadRequest();
+        if (response.IsFailure) return BadRequest(response.Error.Description);
 
-		var response = await spreadsheetBatchImporter.ImportAsync(file);
+        return Ok(response.Data);
+    }
 
-		if (response.IsFailure)
-			return BadRequest(response.Error.Description ?? string.Empty);
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
+    public async Task<IActionResult> RegisterBySpreadsheet(IFormFile file)
+    {
+        if (file is null || file.Length == 0) return BadRequest();
+
+        var response = await spreadsheetBatchImporter.ImportAsync(file);
+
+        if (response.IsFailure)
+            return BadRequest(response.Error.Description ?? string.Empty);
 
         await this.AddAuditLogAsync(auditLogService, "Series", file.FileName, $"iniciou a importação de séries da planilha {file.FileName}");
 
-		return Ok(response.Data);
-	}
+        return Ok(response.Data);
+    }
 
-	[Authorize(Roles = "admin, common")]
-	[HttpGet]
-	public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
-	{
-		var response = await spreadsheetBatchImporter.MonitorImportAsync(importId);
+    [Authorize(Roles = "admin, common")]
+    [HttpGet]
+    public async Task<IActionResult> MonitorSpreadsheetRegistration(string importId)
+    {
+        var response = await spreadsheetBatchImporter.MonitorImportAsync(importId);
 
-		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
-			TempData["Notification"] = MessageViewHelper
-			  .SuccessJson($"{response.Data.SuccessCount} séries/episódios cadastrados/atualizados com sucesso");
+        if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.SuccessCount > 1)
+            TempData["Notification"] = MessageViewHelper
+              .SuccessJson($"{response.Data.SuccessCount} séries/episódios cadastrados/atualizados com sucesso");
 
-		if (response.IsSuccess)
-			return Ok(response.Data);
+        if (response.IsSuccess)
+            return Ok(response.Data);
 
-		return BadRequest(response.Error.Description ?? string.Empty);
-	}
+        return BadRequest(response.Error.Description ?? string.Empty);
+    }
 
-	[Authorize(Roles = "admin, common")]
-	[HttpPost]
-	public async Task<IActionResult> ImportEpisodesByImdbId(ImportEpisodesRequestDto dto)
-	{
-		if (string.IsNullOrEmpty(dto.SeriesId))
-		{
-			TempData["Notification"] = MessageViewHelper.ErrorJson("Ops! Houve um problema [série inválida]");
-			return BadRequest();
-		}
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
+    public async Task<IActionResult> ImportEpisodesByImdbId(ImportEpisodesRequestDto dto)
+    {
+        if (string.IsNullOrEmpty(dto.SeriesId))
+        {
+            TempData["Notification"] = MessageViewHelper.ErrorJson("Ops! Houve um problema [série inválida]");
+            return BadRequest();
+        }
 
-		var response = await episodesImporter.ImportAsync(dto.SeriesId);
+        var response = await episodesImporter.ImportAsync(dto.SeriesId);
 
-		if (response.IsFailure)
-			return BadRequest(response.Error.Description ?? string.Empty);
+        if (response.IsFailure)
+            return BadRequest(response.Error.Description ?? string.Empty);
 
         await this.AddAuditLogAsync(auditLogService, "Episode", dto.SeriesId, $"iniciou a importação de episódios da série {dto.SeriesTitle}");
 
-		return Ok(response.Data);
-	}
+        return Ok(response.Data);
+    }
 
-	[Authorize(Roles = "admin, common")]
-	[HttpGet]
-	public async Task<IActionResult> MonitorImdbEpisodesImport(string importId)
-	{
-		var response = await episodesImporter.MonitorImportAsync(importId);
+    [Authorize(Roles = "admin, common")]
+    [HttpGet]
+    public async Task<IActionResult> MonitorImdbEpisodesImport(string importId)
+    {
+        var response = await episodesImporter.MonitorImportAsync(importId);
 
-		if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.ImportedCount > 1)
-			TempData["Notification"] = MessageViewHelper
-			  .SuccessJson($"{response.Data.ImportedCount} episódios importados com sucesso");
+        if (response.IsSuccess && response.Data?.ProgressCount == 100 && response.Data.ImportedCount > 1)
+            TempData["Notification"] = MessageViewHelper
+              .SuccessJson($"{response.Data.ImportedCount} episódios importados com sucesso");
 
-		if (response.IsSuccess)
-			return Ok(response.Data);
+        if (response.IsSuccess)
+            return Ok(response.Data);
 
-		return BadRequest(response.Error.Description ?? string.Empty);
-	}
+        return BadRequest(response.Error.Description ?? string.Empty);
+    }
 }
 
