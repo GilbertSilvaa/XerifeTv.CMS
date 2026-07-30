@@ -3,9 +3,6 @@ using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
-using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
-using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
-using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -202,6 +199,26 @@ public class SeriesService(
         {
             var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
             return Result<GetEpisodesResponseDto>.Failure(error);
+        }
+    }
+
+    public async Task<Result<Episode?>> GetEpisodeBySeriesIdAndEpisodeIdAsync(string seriesId, string episodeId)
+    {
+        try
+        {
+            var response = await repository.GetEpisodeBySeriesIdAndEpisodeIdAsync(seriesId, episodeId);
+
+            if (response is null)
+                return Result<Episode?>.Failure(new Error("404", "Conteúdo não encontrado"));
+
+            response.SetUrlResolverPath(configuration["SecuritySettings:ContentEncryptionKey"]!);
+
+            return Result<Episode?>.Success(response);
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<Episode?>.Failure(error);
         }
     }
 

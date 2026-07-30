@@ -10,6 +10,7 @@ public interface ISeriesRepository : IBaseRepository<SeriesEntity>
     Task<PagedList<SeriesEntity>> GetByFilterAsync(GetSeriesByFilterRequestDto dto);
     Task<IEnumerable<ItemsByCategory<SeriesEntity>>> GetGroupByCategoryAsync(GetGroupByCategoryRequestDto dto);
     Task<SeriesEntity?> GetEpisodesBySeasonAsync(string serieId, int season, bool includeDisabled, int? especificEpisode = null);
+    Task<Episode?> GetEpisodeBySeriesIdAndEpisodeIdAsync(string seriesId, string episodeId);
     Task<string> CreateEpisodeAsync(string serieId, Episode episode);
     Task UpdateEpisodeAsync(string serieId, Episode episode);
     Task<bool> DeleteEpisodeAsync(string serieId, string episodeId);

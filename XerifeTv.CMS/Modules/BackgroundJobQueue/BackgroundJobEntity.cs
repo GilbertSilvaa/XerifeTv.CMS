@@ -46,12 +46,12 @@ public class BackgroundJobEntity : BaseEntity
         };
     }
 
-    public static BackgroundJobEntity Create(string seriesId, string seriesImdbId, string userId)
+    public static BackgroundJobEntity Create(string seriesId, string seriesTitle, string userId)
     {
         return new BackgroundJobEntity
         {
             Type = EBackgroundJobType.IMPORT_EPISODES_FROM_SERIES_IMDB,
-            JobName = $"Importação de Episódios via IMDB [{seriesImdbId}]",
+            JobName = $"Importação de episódios da série {seriesTitle} via IMDB",
             Status = EBackgroundJobStatus.PENDING,
             RequestedByUserId = userId,
             SeriesIdImportEpisodes = seriesId
