@@ -14,8 +14,6 @@ public static class DateTimeExtension
             return $"há {Math.Floor(ts.TotalMinutes)}min";
         if (ts.TotalHours < 24)
             return $"há {Math.Floor(ts.TotalHours)}h";
-        if (ts.TotalHours is > 24 and < 48)
-            return "ontem";
         if (ts.TotalDays < 30)
             return $"há {Math.Floor(ts.TotalDays)} dia{(ts.TotalDays < 2 ? "" : "s")}";
 
