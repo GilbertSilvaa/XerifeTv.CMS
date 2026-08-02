@@ -1,6 +1,7 @@
 ﻿using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Request;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Entities;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 
 namespace XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;

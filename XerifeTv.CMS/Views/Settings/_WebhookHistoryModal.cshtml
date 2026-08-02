@@ -1,0 +1,178 @@
+@using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response
+@using XerifeTv.CMS.Modules.Integrations.Webhook.Entities
+@using XerifeTv.CMS.Modules.Integrations.Webhook.Enums
+
+@model IEnumerable<GetWebhookResponseDto>
+
+<div class="modal fade"
+     id="webhookHistoryModal"
+     tabindex="-1"
+     aria-labelledby="webhookHistoryModalLabel"
+     aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="webhookHistoryModalLabel">
+                    Histórico de Disparos de Webhooks
+                </h1>
+                <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body">
+                <!-- Filtros em Grid Padrão do Sistema -->
+                <div class="row mb-3 align-items-end">
+                    <div class="col-12 col-md-4 mb-2 mb-md-0">
+                        <label for="historyFilterWebhook" class="form-label">Webhook</label>
+                        <select id="historyFilterWebhook" class="form-select shadow-sm" onchange="loadWebhookHistory(1)">
+                            <option value="">Todos os Webhooks</option>
+                            @if (Model != null)
+                            {
+                                foreach (var webhook in Model)
+                                {
+                                    <option value="@webhook.Id">@webhook.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-4 mb-2 mb-md-0">
+                        <label for="historyFilterEvent" class="form-label">Evento</label>
+                        <select id="historyFilterEvent" class="form-select shadow-sm" onchange="loadWebhookHistory(1)">
+                            <option value="">Todos os Eventos</option>
+                            @foreach (EWebhookTriggerEvent evt in Enum.GetValues(typeof(EWebhookTriggerEvent)))
+                            {
+                                <option value="@((int)evt)">@evt.GetDescription()</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-3 mb-2 mb-md-0">
+                        <label for="historyFilterStatus" class="form-label">Status</label>
+                        <select id="historyFilterStatus" class="form-select shadow-sm" onchange="loadWebhookHistory(1)">
+                            <option value="">Todos os Status</option>
+                            <option value="@((int)EWebhookDispatchStatus.SUCCESS)">Sucesso</option>
+                            <option value="@((int)EWebhookDispatchStatus.FAILED)">Falhou</option>
+                            <option value="@((int)EWebhookDispatchStatus.PROCESSING)">Processando</option>
+                        </select>
+                    </div>
+
+                    <div class="col-12 col-md-1">
+                        <button type="button" class="btn btn-outline-info shadow-sm w-100" onclick="resetWebhookHistoryFilters()" title="Limpar Filtros">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <hr class="my-3" />
+
+                <div id="historyActionAlert" class="alert alert-dismissible fade show d-none mb-3" role="alert">
+                    <span id="historyActionAlertMessage"></span>
+                    <button type="button" class="btn-close shadow-none" onclick="$('#historyActionAlert').addClass('d-none')"></button>
+                </div>
+
+                <div id="webhookHistoryContainer">
+                    <div class="text-center py-5">
+                        <i class="fas fa-spinner fa-spin fa-2x text-muted mb-2"></i>
+                        <p class="text-muted mb-0">Carregando histórico...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary shadow-sm" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentHistoryPage = 1;
+
+    function loadWebhookHistory(page = 1) {
+        currentHistoryPage = page;
+        const webhookId = $('#historyFilterWebhook').val();
+        const triggerEvent = $('#historyFilterEvent').val();
+        const status = $('#historyFilterStatus').val();
+
+        $('#webhookHistoryContainer').html(`
+            <div class="text-center py-5">
+                <i class="fas fa-spinner fa-spin fa-2x text-muted mb-2"></i>
+                <p class="text-muted mb-0">Carregando histórico...</p>
+            </div>
+        `);
+
+        axios.get('/Settings/GetWebhookDispatchHistory', {
+            params: {
+                webhookId: webhookId || null,
+                triggerEvent: triggerEvent || null,
+                status: status || null,
+                page: page,
+                limit: 10
+            }
+        })
+        .then(function (response) {
+            $('#webhookHistoryContainer').html(response.data);
+        })
+        .catch(function (error) {
+            console.error('Erro ao carregar histórico de webhooks:', error);
+            $('#webhookHistoryContainer').html(`
+                <div class="alert alert-danger text-center my-3">
+                    <i class="fa-solid fa-triangle-exclamation me-1"></i>
+                    Erro ao carregar histórico. Por favor, tente novamente.
+                </div>
+            `);
+        });
+    }
+
+    function resetWebhookHistoryFilters() {
+        $('#historyFilterWebhook').val('');
+        $('#historyFilterEvent').val('');
+        $('#historyFilterStatus').val('');
+        loadWebhookHistory(1);
+    }
+
+    function redispatchWebhook(historyId, btnElement) {
+        if (!historyId) return;
+
+        const $btn = $(btnElement);
+        const originalHtml = $btn.html();
+
+        $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i> Enviando...');
+
+        axios.post('/Settings/RedispatchWebhook', { historyId: historyId })
+        .then(function (response) {
+            const data = response.data;
+            const $alert = $('#historyActionAlert');
+            const $alertMsg = $('#historyActionAlertMessage');
+
+            $alert.removeClass('d-none alert-success alert-danger alert-warning');
+
+            if (data && data.success) {
+                $alert.addClass('alert-success');
+                $alertMsg.text(data.message || 'Webhook disparado manualmente com sucesso!');
+                loadWebhookHistory(currentHistoryPage);
+            } else {
+                $alert.addClass('alert-danger');
+                $alertMsg.text(data ? data.message : 'Falha ao re-disparar o webhook.');
+            }
+
+            setTimeout(function () {
+                $alert.addClass('d-none');
+            }, 6000);
+        })
+        .catch(function (error) {
+            console.error('Erro ao re-disparar webhook:', error);
+            const $alert = $('#historyActionAlert');
+            $alert.removeClass('d-none alert-success alert-warning').addClass('alert-danger');
+            $('#historyActionAlertMessage').text('Erro ao se comunicar com o servidor para re-disparo.');
+
+            setTimeout(function () {
+                $alert.addClass('d-none');
+            }, 6000);
+        })
+        .finally(function () {
+            $btn.prop('disabled', false).html(originalHtml);
+        });
+    }
+</script>

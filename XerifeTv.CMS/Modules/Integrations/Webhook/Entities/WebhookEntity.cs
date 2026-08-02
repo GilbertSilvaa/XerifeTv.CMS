@@ -2,7 +2,7 @@
 using XerifeTv.CMS.Modules.Common.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 
-namespace XerifeTv.CMS.Modules.Integrations.Webhook;
+namespace XerifeTv.CMS.Modules.Integrations.Webhook.Entities;
 
 public sealed class WebhookEntity : BaseEntity
 {
