@@ -1,10 +1,11 @@
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Request;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Entities;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 
-namespace XerifeTv.CMS.Modules.Integrations.Webhook;
+namespace XerifeTv.CMS.Modules.Integrations.Webhook.Services;
 
 public sealed class WebhookService(IWebhookRepository repository) : IWebhookService
 {

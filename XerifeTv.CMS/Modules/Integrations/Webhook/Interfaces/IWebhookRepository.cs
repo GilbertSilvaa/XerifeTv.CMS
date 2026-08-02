@@ -1,4 +1,5 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Entities;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 
 namespace XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;

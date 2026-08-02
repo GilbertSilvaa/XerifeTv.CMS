@@ -1,4 +1,4 @@
-﻿@using XerifeTv.CMS.Modules.Common.Enums
+@using XerifeTv.CMS.Modules.Common.Enums
 @using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response
 @using XerifeTv.CMS.Modules.Integrations.Webhook.Enums
 
@@ -10,14 +10,28 @@
 
 <div class="d-flex justify-content-between align-items-center mb-3">
     @await Html.PartialAsync("_WebhookFormModal", webhookDtoEmpty)
+    @await Html.PartialAsync("_WebhookHistoryModal", Model)
 
-    <button class="btn btn-primary btn-sm shadow-sm"
-            role="button"
-            data-bs-toggle="modal"
-            data-bs-target="#webhookFormModal-@webhookDtoEmpty.Id">
-        <i class="fa-solid fa-plus"></i>
-        Novo webhook
-    </button>
+    <div>
+        <button class="btn btn-outline-info btn-sm shadow-sm"
+                type="button"
+                data-bs-toggle="modal"
+                data-bs-target="#webhookHistoryModal"
+                onclick="loadWebhookHistory(1)">
+            <i class="fa-solid fa-clock-rotate-left me-1"></i>
+            Histórico de disparos
+        </button>
+    </div>
+
+    <div>
+        <button class="btn btn-primary btn-sm shadow-sm"
+                role="button"
+                data-bs-toggle="modal"
+                data-bs-target="#webhookFormModal-@webhookDtoEmpty.Id">
+            <i class="fa-solid fa-plus"></i>
+            Novo webhook
+        </button>
+    </div>
 </div>
 
 <table class="table table-striped table-hover align-middle">
@@ -35,7 +49,7 @@
         @if (!Model.Any())
         {
             <tr>
-                <td colspan="5" class="text-center text-muted py-4">
+                <td colspan="6" class="text-center text-muted py-4">
                     Nenhum registro encontrado.
                 </td>
             </tr>

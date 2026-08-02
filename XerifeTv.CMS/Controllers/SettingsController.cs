@@ -1,7 +1,11 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.AuditLog.Interfaces;
+using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Request;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Entities;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
@@ -15,6 +19,7 @@ namespace XerifeTv.CMS.Controllers;
 public class SettingsController(
     IUserService userService,
     IWebhookService webhookService,
+    IWebhookDispatchHistoryService webhookDispatchHistoryService,
     IMediaDeliveryProfileService mediaDeliveryProfileService,
     IAuditLogService auditLogService,
     ILogger<SettingsController> logger) : Controller
@@ -171,5 +176,58 @@ public class SettingsController(
 
 
         return Redirect(Url.Action("Index") + "#webhook");
+    }
+
+    [HttpGet]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> GetWebhookDispatchHistory(
+        string? webhookId,
+        EWebhookTriggerEvent? triggerEvent,
+        EWebhookDispatchStatus? status,
+        int page = 1,
+        int limit = 10)
+    {
+        var result = await webhookDispatchHistoryService.GetHistoryAsync(webhookId, triggerEvent, status, page, limit);
+
+        if (result.IsFailure)
+        {
+            return PartialView("_WebhookHistoryTable", new PagedList<GetWebhookDispatchHistoryResponseDto>(1, 0, []));
+        }
+
+        return PartialView("_WebhookHistoryTable", result.Data);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> RedispatchWebhook([FromBody] RedispatchWebhookRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request?.HistoryId))
+        {
+            return Json(new { success = false, message = "ID de histórico inválido." });
+        }
+
+        var response = await webhookDispatchHistoryService.RedispatchAsync(request.HistoryId);
+
+        if (response.IsFailure)
+        {
+            return Json(new { success = false, message = response.Error.Description ?? "Falha ao re-disparar o webhook." });
+        }
+
+        var item = response.Data;
+
+        await this.AddAuditLogAsync(
+            auditLogService,
+            "WebhookHistory",
+            item?.Id ?? request.HistoryId,
+            $"disparou manualmente o webhook {item?.WebhookName}");
+
+        return Json(new
+        {
+            success = true,
+            message = item?.Status == EWebhookDispatchStatus.SUCCESS
+                ? "Webhook disparado com sucesso!"
+                : $"Disparo manual finalizado com status: {item?.Status}",
+            data = item
+        });
     }
 }

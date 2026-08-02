@@ -23,8 +23,9 @@ using XerifeTv.CMS.Modules.Dashboard.Interfaces;
 using XerifeTv.CMS.Modules.Franchise;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
-using XerifeTv.CMS.Modules.Integrations.Webhook;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Repositories;
+using XerifeTv.CMS.Modules.Integrations.Webhook.Services;
 using XerifeTv.CMS.Modules.Media.Delivery;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Media.Delivery.Services;
@@ -73,6 +74,7 @@ public static class ConfigureServices
         services.AddScoped<IMediaDeliveryProfileRepository, MediaDeliveryProfileRepository>();
         services.AddScoped<IContentSettingsRepository, ContentSettingsRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
+        services.AddScoped<IWebhookDispatchHistoryRepository, WebhookDispatchHistoryRepository>();
 
         return services;
     }
@@ -104,6 +106,7 @@ public static class ConfigureServices
         services.AddScoped<ILoginStrategy, BasicLoginStrategy>();
         services.AddScoped<ILoginStrategy, GoogleLoginStrategy>();
         services.AddScoped<IWebhookService, WebhookService>();
+        services.AddScoped<IWebhookDispatchHistoryService, WebhookDispatchHistoryService>();
 
         services.AddScoped<IMediaDeliveryProfileService, MediaDeliveryProfileService>();
         services.AddScoped<IMediaDeliveryUrlResolver, MediaDeliveryUrlResolver>();
