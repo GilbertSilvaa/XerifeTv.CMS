@@ -215,44 +215,102 @@
 
 @if (Model.TotalPageCount > 1)
 {
-    <div class="d-flex justify-content-between align-items-center mt-3">
-        <span class="text-muted">
-            Página @Model.CurrentPage de @Model.TotalPageCount
-        </span>
+    int currentPage = Model.CurrentPage;
+    int totalPages = (int)Model.TotalPageCount;
+    int maxPagesToShow = 3;
+    int half = maxPagesToShow / 2;
 
+    <div class="d-flex justify-content-center align-items-center mt-3">
         <ul class="pagination mb-0">
-            <li class="page-item @(!Model.HasPrevious ? "disabled" : "")">
+
+            <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
                 <button class="page-link shadow-none"
                         type="button"
-                        onclick="loadWebhookHistory(@(Model.CurrentPage - 1))">
-                    Anterior
+                        onclick="loadWebhookHistory(@(currentPage - 1))">
+                    &laquo;
                 </button>
             </li>
 
-            @{
-                int startPage = Math.Max(1, Model.CurrentPage - 2);
-                int endPage = Math.Min((int)Model.TotalPageCount, Model.CurrentPage + 2);
-            }
-
-            @for (int p = startPage; p <= endPage; p++)
+            @if (totalPages <= maxPagesToShow + 2)
             {
-                var pageNum = p;
-                <li class="page-item @(pageNum == Model.CurrentPage ? "active" : "")">
+                for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(currentPage == i ? "active" : "")">
+                        <button class="page-link shadow-none"
+                                type="button"
+                                onclick="loadWebhookHistory(@i)">
+                            @i
+                        </button>
+                    </li>
+                }
+            }
+            else
+            {
+                <!-- Primeira página -->
+                <li class="page-item @(currentPage == 1 ? "active" : "")">
                     <button class="page-link shadow-none"
                             type="button"
-                            onclick="loadWebhookHistory(@pageNum)">
-                        @pageNum
+                            onclick="loadWebhookHistory(1)">
+                        1
+                    </button>
+                </li>
+
+                @if (currentPage - half > 2)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+
+                int start = Math.Max(2, currentPage - half);
+                int end = Math.Min(totalPages - 1, currentPage + half);
+
+                if (currentPage <= half + 2)
+                {
+                    end = Math.Min(1 + maxPagesToShow, totalPages - 1);
+                }
+                else if (currentPage >= totalPages - half - 1)
+                {
+                    start = Math.Max(totalPages - maxPagesToShow, 2);
+                }
+
+               
+                @for (int i = start; i <= end; i++)
+                {
+                    <li class="page-item @(currentPage == i ? "active" : "")">
+                        <button class="page-link shadow-none"
+                                type="button"
+                                onclick="loadWebhookHistory(@i)">
+                            @i
+                        </button>
+                    </li>
+                }
+
+                @if (end < totalPages - 1)
+                {
+                    <li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>
+                }
+
+                <!-- Última página -->
+                <li class="page-item @(currentPage == totalPages ? "active" : "")">
+                    <button class="page-link shadow-none"
+                            type="button"
+                            onclick="loadWebhookHistory(@totalPages)">
+                        @totalPages
                     </button>
                 </li>
             }
 
-            <li class="page-item @(!Model.HasNext ? "disabled" : "")">
+            <li class="page-item @(Model.HasNext ? "" : "disabled")">
                 <button class="page-link shadow-none"
                         type="button"
-                        onclick="loadWebhookHistory(@(Model.CurrentPage + 1))">
-                    Próximo
+                        onclick="loadWebhookHistory(@(currentPage + 1))">
+                    &raquo;
                 </button>
             </li>
+
         </ul>
     </div>
 }
