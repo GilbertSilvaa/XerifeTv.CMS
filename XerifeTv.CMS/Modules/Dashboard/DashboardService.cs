@@ -29,7 +29,7 @@ public sealed class DashboardService(
 
     public async Task<Result<GetDashboardDataRequestDto>> GetAsync(string? userName = null)
     {
-        var today = DateTime.Today;
+        var today = DateTime.UtcNow;
         var currentMonthStart = new DateTime(today.Year, today.Month, 1);
 
         var rangesLast6Months = BuildLast6MonthRanges(today, currentMonthStart);
