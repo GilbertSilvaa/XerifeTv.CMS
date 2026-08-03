@@ -346,7 +346,12 @@ public class SeriesController(
     {
         var response = await episodesImporter.CancelImportAsync(dto.ImportId);
 
-        if (response.IsSuccess) return Ok(response.Data);
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(auditLogService, "Episode", dto.SeriesId, $"cancelou a importação de episódios da série {dto.SeriesTitle}");
+
+            return Ok(response.Data);
+        }
 
         return BadRequest(response.Error.Description ?? string.Empty);
     }

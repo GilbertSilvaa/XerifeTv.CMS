@@ -233,6 +233,8 @@
 
                     const cancelFormData = new FormData();
                     cancelFormData.append('importId', importId);
+                    cancelFormData.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                    cancelFormData.append('seriesTitle', "@Html.Raw(Model?.EpisodesDto?.SerieTitle)");
 
                     await fetch(`/Series/CancelImport`, {
                         method: 'POST',
