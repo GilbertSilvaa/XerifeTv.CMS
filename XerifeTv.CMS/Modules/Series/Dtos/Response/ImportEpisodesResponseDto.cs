@@ -4,4 +4,5 @@ public record ImportEpisodesResponseDto(
 	int TotalItemsCount,
 	int ImportedCount,
 	int ProgressCount,
-	int ProcessedCount);
+	int ProcessedCount, 
+	bool IsCancelled = false);

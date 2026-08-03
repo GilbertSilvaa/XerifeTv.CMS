@@ -209,6 +209,7 @@
             }
 
             $('#importEpisodesProgressModal').modal('show');
+            $('.close-modal').hide();
 
             var monitorProgressInterval = 0;
 
@@ -224,15 +225,53 @@
 
                 var importId = await response.text();
 
+                $('#btn-cancel-import').click(async function() {
+                    if (!confirm('Deseja realmente cancelar a importação?')) return;
+
+                    $(this).text('Cancelando...')
+                    $(this).attr('disabled', true);
+
+                    const cancelFormData = new FormData();
+                    cancelFormData.append('importId', importId);
+
+                    await fetch(`/Series/CancelImport`, {
+                        method: 'POST',
+                        body: cancelFormData
+                    });
+                });
+
                 // monitor progress records
                 monitorProgressInterval = setInterval(async () => {
                     var monitorResponse = await fetch(`/Series/MonitorImdbEpisodesImport?importId=${importId}`);
-                    const { importedCount, progressCount } = await monitorResponse.json();
+                    const { importedCount, progressCount, isCancelled } = await monitorResponse.json();
 
                     if (progressCount == 0) return;
 
                     $('.process .progress-bar').css('width', `${progressCount}%`);
                     $('.process span.status-percent').text(`${progressCount}%`);
+
+                    if (isCancelled) {
+                        clearInterval(monitorProgressInterval);
+
+                        $('.finish-process-container .success-count').text(importedCount);
+
+                        $('.process .progress-bar').css('width', '100%');
+                        $('.process span.status-percent').text('100%');
+                        $('.process span.status-text').text('Processo de importação cancelado.');
+
+                        setTimeout(() => {
+                            $('.process-container').hide();
+                            $('.finish-process-container').show();
+
+                            $('#btn-cancel-import').hide();
+                            $('.close-modal').show();
+                            $('.close-modal').text('Fechar');
+                            $('.close-modal').prop('disabled', false);
+                            $('.close-modal').off().click(() => location.reload());
+                        }, 1250);
+
+                        return;
+                    }
 
                     if (progressCount == 100) {
                         clearInterval(monitorProgressInterval);
@@ -247,13 +286,15 @@
                             $('.process-container').hide();
                             $('.finish-process-container').show();
 
+                            $('#btn-cancel-import').hide();
+                            $('.close-modal').show();
                             $('.close-modal').text('Fechar');
                             $('.close-modal').prop('disabled', false);
                             $('.close-modal').off().click(() => location.reload());
                         }, 1250);
                     }
 
-                }, 2500);
+                }, 2000);
             }
             catch (error) {
                 console.error(error);
@@ -267,6 +308,8 @@
                     $('.process-container').hide();
                     $('.finish-process-container').show();
 
+                    $('#btn-cancel-import').hide();
+                    $('.close-modal').show();
                     $('.close-modal').text('Fechar');
                     $('.close-modal').prop('disabled', false);
                     $('.close-modal').off().click(() => location.reload());
