@@ -8,101 +8,132 @@ using XerifeTv.CMS.Modules.Series.Interfaces;
 namespace XerifeTv.CMS.Modules.Series.Importers;
 
 public class EpisodesImdbImporter(
-	ISeriesService service,
-	IImdbService imdbService,
-	ICacheService cacheService) : IEpisodesImporter
+    ISeriesService service,
+    IImdbService imdbService,
+    ICacheService cacheService) : IEpisodesImporter
 {
-	public async Task<Result<string>> ImportAsync(string seriesId)
-	{
-		var importId = Guid.NewGuid().ToString();
-		var emptyDto = new ImportEpisodesResponseDto(0, 0, 0, 0);
-		cacheService.SetValue<ImportEpisodesResponseDto>(importId, emptyDto);
+    public async Task<Result<string>> ImportAsync(string seriesId)
+    {
+        var importId = Guid.NewGuid().ToString();
+        var emptyDto = new ImportEpisodesResponseDto(0, 0, 0, 0);
+        cacheService.SetValue<ImportEpisodesResponseDto>(importId, emptyDto);
 
-		_ = HandleImportAsync(seriesId, importId);
+        _ = HandleImportAsync(seriesId, importId);
 
-		await Task.Delay(300);
-		return Result<string>.Success(importId);
-	}
+        await Task.Delay(300);
+        return Result<string>.Success(importId);
+    }
 
-	public async Task<Result<ImportEpisodesResponseDto>> MonitorImportAsync(string importId)
-	{
-		var response = cacheService.GetValue<ImportEpisodesResponseDto>(importId);
+    public async Task<Result<ImportEpisodesResponseDto>> MonitorImportAsync(string importId)
+    {
+        var response = cacheService.GetValue<ImportEpisodesResponseDto>(importId);
 
-		if (response == null)
-			return Result<ImportEpisodesResponseDto>.Failure(
-			  new Error("400", $"Import Id {importId} não encontrado"));
+        if (response == null)
+            return Result<ImportEpisodesResponseDto>.Failure(
+              new Error("400", $"Import Id {importId} não encontrado"));
 
-		await Task.Delay(500);
-		return Result<ImportEpisodesResponseDto>.Success(response);
-	}
+        return Result<ImportEpisodesResponseDto>.Success(response);
+    }
 
-	private async Task HandleImportAsync(string seriesId, string importId)
-	{
-		try
-		{
-			var seriesResult = await service.GetAsync(seriesId);
-			if (seriesResult.IsFailure) throw new Exception(seriesResult.Error.Description);
+    public async Task<Result<bool>> CancelImportAsync(string importId)
+    {
+        var response = cacheService.GetValue<ImportEpisodesResponseDto>(importId);
 
-			var seriesImdbResult = await imdbService.GetSeriesByImdbIdAsync(seriesResult.Data?.ImdbId ?? string.Empty);
-			if (seriesImdbResult.IsFailure) throw new Exception(seriesImdbResult.Error.Description);
+        if (response == null)
+            return Result<bool>.Failure(new Error("400", $"Import Id {importId} não encontrado"));
 
-			var seriesEpisodesImdbCount = seriesImdbResult.Data?.NumberEpisodes ?? 0;
-			var createdEpisodesCount = 0;
-			var episodeCreationAttemptsCount = 0;
+        cacheService.SetValue<bool>($"cancelled_{importId}", true);
+        return Result<bool>.Success(true);
+    }
+
+    private async Task HandleImportAsync(string seriesId, string importId)
+    {
+        try
+        {
+            var seriesResult = await service.GetAsync(seriesId);
+            if (seriesResult.IsFailure) throw new Exception(seriesResult.Error.Description);
+
+            var seriesImdbResult = await imdbService.GetSeriesByImdbIdAsync(seriesResult.Data?.ImdbId ?? string.Empty);
+            if (seriesImdbResult.IsFailure) throw new Exception(seriesImdbResult.Error.Description);
+
+            var seriesEpisodesImdbCount = seriesImdbResult.Data?.NumberEpisodes ?? 0;
+            var createdEpisodesCount = 0;
+            var episodeCreationAttemptsCount = 0;
 
             void UpdateProgress()
-			{
-				var progressCount = (int)(((float)episodeCreationAttemptsCount / seriesEpisodesImdbCount) * 100);
-				var _dto = new ImportEpisodesResponseDto(
-					TotalItemsCount: seriesEpisodesImdbCount,
-					ImportedCount: createdEpisodesCount,
-					ProgressCount: progressCount,
-					ProcessedCount: episodeCreationAttemptsCount);
+            {
+                bool importCancelled = cacheService.GetValue<bool>($"cancelled_{importId}") == true;
 
-				cacheService.SetValue<ImportEpisodesResponseDto>(importId, _dto);
-			}
+                var progressCount = (int)(((float)episodeCreationAttemptsCount / seriesEpisodesImdbCount) * 100);
+                var _dto = new ImportEpisodesResponseDto(
+                    TotalItemsCount: seriesEpisodesImdbCount,
+                    ImportedCount: createdEpisodesCount,
+                    ProgressCount: progressCount,
+                    ProcessedCount: episodeCreationAttemptsCount,
+                    IsCancelled: importCancelled);
 
-			for (int i = 1; i <= seriesImdbResult?.Data?.NumberSeasons; i++)
-			{
-				var result = await imdbService.GetSeriesEpisodesBySeasonAsync(seriesResult.Data!.ImdbId, i);
-				if (result.IsFailure || result.Data == null) continue;
+                cacheService.SetValue<ImportEpisodesResponseDto>(importId, _dto);
 
-				foreach (var episode in result.Data.Episodes)
-				{
-					var newEpisodeResult = await service.CreateEpisodeAsync(new CreateEpisodeRequestDto
-					{
-						SerieId = seriesResult.Data.Id,
-						Title = episode.Name,
-						BannerUrl = episode.BannerUrl,
-						Number = episode.EpisodeNumber,
-						Season = episode.SeasonNumber,
-						VideoDuration = episode.DurationInSeconds,
-						IsDisabled = true
-					});
+                if (importCancelled)
+                    throw new OperationCanceledException("Importação cancelada pelo usuário");
+            }
 
-					if (newEpisodeResult.IsSuccess) createdEpisodesCount++;
+            for (int i = 1; i <= seriesImdbResult?.Data?.NumberSeasons; i++)
+            {
+                var result = await imdbService.GetSeriesEpisodesBySeasonAsync(seriesResult.Data!.ImdbId, i);
+                if (result.IsFailure || result.Data == null) continue;
 
-					episodeCreationAttemptsCount++;
-					UpdateProgress();
-				}
-			}
-		}
-		catch (Exception)
-		{
-			var monitorResponse = await MonitorImportAsync(importId);
+                foreach (var episode in result.Data.Episodes)
+                {
+                    var newEpisodeResult = await service.CreateEpisodeAsync(new CreateEpisodeRequestDto
+                    {
+                        SerieId = seriesResult.Data.Id,
+                        Title = episode.Name,
+                        BannerUrl = episode.BannerUrl,
+                        Number = episode.EpisodeNumber,
+                        Season = episode.SeasonNumber,
+                        VideoDuration = episode.DurationInSeconds,
+                        IsDisabled = true
+                    });
 
-			if (monitorResponse.IsSuccess)
-			{
-				var currentProgress = monitorResponse.Data;
-				var _newDto = new ImportEpisodesResponseDto(
-					TotalItemsCount: currentProgress?.TotalItemsCount ?? 0,
-					ImportedCount: currentProgress?.ImportedCount ?? 0,
-					ProcessedCount: currentProgress?.ProcessedCount ?? 0,
-					ProgressCount: 100);
+                    if (newEpisodeResult.IsSuccess) createdEpisodesCount++;
 
-				cacheService.SetValue<ImportEpisodesResponseDto>(importId, _newDto);
-			}
-		}
-	}
+                    episodeCreationAttemptsCount++;
+                    UpdateProgress();
+                }
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            var monitorResponse = await MonitorImportAsync(importId);
+
+            if (monitorResponse.IsSuccess)
+            {
+                var currentProgress = monitorResponse.Data ?? new ImportEpisodesResponseDto(0, 0, 0, 0);
+                var progress = currentProgress with
+                {
+                    ProgressCount = 100,
+                    IsCancelled = true
+                };
+
+                cacheService.SetValue<ImportEpisodesResponseDto>(importId, progress);
+            }
+        }
+        catch (Exception)
+        {
+            var monitorResponse = await MonitorImportAsync(importId);
+
+            if (monitorResponse.IsSuccess)
+            {
+                var currentProgress = monitorResponse.Data ?? new ImportEpisodesResponseDto(0, 0, 0, 0);
+                var progress = currentProgress with
+                {
+                    ProgressCount = 100
+                };
+
+                cacheService.SetValue<ImportEpisodesResponseDto>(importId, progress);
+            }
+        }
+    }
 }
 

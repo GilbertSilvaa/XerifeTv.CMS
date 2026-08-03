@@ -339,5 +339,16 @@ public class SeriesController(
 
         return BadRequest(response.Error.Description ?? string.Empty);
     }
+
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
+    public async Task<IActionResult> CancelImport(CancelImportEpisodesRequestDto dto)
+    {
+        var response = await episodesImporter.CancelImportAsync(dto.ImportId);
+
+        if (response.IsSuccess) return Ok(response.Data);
+
+        return BadRequest(response.Error.Description ?? string.Empty);
+    }
 }
 
