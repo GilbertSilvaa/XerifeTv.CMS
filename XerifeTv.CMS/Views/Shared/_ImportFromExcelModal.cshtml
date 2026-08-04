@@ -1,4 +1,8 @@
-﻿<div class="modal fade importFromExcelModal"
+﻿@using XerifeTv.CMS.Views.Shared.Models
+
+@model ImportFromExcelModalViewModel
+
+<div class="modal fade importFromExcelModal"
      id="importFromExcelModal"
      tabindex="-1"
      aria-labelledby="importFromExcelModal-Label"
@@ -10,7 +14,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="importFromExcelModal-Label">
-                    Cadastrar Canais via Planilha
+                    @Model.Title
                 </h1>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -26,8 +30,8 @@
                                      style="height: 24px" />
                                 <span class="fw-bold">Template da Planilha</span>
                             </div>
-                            <a href="~/templates/template_spreedsheet_channels.xlsx"
-                               download="spreadsheet_channels.xlsx"
+                            <a href="~/templates/@Model.TemplateFileName"
+                               download="@Model.TemplateDownloadName"
                                class="btn btn-sm btn-secondary shadow-sm">
                                 Download
                             </a>
@@ -81,13 +85,13 @@
                             <div class="w-50 p-4 bg-body-tertiary rounded shadow-sm d-flex flex-column align-items-center justify-content-center gap-2">
                                 <i class="fa-regular fa-circle-check text-success fs-1"></i>
                                 <span class="fs-3 fw-bold success-count">0</span>
-                                <span>Itens cadastrados/atualizados</span>
+                                <span class="text-center">Itens cadastrados/atualizados</span>
                             </div>
 
                             <div class="w-50 p-4 bg-body-tertiary rounded shadow-sm d-flex flex-column align-items-center justify-content-center gap-2">
                                 <i class="fa-regular fa-circle-xmark text-danger fs-1"></i>
                                 <span class="fs-3 fw-bold fail-count">0</span>
-                                <span>Itens que retornaram erro</span>
+                                <span class="text-center">Itens que retornaram erro</span>
                             </div>
                         </div>
 
@@ -137,7 +141,7 @@
 
                     <button type="button"
                             class="btn btn-success shadow-sm btn-excel-file-submit"
-                            data-controller="Channels"
+                            data-controller="@Model.Controller"
                             data-action="RegisterBySpreadsheet"
                             data-monitor-progress-action="MonitorSpreadsheetRegistration"
                             disabled>
@@ -148,4 +152,3 @@
         </div>
     </div>
 </div>
-

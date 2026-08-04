@@ -9,7 +9,13 @@
     ViewData["Title"] = "Séries";
 }
 
-@await Html.PartialAsync("_ImportFromExcelModal")
+@await Html.PartialAsync("_ImportFromExcelModal", new ImportFromExcelModalViewModel
+{
+    Title = "Cadastrar/Atualizar Séries via Planilha",
+    Controller = "Series",
+    TemplateFileName = "template_spreedsheet_series.xlsx",
+    TemplateDownloadName = "spreadsheet_series.xlsx"
+})
 
 <div class="container">
     <header>
