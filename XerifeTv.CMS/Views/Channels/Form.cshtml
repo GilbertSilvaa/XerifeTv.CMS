@@ -11,7 +11,13 @@
     bool isMediaDeliveryProfileSelected = !string.IsNullOrWhiteSpace(Model?.ChannelDto?.MediaDeliveryProfileId);
 }
 
-@await Html.PartialAsync("_ImportFromExcelModal")
+@await Html.PartialAsync("_ImportFromExcelModal", new ImportFromExcelModalViewModel
+{
+    Title = "Cadastrar Canais via Planilha",
+    Controller = "Channels",
+    TemplateFileName = "template_spreedsheet_channels.xlsx",
+    TemplateDownloadName = "spreadsheet_channels.xlsx"
+})
 
 <div class="container">
     <header>

@@ -11,7 +11,13 @@
     bool isMediaDeliveryProfileSelected = !string.IsNullOrWhiteSpace(Model?.MovieDto?.MediaDeliveryProfileId);
 }
 
-@await Html.PartialAsync("_ImportFromExcelModal")
+@await Html.PartialAsync("_ImportFromExcelModal", new ImportFromExcelModalViewModel
+{
+    Title = "Cadastrar/Atualizar Filmes via Planilha",
+    Controller = "Movies",
+    TemplateFileName = "template_spreedsheet_movies.xlsx",
+    TemplateDownloadName = "spreadsheet_movies.xlsx"
+})
 
 <div class="container">
     <header>
