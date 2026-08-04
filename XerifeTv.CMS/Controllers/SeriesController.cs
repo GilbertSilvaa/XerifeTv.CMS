@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
@@ -306,6 +307,22 @@ public class SeriesController(
 
     [Authorize(Roles = "admin, common")]
     [HttpPost]
+    public async Task<IActionResult> CancelSpreadsheetRegistration(CancelSpreadsheetBatchImporterRequestDto dto)
+    {
+        var response = await spreadsheetBatchImporter.CancelImportAsync(dto.ImportId);
+
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(auditLogService, "Series", dto.FileName, $"cancelou a importação de séries da planilha {dto.FileName}");
+
+            return Ok(response.Data);
+        }
+
+        return BadRequest(response.Error.Description ?? string.Empty);
+    }
+
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
     public async Task<IActionResult> ImportEpisodesByImdbId(ImportEpisodesRequestDto dto)
     {
         if (string.IsNullOrEmpty(dto.SeriesId))
@@ -342,7 +359,7 @@ public class SeriesController(
 
     [Authorize(Roles = "admin, common")]
     [HttpPost]
-    public async Task<IActionResult> CancelImport(CancelImportEpisodesRequestDto dto)
+    public async Task<IActionResult> CancelImportEpisodes(CancelImportEpisodesRequestDto dto)
     {
         var response = await episodesImporter.CancelImportAsync(dto.ImportId);
 

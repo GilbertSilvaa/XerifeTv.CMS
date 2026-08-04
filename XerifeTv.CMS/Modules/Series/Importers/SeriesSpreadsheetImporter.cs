@@ -22,12 +22,11 @@ public class SeriesSpreadsheetImporter(
     public async Task<Result<string>> ImportAsync(IFormFile file)
     {
         var importId = Guid.NewGuid().ToString();
-        var emptyDto = new ImportSpreadsheetResponseDto(0, 0, 0, 0, [], 0);
+        var emptyDto = new ImportSpreadsheetResponseDto(ErrorList: []);
         cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
 
         _ = HandleImportAsync(file, importId);
 
-        await Task.Delay(300);
         return Result<string>.Success(importId);
     }
 
@@ -39,8 +38,18 @@ public class SeriesSpreadsheetImporter(
             return Result<ImportSpreadsheetResponseDto>.Failure(
               new Error("400", $"Import Id {importId} não encontrado"));
 
-        await Task.Delay(500);
         return Result<ImportSpreadsheetResponseDto>.Success(response);
+    }
+
+    public async Task<Result<bool>> CancelImportAsync(string importId)
+    {
+        var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+
+        if (response == null)
+            return Result<bool>.Failure(new Error("400", $"Import Id {importId} não encontrado"));
+
+        cacheService.SetValue<bool>($"cancelled_{importId}", true);
+        return Result<bool>.Success(true);
     }
 
     private async Task HandleImportAsync(IFormFile file, string importId)
@@ -88,6 +97,8 @@ public class SeriesSpreadsheetImporter(
 
             void UpdateProgress()
             {
+                bool importCancelled = cacheService.GetValue<bool>($"cancelled_{importId}") == true;
+
                 var successCount = seriesSuccessCount + episodesSuccessCount;
                 var failCount = seriesFailCount + episodesFailCount;
                 var totalCount = spreadsheetSeriesResult.Length + spreadsheetEpisodesResult.Length;
@@ -99,9 +110,13 @@ public class SeriesSpreadsheetImporter(
                     FailCount: failCount,
                     ProcessedCount: failCount + successCount,
                     ErrorList: [.. errorList],
-                    ProgressCount: progressCount);
+                    ProgressCount: progressCount,
+                    IsCancelled: importCancelled);
 
                 cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
+
+                if (importCancelled)
+                    throw new OperationCanceledException("Importação cancelada pelo usuário");
             }
 
             foreach (var item in spreadsheetSeriesResult)
@@ -285,26 +300,42 @@ public class SeriesSpreadsheetImporter(
                 await Task.Delay(500);
             }
         }
+        catch (OperationCanceledException)
+        {
+            var monitorResponse = await MonitorImportAsync(importId);
+
+            if (monitorResponse.IsSuccess)
+            {
+                var currentProgress = monitorResponse.Data ?? new ImportSpreadsheetResponseDto(ErrorList: []);
+                var errorList = currentProgress?.ErrorList.ToList() ?? [];
+
+                var progress = currentProgress! with
+                {
+                    ErrorList = [.. errorList],
+                    ProgressCount = 100,
+                    IsCancelled = true
+                };
+
+                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, progress);
+            }
+        }
         catch (Exception ex)
         {
             var monitorResponse = await MonitorImportAsync(importId);
 
             if (monitorResponse.IsSuccess)
             {
-                var currentProgress = monitorResponse.Data;
-                var failCount = currentProgress?.FailCount ?? 0;
+                var currentProgress = monitorResponse.Data ?? new ImportSpreadsheetResponseDto(ErrorList: []);
                 var errorList = currentProgress?.ErrorList.ToList() ?? [];
                 errorList.Add(ex.InnerException?.Message ?? ex.Message);
 
-                var _newDto = new ImportSpreadsheetResponseDto(
-                    TotalItemsCount: currentProgress?.TotalItemsCount,
-                    SuccessCount: currentProgress?.SuccessCount,
-                    FailCount: failCount,
-                    ProcessedCount: currentProgress?.ProcessedCount,
-                    ErrorList: [.. errorList],
-                    ProgressCount: 100);
+                var progress = currentProgress! with
+                {
+                    ErrorList = [.. errorList],
+                    ProgressCount = 100
+                };
 
-                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
+                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, progress);
             }
         }
     }

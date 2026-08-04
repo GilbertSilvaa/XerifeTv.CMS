@@ -7,6 +7,7 @@ public interface ISpreadsheetBatchImporter
 {
     Task<Result<string>> ImportAsync(IFormFile file);
     Task<Result<ImportSpreadsheetResponseDto>> MonitorImportAsync(string importId);
+    Task<Result<bool>> CancelImportAsync(string importId);
 }
 
 public interface ISpreadsheetBatchImporter<TService> : ISpreadsheetBatchImporter;

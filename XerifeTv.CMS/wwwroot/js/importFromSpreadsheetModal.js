@@ -1,140 +1,168 @@
 ﻿// upload excel file 
 $('.importExcelFile').on('change', function () {
-  const file = $(this).prop('files')[0];
-  if (!file) return;
+    const file = $(this).prop('files')[0];
+    if (!file) return;
 
-  $('.file-uploaded-name i').addClass('fa-solid fa-file-excel');
-  $('.file-uploaded-name span').text(file.name);
-  $('.btn-excel-file-submit').prop('disabled', false);
+    $('.file-uploaded-name i').addClass('fa-solid fa-file-excel');
+    $('.file-uploaded-name span').text(file.name);
+    $('.btn-excel-file-submit').prop('disabled', false);
 });
 
 // when closing the modal reset form
 $('.importFromExcelModal').on('hidden.bs.modal', () => {
-  $('.importExcelFile').val('');
-  $('.file-uploaded-name i').removeClass('fa-solid fa-file-excel');
-  $('.file-uploaded-name span').text('');
-  $('.btn-excel-file-submit').text('Cadastrar').prop('disabled', true);
+    $('.importExcelFile').val('');
+    $('.file-uploaded-name i').removeClass('fa-solid fa-file-excel');
+    $('.file-uploaded-name span').text('');
+    $('.btn-excel-file-submit').text('Cadastrar').prop('disabled', true);
 });
 
 // submit spreadsheet
 $('.btn-excel-file-submit').on('click', async function () {
-  if (!confirm('Confirmar ação?')) return;
+    if (!confirm('Confirmar ação?')) return;
 
-  const btn = this;
-  const file = $('.importExcelFile').prop('files')[0];
-  if (!file) return;
+    const btn = this;
+    const file = $('.importExcelFile').prop('files')[0];
+    if (!file) return;
 
-  const formData = new FormData();
-  formData.append('file', file);
+    const formData = new FormData();
+    formData.append('file', file);
 
-  const controller = $(btn).data('controller');
-  const action = $(btn).data('action');
-  const actionMonitorProgress = $(btn).data('monitorProgressAction');
+    const controller = $(btn).data('controller');
+    const action = $(btn).data('action');
+    const actionMonitorProgress = $(btn).data('monitorProgressAction');
 
-  var monitorProgressInterval = 0;
+    var monitorProgressInterval = 0;
 
-  try {
-    $(btn).text('Processando...').prop('disabled', true);
-    $('.isBackgroundJob').prop('disabled', true);
+    try {
+        $(btn).text('Processando...').prop('disabled', true);
+        $('.isBackgroundJob').prop('disabled', true);
 
-    if ($('.isBackgroundJob').is(':checked')) {
-      const formDataBackgroundJob = new FormData();
-      formDataBackgroundJob.append('spreadsheetFile', file);
+        if ($('.isBackgroundJob').is(':checked')) {
+            const formDataBackgroundJob = new FormData();
+            formDataBackgroundJob.append('spreadsheetFile', file);
 
-      const controllerType = controller.toUpperCase();
-      const backgroundJobTypes = {
-        SERIES: 'REGISTER_SPREADSHEET_SERIES',
-        CHANNELS: 'REGISTER_SPREADSHEET_CHANNELS',
-        MOVIES: 'REGISTER_SPREADSHEET_MOVIES',
-      };
+            const controllerType = controller.toUpperCase();
+            const backgroundJobTypes = {
+                SERIES: 'REGISTER_SPREADSHEET_SERIES',
+                CHANNELS: 'REGISTER_SPREADSHEET_CHANNELS',
+                MOVIES: 'REGISTER_SPREADSHEET_MOVIES',
+            };
 
-      const backgroundJobType = backgroundJobTypes[controllerType] || 'REGISTER_SPREADSHEET_MOVIES';
+            const backgroundJobType = backgroundJobTypes[controllerType] || 'REGISTER_SPREADSHEET_MOVIES';
 
-      formDataBackgroundJob.append('type', backgroundJobType);
+            formDataBackgroundJob.append('type', backgroundJobType);
 
-      await fetch(`/BackgroundJobQueue/AddJobInQueueSpreadsheetRegisters`, {
-        method: 'POST',
-        body: formDataBackgroundJob
-      });
+            await fetch(`/BackgroundJobQueue/AddJobInQueueSpreadsheetRegisters`, {
+                method: 'POST',
+                body: formDataBackgroundJob
+            });
 
-      location.replace(`/${controller}`);
-      return;
-    }
+            location.replace(`/${controller}`);
+            return;
+        }
 
-    $('.isBackgroundJob').parent().hide();
-    $('.select-file-container').hide();
-    $('.importFromExcelModal .btn-close').hide();
-    $('.process-file-container').show();
+        const btnCancelRegistration = $('.btn-cancel-registration');
+        const cancelAction = $(btnCancelRegistration).data('cancelAction');
 
-    // submit file
-    const response = await fetch(`/${controller}/${action}`, {
-      method: 'POST',
-      body: formData
-    });
+        $(btn).hide();
+        $(btnCancelRegistration).show();
 
-    const importId = await response.text();
+        $('.isBackgroundJob').parent().hide();
+        $('.select-file-container').hide();
+        $('.importFromExcelModal .btn-close').hide();
+        $('.process-file-container').show();
 
-    // monitor progress records
-    monitorProgressInterval = setInterval(async () => {
-
-      var monitorResponse = await fetch(`/${controller}/${actionMonitorProgress}?importId=${importId}`);
-      const { successCount, failCount, errorList, progressCount } = await monitorResponse.json();
-
-      if (progressCount == 0) return;
-
-      $('.process .progress-bar').css('width', `${progressCount}%`);
-      $('.process span.status-percent').text(`${progressCount}%`);
-
-      if (progressCount == 100) {
-        clearInterval(monitorProgressInterval);
-
-        $('.finish-process-container .success-count').text(successCount);
-        $('.finish-process-container .fail-count').text(failCount);
-
-        $(errorList).each((_, message) => {
-          const errorItem = document.createElement('li');
-          errorItem.textContent = message;
-          errorItem.classList.add('list-group-item');
-          $('.finish-process-container .errorList .list-group').append(errorItem);
+        // submit file
+        const response = await fetch(`/${controller}/${action}`, {
+            method: 'POST',
+            body: formData
         });
 
-        if (errorList.length > 0) $('.finish-process-container .errorList').show();
+        const importId = await response.text();
 
+        $(btnCancelRegistration).click(async function () {
+            if (!confirm('Deseja realmente cancelar a importação?')) return;
+
+            $(this).text('Cancelando...')
+            $(this).attr('disabled', true);
+
+            const cancelFormData = new FormData();
+            cancelFormData.append('importId', importId);
+            cancelFormData.append('fileName', file.name);
+
+            await fetch(`/${controller}/${cancelAction}`, {
+                method: 'POST',
+                body: cancelFormData
+            });
+        });
+
+        // monitor progress records
+        monitorProgressInterval = setInterval(async () => {
+
+            var monitorResponse = await fetch(`/${controller}/${actionMonitorProgress}?importId=${importId}`);
+            const { successCount, failCount, errorList, progressCount, isCancelled } = await monitorResponse.json();
+
+            if (progressCount == 0) return;
+
+            $('.process .progress-bar').css('width', `${progressCount}%`);
+            $('.process span.status-percent').text(`${progressCount}%`);
+
+            if (progressCount == 100 || isCancelled) {
+                clearInterval(monitorProgressInterval);
+
+                $('.finish-process-container .success-count').text(successCount);
+                $('.finish-process-container .fail-count').text(failCount);
+
+                $(errorList).each((_, message) => {
+                    const errorItem = document.createElement('li');
+                    errorItem.textContent = message;
+                    errorItem.classList.add('list-group-item');
+                    $('.finish-process-container .errorList .list-group').append(errorItem);
+                });
+
+                if (errorList.length > 0) $('.finish-process-container .errorList').show();
+
+                $('.process .progress-bar').css('width', '100%');
+                $('.process span.status-percent').text('100%');
+                $('.process span.status-text').text(
+                    isCancelled
+                        ? 'Processo de cadastros cancelado.'
+                        : 'Processo de cadastros finalizado.'
+                );
+
+                setTimeout(() => {
+                    $('.process-file-container').hide();
+                    $('.finish-process-container').show();
+
+                    $(btnCancelRegistration).hide();
+                    $(btn).show();
+                    $(btn).text('Pronto').prop('disabled', false);
+                    $(btn).off().click(() => location.replace(`/${controller}`));
+                }, 1250);
+            }
+
+        }, 2500);
+    }
+    catch (error) {
+        if (!error) return;
+        const errorItem = document.createElement('li');
+        errorItem.textContent = String(error);
+        errorItem.classList.add('list-group-item');
+
+        $('.finish-process-container .errorList .list-group').append(errorItem);
+        $('.finish-process-container .errorList').show();
+
+        clearInterval(monitorProgressInterval);
         $('.process .progress-bar').css('width', '100%');
         $('.process span.status-percent').text('100%');
         $('.process span.status-text').text('Processo de cadastros finalizado.');
 
         setTimeout(() => {
-          $('.process-file-container').hide();
-          $('.finish-process-container').show();
+            $('.process-file-container').hide();
+            $('.finish-process-container').show();
 
-          $(btn).text('Pronto').prop('disabled', false);
-          $(btn).off().click(() => location.replace(`/${controller}`));
+            $(btn).text('Pronto').prop('disabled', false);
+            $(btn).off().click(() => location.replace(`/${controller}`));
         }, 1250);
-      }
-
-    }, 2500);
-  }
-  catch (error) {
-    if (!error) return;
-    const errorItem = document.createElement('li');
-    errorItem.textContent = String(error);
-    errorItem.classList.add('list-group-item');
-
-    $('.finish-process-container .errorList .list-group').append(errorItem);
-    $('.finish-process-container .errorList').show();
-
-    clearInterval(monitorProgressInterval);
-    $('.process .progress-bar').css('width', '100%');
-    $('.process span.status-percent').text('100%');
-    $('.process span.status-text').text('Processo de cadastros finalizado.');
-
-    setTimeout(() => {
-      $('.process-file-container').hide();
-      $('.finish-process-container').show();
-
-      $(btn).text('Pronto').prop('disabled', false);
-      $(btn).off().click(() => location.replace(`/${controller}`));
-    }, 1250);
-  }
+    }
 });
