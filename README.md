@@ -444,35 +444,19 @@ The public API is documented through OpenAPI and Scalar.
 
 ## Screenshots
 
-The repository contains UI assets, but no committed product screenshots were verified during this README rewrite. Capture current screens and replace the placeholders below.
+![Dashboard](https://i.ibb.co/nGsz090/dashboard.png)
 
-> Screenshot placeholder:
-> Dashboard overview
-> Capture `Home/Index` after logging in as an administrator.
+![Sigin](https://i.ibb.co/BH4y7kkS/Login.png)
 
-> Screenshot placeholder:
-> Login screen
-> Capture `Users/SignIn` showing the basic and Google login options.
+![Movies](https://i.ibb.co/4RdX28qC/movies-Index.png)
 
-> Screenshot placeholder:
-> Movie management
-> Capture `Movies/Index` with filters, pagination, and import controls.
+![Episodes Series](https://i.ibb.co/Fb5VPYVm/Series-Episodes.png)
 
-> Screenshot placeholder:
-> Series episodes workflow
-> Capture `Series/Episodes` with season filtering and episode actions.
+![Background Jobs](https://i.ibb.co/7xVPYS6b/Background-Index.png)
 
-> Screenshot placeholder:
-> Background jobs
-> Capture `BackgroundJobQueue/Index` showing job status, progress, and cancellation.
+![Settings](https://i.ibb.co/KpF82qpN/Settings-Web-Hooks.png)
 
-> Screenshot placeholder:
-> Settings and webhooks
-> Capture `Settings/Index` with webhook configuration and dispatch history.
-
-> Screenshot placeholder:
-> Scalar API reference
-> Capture `/Api` showing the Content API documentation.
+![Api Content](https://i.ibb.co/zh8spTvL/Scalar.png)
 
 ## Folder Structure
 
