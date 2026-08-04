@@ -131,6 +131,46 @@ public class BackgroundJobQueueController(
 
     [HttpGet]
     [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> GetJobsPartial(int? currentPage, string? username, EBackgroundJobStatus? status)
+    {
+        var usernameSearch = User.Identity?.Name;
+
+        if (User.IsInRole("admin"))
+        {
+            usernameSearch = username ?? User.Identity?.Name;
+        }
+
+        var jobsResult = await service.GetByFilterAsync(new GetBackgroundJobsByFilterRequestDto(
+            order: EBackgroundJobOrderFilter.REGISTRATION_DATE_DESC,
+            limitResults: limitResultsPage,
+            currentPage: currentPage ?? 1,
+            responsibleUsername: usernameSearch,
+            status));
+
+        var modelView = new BackgroundJobQueueModelView
+        {
+            Jobs = jobsResult.IsSuccess ? (jobsResult.Data?.Items ?? []) : []
+        };
+
+        if (User.IsInRole("admin"))
+        {
+            var usersResult = await userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
+            if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => u.Role != EUserRole.VISITOR) ?? [];
+        }
+
+        ViewBag.CurrentPage = jobsResult.Data?.CurrentPage;
+        ViewBag.TotalPages = jobsResult.Data?.TotalPageCount ?? 1;
+        ViewBag.HasNextPage = jobsResult.Data?.HasNext;
+        ViewBag.HasPrevPage = jobsResult.Data?.HasPrevious;
+        ViewBag.Username = usernameSearch;
+        ViewBag.Status = status != null ? $"{(int)status}" : string.Empty;
+
+        return PartialView("_JobListPartial", modelView);
+    }
+
+
+    [HttpGet]
+    [Authorize(Roles = "admin, common")]
     public async Task GetJobsNotification(CancellationToken cancellationToken)
     {
         Response.Headers.Append("Content-Type", "text/event-stream");
