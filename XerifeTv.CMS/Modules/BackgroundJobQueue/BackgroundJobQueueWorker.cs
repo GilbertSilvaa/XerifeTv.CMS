@@ -1,5 +1,6 @@
 
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+using XerifeTv.CMS.Modules.Abstractions.Services;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Request;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
@@ -11,6 +12,7 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue;
 
 public class BackgroundJobQueueWorker(
     IServiceProvider serviceProvider,
+    ICacheService cacheService,
     ILogger<BackgroundJobQueueWorker> logger) : BackgroundService
 {
     private const int MaxConcurrentJobs = 2;
@@ -64,13 +66,50 @@ public class BackgroundJobQueueWorker(
 
             _ = Task.Run(async () =>
             {
+                using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(stoppingToken);
+
                 try
                 {
-                    await processorStrategy.ProcessJobAsync(jobQueue);
+                    var processTask = processorStrategy.ProcessJobAsync(jobQueue, cancellation.Token);
+
+                    async Task MonitorCancellationAsync()
+                    {
+                        try
+                        {
+                            while (!cancellation.Token.IsCancellationRequested)
+                            {
+                                var cancellationRequest = cacheService.GetValue<bool>($"cancelledJob_{jobQueue.Id}");
+
+                                if (cancellationRequest)
+                                {
+                                    cancellation.Cancel();
+                                    return;
+                                }
+
+                                await Task.Delay(TimeSpan.FromSeconds(2), cancellation.Token);
+                            }
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            // Expected cancellation
+                        }
+                    }
+
+                    var monitorTask = MonitorCancellationAsync();
+
+                    await Task.WhenAny(processTask, monitorTask);
+
+                    cancellation.Cancel();
+
+                    await Task.WhenAll(processTask, monitorTask);
+                }
+                catch (OperationCanceledException)
+                {
+                    logger.LogInformation("Background job {JobId} was cancelled.", jobQueue.Id);
                 }
                 catch (Exception ex)
                 {
-                    logger.Log(LogLevel.Error, ex.InnerException?.Message ?? ex.Message);
+                    logger.LogError(ex, "Error processing background job {JobId}.", jobQueue.Id);
                 }
                 finally
                 {

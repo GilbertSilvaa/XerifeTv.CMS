@@ -14,7 +14,7 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue.ProcessorStrategies;
 public class CalculateCategoryDistributionBackgroundJobProcessorStrategy(
     IServiceProvider serviceProvider) : IBackgroundJobProcessorStrategy
 {
-    public async Task ProcessJobAsync(GetBackgroundJobResponseDto job)
+    public async Task ProcessJobAsync(GetBackgroundJobResponseDto job, CancellationToken cancellation)
     {
         int pageSizeContent = ContentConstants.DefaultPageSizeContent;
         int pageSizeMin = ContentConstants.DefaultPageSizeMin;

@@ -111,6 +111,24 @@ public class BackgroundJobQueueController(
         return Ok(response.Data);
     }
 
+    [HttpPost]
+    [Authorize(Roles = "admin, common")]
+    public async Task<IActionResult> CancelJob(CancelJobRequestDto dto)
+    {
+        var response = await service.CancelJobAsync(dto.JobId);
+
+        if (response.IsFailure) return BadRequest(response.Error.Description);
+
+        await this.AddAuditLogAsync(
+            auditLogService,
+            "BackgroundJob",
+            dto.JobId,
+            $"cancelou o processo {dto.JobName} da fila de processamento");
+
+        return Ok(response.Data);
+    }
+
+
     [HttpGet]
     [Authorize(Roles = "admin, common")]
     public async Task GetJobsNotification(CancellationToken cancellationToken)

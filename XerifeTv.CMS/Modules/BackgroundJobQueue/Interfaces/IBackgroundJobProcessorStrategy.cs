@@ -6,6 +6,6 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 
 public interface IBackgroundJobProcessorStrategy
 {
-    Task ProcessJobAsync(GetBackgroundJobResponseDto job);
+    Task ProcessJobAsync(GetBackgroundJobResponseDto job, CancellationToken cancellationToken);
     bool CanProcess(EBackgroundJobType jobType);
 }

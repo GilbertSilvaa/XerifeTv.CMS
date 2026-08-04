@@ -12,7 +12,7 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue.ProcessorStrategies;
 public sealed class ImportSpreadsheetBackgroundJobProcessorStrategy(
     IServiceProvider serviceProvider) : IBackgroundJobProcessorStrategy
 {
-    public async Task ProcessJobAsync(GetBackgroundJobResponseDto job)
+    public async Task ProcessJobAsync(GetBackgroundJobResponseDto job, CancellationToken cancellation)
     {
         using var scope = serviceProvider.CreateScope();
         var backgroundJobQueueService = scope.ServiceProvider.GetRequiredService<IBackgroundJobQueueService>();
@@ -39,6 +39,9 @@ public sealed class ImportSpreadsheetBackgroundJobProcessorStrategy(
 
         while (true)
         {
+            if (cancellation.IsCancellationRequested)
+                await spreadsheetBatchImporter.CancelImportAsync(importId);
+
             var monitorResult = await spreadsheetBatchImporter.MonitorImportAsync(importId);
 
             if (monitorResult.IsFailure || monitorResult.Data == null) continue;
@@ -55,6 +58,14 @@ public sealed class ImportSpreadsheetBackgroundJobProcessorStrategy(
                 ErrorList = data.ErrorList,
                 Status = EBackgroundJobStatus.PROCESSING
             };
+
+            if (data.IsCancelled)
+            {
+                updateBackgroundJobDto.Status = EBackgroundJobStatus.CANCELED;
+                await backgroundJobQueueService.UpdateAsync(updateBackgroundJobDto);
+
+                break;
+            }
 
             if (data.ProgressCount == 100)
             {
