@@ -7,6 +7,7 @@ using XerifeTv.CMS.Modules.Channel.Dtos.Response;
 using XerifeTv.CMS.Modules.Channel.Enums;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Shared.Extensions;
@@ -165,6 +166,22 @@ public class ChannelsController(
 
         if (response.IsSuccess)
             return Ok(response.Data);
+
+        return BadRequest(response.Error.Description ?? string.Empty);
+    }
+
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
+    public async Task<IActionResult> CancelSpreadsheetRegistration(CancelSpreadsheetBatchImporterRequestDto dto)
+    {
+        var response = await spreadsheetBatchImporter.CancelImportAsync(dto.ImportId);
+
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(auditLogService, "Channel", dto.FileName, $"cancelou a importação de canais da planilha {dto.FileName}");
+
+            return Ok(response.Data);
+        }
 
         return BadRequest(response.Error.Description ?? string.Empty);
     }

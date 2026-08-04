@@ -225,7 +225,7 @@
 
                 var importId = await response.text();
 
-                $('#btn-cancel-import').click(async function() {
+                $('#btn-cancel-import').click(async function () {
                     if (!confirm('Deseja realmente cancelar a importação?')) return;
 
                     $(this).text('Cancelando...')
@@ -233,8 +233,10 @@
 
                     const cancelFormData = new FormData();
                     cancelFormData.append('importId', importId);
+                    cancelFormData.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                    cancelFormData.append('seriesTitle', "@Html.Raw(Model?.EpisodesDto?.SerieTitle)");
 
-                    await fetch(`/Series/CancelImport`, {
+                    await fetch(`/Series/CancelImportEpisodes`, {
                         method: 'POST',
                         body: cancelFormData
                     });
@@ -250,37 +252,17 @@
                     $('.process .progress-bar').css('width', `${progressCount}%`);
                     $('.process span.status-percent').text(`${progressCount}%`);
 
-                    if (isCancelled) {
+                    if (progressCount == 100 || isCancelled) {
                         clearInterval(monitorProgressInterval);
 
                         $('.finish-process-container .success-count').text(importedCount);
 
                         $('.process .progress-bar').css('width', '100%');
                         $('.process span.status-percent').text('100%');
-                        $('.process span.status-text').text('Processo de importação cancelado.');
-
-                        setTimeout(() => {
-                            $('.process-container').hide();
-                            $('.finish-process-container').show();
-
-                            $('#btn-cancel-import').hide();
-                            $('.close-modal').show();
-                            $('.close-modal').text('Fechar');
-                            $('.close-modal').prop('disabled', false);
-                            $('.close-modal').off().click(() => location.reload());
-                        }, 1250);
-
-                        return;
-                    }
-
-                    if (progressCount == 100) {
-                        clearInterval(monitorProgressInterval);
-
-                        $('.finish-process-container .success-count').text(importedCount);
-
-                        $('.process .progress-bar').css('width', '100%');
-                        $('.process span.status-percent').text('100%');
-                        $('.process span.status-text').text('Processo de importação finalizado.');
+                        $('.process span.status-text').text(
+                            isCancelled
+                                ? 'Processo de importação cancelado.'
+                                : 'Processo de importação finalizado.');
 
                         setTimeout(() => {
                             $('.process-container').hide();

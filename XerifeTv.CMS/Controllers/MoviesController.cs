@@ -1,20 +1,21 @@
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
-using XerifeTv.CMS.Modules.Movie.Enums;
-using XerifeTv.CMS.Modules.Movie.Interfaces;
-using XerifeTv.CMS.Modules.Movie.Dtos.Request;
-using XerifeTv.CMS.Modules.Movie.Dtos.Response;
+using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
+using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
+using XerifeTv.CMS.Modules.Movie.Dtos.Request;
+using XerifeTv.CMS.Modules.Movie.Dtos.Response;
+using XerifeTv.CMS.Modules.Movie.Enums;
+using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.Movies.Models;
-using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
-using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
-using XerifeTv.CMS.Modules.AuditLog.Interfaces;
-using XerifeTv.CMS.Shared.Extensions;
 
 namespace XerifeTv.CMS.Controllers;
 
@@ -197,6 +198,22 @@ public class MoviesController(
 
         if (response.IsSuccess)
             return Ok(response.Data);
+
+        return BadRequest(response.Error.Description ?? string.Empty);
+    }
+
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
+    public async Task<IActionResult> CancelSpreadsheetRegistration(CancelSpreadsheetBatchImporterRequestDto dto)
+    {
+        var response = await spreadsheetBatchImporter.CancelImportAsync(dto.ImportId);
+
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(auditLogService, "Movie", dto.FileName, $"cancelou a importação de filmes da planilha {dto.FileName}");
+
+            return Ok(response.Data);
+        }
 
         return BadRequest(response.Error.Description ?? string.Empty);
     }

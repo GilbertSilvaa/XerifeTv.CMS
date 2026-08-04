@@ -18,12 +18,11 @@ public class ChannelsSpreadsheetImporter(
 	public async Task<Result<string>> ImportAsync(IFormFile file)
 	{
 		var importId = Guid.NewGuid().ToString();
-		var emptyDto = new ImportSpreadsheetResponseDto(0, 0, 0, 0, [], 0);
+		var emptyDto = new ImportSpreadsheetResponseDto(ErrorList: []);
 		cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
 
 		_ = HandleImportAsync(file, importId);
 
-		await Task.Delay(500);
 		return Result<string>.Success(importId);
 	}
 
@@ -35,11 +34,21 @@ public class ChannelsSpreadsheetImporter(
 			return Result<ImportSpreadsheetResponseDto>.Failure(
 				new Error("400", $"Import Id {importId} não encontrado"));
 
-		await Task.Delay(500);
 		return Result<ImportSpreadsheetResponseDto>.Success(response);
 	}
 
-	private async Task HandleImportAsync(IFormFile file, string importId)
+    public async Task<Result<bool>> CancelImportAsync(string importId)
+    {
+        var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+
+        if (response == null)
+            return Result<bool>.Failure(new Error("400", $"Import Id {importId} não encontrado"));
+
+        cacheService.SetValue<bool>($"cancelled_{importId}", true);
+        return Result<bool>.Success(true);
+    }
+
+    private async Task HandleImportAsync(IFormFile file, string importId)
 	{
 		try
 		{
@@ -66,17 +75,23 @@ public class ChannelsSpreadsheetImporter(
 
 			void UpdateProgress()
 			{
-				var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResult.Length) * 100);
+                bool importCancelled = cacheService.GetValue<bool>($"cancelled_{importId}") == true;
+
+                var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResult.Length) * 100);
 				var _dto = new ImportSpreadsheetResponseDto(
 					TotalItemsCount: spreadsheetResult.Length,
 					SuccessCount: successCount,
 					FailCount: failCount,
 					ProcessedCount: successCount + failCount,
 					ErrorList: [.. errorList],
-					ProgressCount: progressCount);
+					ProgressCount: progressCount,
+					IsCancelled: importCancelled);
 
 				cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
-			}
+
+                if (importCancelled)
+                    throw new OperationCanceledException("Importação cancelada pelo usuário");
+            }
 
 			foreach (var item in spreadsheetResult)
 			{
@@ -137,28 +152,44 @@ public class ChannelsSpreadsheetImporter(
 				await Task.Delay(1200);
 			}
 		}
-		catch (Exception ex)
+        catch (OperationCanceledException)
+        {
+            var monitorResponse = await MonitorImportAsync(importId);
+
+            if (monitorResponse.IsSuccess)
+            {
+                var currentProgress = monitorResponse.Data ?? new ImportSpreadsheetResponseDto(ErrorList: []);
+                var errorList = currentProgress?.ErrorList.ToList() ?? [];
+
+                var progress = currentProgress! with
+                {
+                    ErrorList = [.. errorList],
+                    ProgressCount = 100,
+                    IsCancelled = true
+                };
+
+                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, progress);
+            }
+        }
+        catch (Exception ex)
 		{
-			var monitorResponse = await MonitorImportAsync(importId);
+            var monitorResponse = await MonitorImportAsync(importId);
 
-			if (monitorResponse.IsSuccess)
-			{
-				var currentProgress = monitorResponse.Data;
-				var failCount = currentProgress?.FailCount ?? 0;
-				var errorList = currentProgress?.ErrorList.ToList() ?? [];
-				errorList.Add(ex.InnerException?.Message ?? ex.Message);
-				
-				var _newDto = new ImportSpreadsheetResponseDto(
-					TotalItemsCount: currentProgress?.TotalItemsCount,
-					SuccessCount: currentProgress?.SuccessCount,
-					FailCount: failCount,
-					ProcessedCount: currentProgress?.ProcessedCount,
-					ErrorList: [.. errorList],
-					ProgressCount: 100);
+            if (monitorResponse.IsSuccess)
+            {
+                var currentProgress = monitorResponse.Data ?? new ImportSpreadsheetResponseDto(ErrorList: []);
+                var errorList = currentProgress?.ErrorList.ToList() ?? [];
+                errorList.Add(ex.InnerException?.Message ?? ex.Message);
 
-				cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _newDto);
-			}
-		}
+                var progress = currentProgress! with
+                {
+                    ErrorList = [.. errorList],
+                    ProgressCount = 100
+                };
+
+                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, progress);
+            }
+        }
 	}
 }
 

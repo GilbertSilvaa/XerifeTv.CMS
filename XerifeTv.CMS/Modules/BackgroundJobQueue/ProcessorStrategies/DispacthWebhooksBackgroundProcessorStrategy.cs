@@ -20,7 +20,7 @@ public class DispacthWebhooksBackgroundProcessorStrategy(
     IServiceProvider serviceProvider,
     ILogger<DispacthWebhooksBackgroundProcessorStrategy> logger) : IBackgroundJobProcessorStrategy
 {
-    public async Task ProcessJobAsync(GetBackgroundJobResponseDto job)
+    public async Task ProcessJobAsync(GetBackgroundJobResponseDto job, CancellationToken cancellation)
     {
         const int MAX_RETRY_ATTEMPTS = 5;
 

@@ -13,6 +13,7 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue.Services;
 public class BackgroundJobQueueService(
     IStorageFilesService storageFilesService,
     IBackgroundJobQueueRepository repository,
+    ICacheService cacheService, 
     IUserService userService) : IBackgroundJobQueueService
 {
     private readonly string[] _acceptedExtensions = [".xlsx", ".xls"];
@@ -113,6 +114,43 @@ public class BackgroundJobQueueService(
         {
             var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
             return Result<AddJobQueueResponseDto>.Failure(error);
+        }
+    }
+
+    public async Task<Result<bool>> CancelJobAsync(string jobId)
+    {
+        try
+        {
+            var entity = await repository.GetAsync(jobId);
+
+            if (entity == null)
+                return Result<bool>.Failure(new Error("404", "Background Job não encontrado"));
+
+            cacheService.SetValue<bool>($"cancelledJob_{jobId}", true);
+            return Result<bool>.Success(true);
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<bool>.Failure(error);
+        }
+    }
+
+    public async Task<Result<GetBackgroundJobResponseDto?>> GetAsync(string id)
+    {
+        try
+        {
+            var response = await repository.GetAsync(id);
+
+            if (response == null)
+                return Result<GetBackgroundJobResponseDto?>.Failure(new Error("404", "Background Job não encontrado"));
+
+            return Result<GetBackgroundJobResponseDto?>.Success(GetBackgroundJobResponseDto.FromEntity(response));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<GetBackgroundJobResponseDto?>.Failure(error);
         }
     }
 

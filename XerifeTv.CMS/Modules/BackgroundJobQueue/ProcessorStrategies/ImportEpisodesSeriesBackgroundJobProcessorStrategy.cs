@@ -9,7 +9,7 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue.ProcessorStrategies;
 public sealed class ImportEpisodesSeriesBackgroundJobProcessorStrategy(
     IServiceProvider serviceProvider) : IBackgroundJobProcessorStrategy
 {
-    public async Task ProcessJobAsync(GetBackgroundJobResponseDto job)
+    public async Task ProcessJobAsync(GetBackgroundJobResponseDto job, CancellationToken cancellation)
     {
         using var scope = serviceProvider.CreateScope();
         var episodesImporter = scope.ServiceProvider.GetRequiredService<IEpisodesImporter>();
@@ -22,6 +22,9 @@ public sealed class ImportEpisodesSeriesBackgroundJobProcessorStrategy(
 
         while (true)
         {
+            if (cancellation.IsCancellationRequested)
+                await episodesImporter.CancelImportAsync(importId);
+
             var monitorResult = await episodesImporter.MonitorImportAsync(importId);
 
             if (monitorResult.IsFailure || monitorResult.Data == null) continue;
@@ -36,6 +39,14 @@ public sealed class ImportEpisodesSeriesBackgroundJobProcessorStrategy(
                 TotalProcessedRecords = data.ProcessedCount,
                 Status = EBackgroundJobStatus.PROCESSING
             };
+
+            if (data.IsCancelled)
+            {
+                updateBackgroundJobDto.Status = EBackgroundJobStatus.CANCELED;
+                await backgroundJobQueueService.UpdateAsync(updateBackgroundJobDto);
+
+                break;
+            }
 
             if (data.ProgressCount == 100)
             {
