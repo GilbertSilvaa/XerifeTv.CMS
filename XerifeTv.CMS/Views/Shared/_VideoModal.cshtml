@@ -78,6 +78,12 @@
             opacity: 0.4;
             cursor: not-allowed;
         }
+
+        @@media(max-width: 780px) {
+            #subtitleSyncBar {
+                flex-direction: column;
+            }
+        }
 </style>
 
 <div class="modal fade"
@@ -107,7 +113,7 @@
                     <i class="bi bi-cc-circle"></i> Sincronizar legenda
                 </span>
 
-                <div class="d-flex align-items-center gap-1 mx-auto">
+                <div class="d-flex align-items-center gap-1 mx-auto flex-wrap">
                     <button type="button" class="btn shadow-sm btn-sync" data-sync="-0.5" title="Atrasar 0.5s">−0.5s</button>
                     <button type="button" class="btn shadow-sm btn-sync" data-sync="-0.1" title="Atrasar 0.1s">−0.1s</button>
 
