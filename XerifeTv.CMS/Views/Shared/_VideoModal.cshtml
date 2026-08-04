@@ -1,4 +1,85 @@
-﻿
+﻿<style>
+    #subtitleSyncBar {
+        display: flex;
+        background: #1c1f26;
+        border: 1px solid #2c2f38;
+        border-radius: 0 0 8px 8px;
+        padding: 10px 16px;
+        gap: 8px;
+    }
+
+        #subtitleSyncBar .sync-label {
+            color: #8b8f98;
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        #subtitleSyncBar .btn-sync {
+            background: #2a2d36;
+            border: 1px solid #3a3d47;
+            color: #e4e6eb;
+            border-radius: 0;
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            transition: background 0.15s ease, border-color 0.15s ease;
+        }
+
+            #subtitleSyncBar .btn-sync:hover {
+                background: #3a3d47;
+                border-color: #4a4d57;
+                color: #fff;
+            }
+
+    #subtitleOffsetLabel {
+        min-width: 56px;
+        text-align: center;
+        color: #fff;
+        background: #12141a;
+        border: 1px solid #2c2f38;
+        border-radius: 0;
+        padding: 4px 8px;
+        font-size: 0.85rem;
+        font-variant-numeric: tabular-nums;
+    }
+
+    #resetSyncBtn {
+        background: transparent;
+        border: 1px solid #4a4d57;
+        color: #b0b3ba;
+        border-radius: 0;
+        padding: 4px 12px;
+        font-size: 0.85rem;
+        transition: border-color 0.15s ease, color 0.15s ease;
+    }
+
+        #resetSyncBtn:hover {
+            border-color: #e0a030;
+            color: #e0a030;
+        }
+
+    #downloadVttBtn {
+        background: #2f8f4e;
+        border: none;
+        color: #fff;
+        border-radius: 0;
+        padding: 5px 14px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        transition: background 0.15s ease;
+    }
+
+        #downloadVttBtn:hover {
+            background: #35a058;
+        }
+
+        #downloadVttBtn:disabled,
+        #subtitleSyncBar .btn-sync:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+</style>
+
 <div class="modal fade"
      id="videoModal"
      data-bs-backdrop="static"
@@ -11,14 +92,36 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h1 class="modal-title fs-5" id="videoModalLabel"></h1>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close shadow-sm" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body" style="height: 65vh;">
+            <div class="modal-body p-0" style="height: 65vh;">
                 <video id="player"
                        class="video-js vjs-default-skin w-100"
                        style="min-height: 100%; max-height: 100%;"
                        controls>
                 </video>
+            </div>
+
+            <div id="subtitleSyncBar" class="d-none align-items-center">
+                <span class="sync-label">
+                    <i class="bi bi-cc-circle"></i> Sincronizar legenda
+                </span>
+
+                <div class="d-flex align-items-center gap-1 mx-auto">
+                    <button type="button" class="btn shadow-sm btn-sync" data-sync="-0.5" title="Atrasar 0.5s">−0.5s</button>
+                    <button type="button" class="btn shadow-sm btn-sync" data-sync="-0.1" title="Atrasar 0.1s">−0.1s</button>
+
+                    <span id="subtitleOffsetLabel">0.0s</span>
+
+                    <button type="button" class="btn shadow-sm btn-sync" data-sync="0.1" title="Adiantar 0.1s">+0.1s</button>
+                    <button type="button" class="btn shadow-sm btn-sync" data-sync="0.5" title="Adiantar 0.5s">+0.5s</button>
+
+                    <button type="button" id="resetSyncBtn" class="btn shadow-sm ms-2">Resetar</button>
+                </div>
+
+                <button type="button" id="downloadVttBtn" class="btn shadow-sm">
+                    Baixar .vtt sincronizado
+                </button>
             </div>
         </div>
     </div>
@@ -28,12 +131,97 @@
     const modal = document.getElementById('videoModal')
     let player = undefined
 
+    let currentTrackEl = null
+    let originalCueTimes = []
+    let subtitleOffset = 0
+
+    const syncBar = document.getElementById('subtitleSyncBar')
+    const offsetLabel = document.getElementById('subtitleOffsetLabel')
+
+    function resetSyncState() {
+        currentTrackEl = null
+        originalCueTimes = []
+        subtitleOffset = 0
+        offsetLabel.textContent = '0.0s'
+        syncBar.classList.add('d-none')
+    }
+
+    function formatVttTime(totalSeconds) {
+        const safe = Math.max(0, totalSeconds)
+        const h = Math.floor(safe / 3600)
+        const m = Math.floor((safe % 3600) / 60)
+        const s = Math.floor(safe % 60)
+        const ms = Math.round((safe - Math.floor(safe)) * 1000)
+        const pad = (n, len = 2) => String(n).padStart(len, '0')
+        return `${pad(h)}:${pad(m)}:${pad(s)}.${pad(ms, 3)}`
+    }
+
+    function applyOffsetToCues() {
+        if (!currentTrackEl || !currentTrackEl.track) return
+        const cues = currentTrackEl.track.cues
+        if (!cues) return
+
+        for (let i = 0; i < cues.length; i++) {
+            const cue = cues[i]
+            const original = originalCueTimes[i]
+            if (!original) continue
+
+            cue.startTime = Math.max(0, original.start + subtitleOffset)
+            cue.endTime = Math.max(0, original.end + subtitleOffset)
+        }
+    }
+
+    function adjustOffset(delta) {
+        subtitleOffset = Math.round((subtitleOffset + delta) * 10) / 10
+        offsetLabel.textContent = `${subtitleOffset.toFixed(1)}s`
+        applyOffsetToCues()
+    }
+
+    function downloadSyncedVtt() {
+        if (!currentTrackEl || !currentTrackEl.track) return
+        const cues = currentTrackEl.track.cues
+        if (!cues || cues.length === 0) return
+
+        let vttContent = 'WEBVTT\n\n'
+
+        for (let i = 0; i < cues.length; i++) {
+            const cue = cues[i]
+            vttContent += `${i + 1}\n`
+            vttContent += `${formatVttTime(cue.startTime)} --> ${formatVttTime(cue.endTime)}\n`
+            vttContent += `${cue.text}\n\n`
+        }
+
+        const blob = new Blob([vttContent], { type: 'text/vtt' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'legenda-sincronizada.vtt'
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+    }
+
+    syncBar.querySelectorAll('[data-sync]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            adjustOffset(parseFloat(btn.getAttribute('data-sync')))
+        })
+    })
+    document.getElementById('resetSyncBtn').addEventListener('click', () => {
+        subtitleOffset = 0
+        offsetLabel.textContent = '0.0s'
+        applyOffsetToCues()
+    })
+    document.getElementById('downloadVttBtn').addEventListener('click', downloadSyncedVtt)
+
     if (modal) {
         modal.addEventListener('show.bs.modal', async event => {
             const button = event.relatedTarget
 
             const modalTitle = document.querySelector('.modal-title')
             modalTitle.textContent = button.getAttribute('data-bs-title')
+
+            resetSyncState()
 
             if (!player) {
                 player = videojs('player', {
@@ -75,14 +263,30 @@
                 const subtitle = button.getAttribute('data-bs-video-subtitle')
 
                 if (subtitle) {
-                    player.addRemoteTextTrack({
+                    currentTrackEl = player.addRemoteTextTrack({
                         kind: 'captions',
                         src: subtitle,
                         srclang: 'pt',
                         label: 'Português'
                     }, false)
+
+                    currentTrackEl.addEventListener('load', () => {
+                        const cues = currentTrackEl.track.cues
+                        if (!cues || cues.length === 0) return
+
+                        originalCueTimes = []
+                        for (let i = 0; i < cues.length; i++) {
+                            originalCueTimes.push({
+                                start: cues[i].startTime,
+                                end: cues[i].endTime
+                            })
+                        }
+
+                        currentTrackEl.track.mode = 'showing'
+                        syncBar.classList.remove('d-none')
+                    })
                 }
-            } 
+            }
             catch (err) {
                 console.error('Erro ao carregar vídeo:', err)
             }
@@ -93,6 +297,7 @@
                 player.pause()
                 player.reset()
             }
+            resetSyncState()
         })
     }
 </script>
