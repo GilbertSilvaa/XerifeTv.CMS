@@ -24,7 +24,7 @@ public class ContentV2Controller(
 
         var cacheKey = "content_v2_movies";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetMoviesAsync(ContentConstants.DefaultPageSizeMin);
             return response.IsSuccess ? response.Data : default;
@@ -43,7 +43,7 @@ public class ContentV2Controller(
 
         var cacheKey = "content_v2_series";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetSeriesAsync(ContentConstants.DefaultPageSizeMin);
             return response.IsSuccess ? response.Data : default;
@@ -64,7 +64,7 @@ public class ContentV2Controller(
         var notFound = false;
         var isFailure = false;
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetMovieByIdAsync(id);
 
@@ -97,7 +97,7 @@ public class ContentV2Controller(
         var notFound = false;
         var isFailure = false;
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetSeriesByIdAsync(id);
 
@@ -155,7 +155,7 @@ public class ContentV2Controller(
 
         var cacheKey = "content_v2_movies_categories";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetMoviesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
             return response.IsSuccess ? response.Data : default;
@@ -174,7 +174,7 @@ public class ContentV2Controller(
 
         var cacheKey = "content_v2_series_categories";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetSeriesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
             return response.IsSuccess ? response.Data : default;
@@ -194,7 +194,7 @@ public class ContentV2Controller(
         var norm = NormalizeCsv(category);
         var cacheKey = $"content_v2_movies_by_category-{norm}-{page}-{pageSize}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetMoviesByCategoryAsync(category, page, pageSize);
             return response.IsSuccess ? response.Data : default;
@@ -214,7 +214,7 @@ public class ContentV2Controller(
         var norm = NormalizeCsv(category);
         var cacheKey = $"content_v2_series_by_category-{norm}-{page}-{pageSize}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetSeriesByCategoryAsync(category, page, pageSize);
             return response.IsSuccess ? response.Data : default;
@@ -233,7 +233,7 @@ public class ContentV2Controller(
 
         var cacheKey = $"content_v2_movies_recommended_{movieId}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetMoviesRecommendedAsync(movieId);
             return response.IsSuccess ? response.Data : default;
@@ -252,7 +252,7 @@ public class ContentV2Controller(
 
         var cacheKey = $"content_v2_series_recommended_{seriesId}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetSeriesRecommendedAsync(seriesId);
             return response.IsSuccess ? response.Data : default;
@@ -327,7 +327,7 @@ public class ContentV2Controller(
         var norm = NormalizeCsv(string.Join('_', categories));
         var cacheKey = $"content_v2_movies_by_categories-{norm}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetMoviesByCategoriesListAsync(categories, page, pageSize);
             return response.IsSuccess ? response.Data : default;
@@ -347,7 +347,7 @@ public class ContentV2Controller(
         var norm = NormalizeCsv(string.Join('_', categories));
         var cacheKey = $"content_v2_series_by_categories-{norm}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetSeriesByCategoriesListAsync(categories, page, pageSize);
             return response.IsSuccess ? response.Data : default;

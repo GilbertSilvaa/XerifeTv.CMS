@@ -29,7 +29,7 @@ public class ContentV1Controller(
 
         var cacheKey = $"moviesGroupByCategory-{NormalizeCsv(categories)}-{currentPage}-{limit}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var _dto = new GetGroupByCategoryRequestDto(
               [.. categories.Split(',').Select(x => x.Trim())],
@@ -57,7 +57,7 @@ public class ContentV1Controller(
 
         var cacheKey = $"moviesByCategory-{category}-{currentPage}-{limit}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetMoviesByCategoryAsync(new GetContentsRequestDto(category, currentPage, limit));
 
@@ -80,7 +80,7 @@ public class ContentV1Controller(
 
         var cacheKey = $"seriesGroupByCategory-{NormalizeCsv(categories)}-{currentPage}-{limit}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var _dto = new GetGroupByCategoryRequestDto(
               [.. categories.Split(',').Select(x => x.Trim())],
@@ -108,7 +108,7 @@ public class ContentV1Controller(
 
         var cacheKey = $"seriesGroupByCategory-{category}-{currentPage}-{limit}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetSeriesByCategoryAsync(new GetContentsRequestDto(category, currentPage, limit));
 
@@ -128,7 +128,7 @@ public class ContentV1Controller(
 
         var cacheKey = $"episodesSeriesBySeason-{serieId}-{season}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetEpisodesSeriesBySeasonAsync(serieId, season);
 
@@ -151,7 +151,7 @@ public class ContentV1Controller(
 
         var cacheKey = $"channelsGroupByCategory-{NormalizeCsv(categories)}-{currentPage}-{limit}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var _dto = new GetGroupByCategoryRequestDto(
               [.. categories.Split(',').Select(x => x.Trim())],
@@ -179,7 +179,7 @@ public class ContentV1Controller(
 
         var cacheKey = $"contentsByTitle-{title}-{currentPage}-{limit}";
 
-        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
             var response = await service.GetContentsByTitleAsync(new(title, currentPage, limit));
 
