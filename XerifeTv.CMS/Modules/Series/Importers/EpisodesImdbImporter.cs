@@ -16,17 +16,16 @@ public class EpisodesImdbImporter(
     {
         var importId = Guid.NewGuid().ToString();
         var emptyDto = new ImportEpisodesResponseDto(0, 0, 0, 0);
-        cacheService.SetValue<ImportEpisodesResponseDto>(importId, emptyDto);
+        await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(160), emptyDto);
 
         _ = HandleImportAsync(seriesId, importId);
 
-        await Task.Delay(300);
         return Result<string>.Success(importId);
     }
 
     public async Task<Result<ImportEpisodesResponseDto>> MonitorImportAsync(string importId)
     {
-        var response = cacheService.GetValue<ImportEpisodesResponseDto>(importId);
+        var response = await cacheService.GetValueAsync<ImportEpisodesResponseDto>(importId);
 
         if (response == null)
             return Result<ImportEpisodesResponseDto>.Failure(
@@ -37,12 +36,12 @@ public class EpisodesImdbImporter(
 
     public async Task<Result<bool>> CancelImportAsync(string importId)
     {
-        var response = cacheService.GetValue<ImportEpisodesResponseDto>(importId);
+        var response = await cacheService.GetValueAsync<ImportEpisodesResponseDto>(importId);
 
         if (response == null)
             return Result<bool>.Failure(new Error("400", $"Import Id {importId} não encontrado"));
 
-        cacheService.SetValue<bool>($"cancelled_{importId}", true);
+        await cacheService.SetValueAsync($"cancelled_{importId}", TimeSpan.FromMinutes(60), true);
         return Result<bool>.Success(true);
     }
 
@@ -60,9 +59,9 @@ public class EpisodesImdbImporter(
             var createdEpisodesCount = 0;
             var episodeCreationAttemptsCount = 0;
 
-            void UpdateProgress()
+            async Task UpdateProgress()
             {
-                bool importCancelled = cacheService.GetValue<bool>($"cancelled_{importId}") == true;
+                bool importCancelled = await cacheService.GetValueAsync<bool>($"cancelled_{importId}") == true;
 
                 var progressCount = (int)(((float)episodeCreationAttemptsCount / seriesEpisodesImdbCount) * 100);
                 var _dto = new ImportEpisodesResponseDto(
@@ -72,7 +71,7 @@ public class EpisodesImdbImporter(
                     ProcessedCount: episodeCreationAttemptsCount,
                     IsCancelled: importCancelled);
 
-                cacheService.SetValue<ImportEpisodesResponseDto>(importId, _dto);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), _dto);
 
                 if (importCancelled)
                     throw new OperationCanceledException("Importação cancelada pelo usuário");
@@ -99,7 +98,7 @@ public class EpisodesImdbImporter(
                     if (newEpisodeResult.IsSuccess) createdEpisodesCount++;
 
                     episodeCreationAttemptsCount++;
-                    UpdateProgress();
+                    await UpdateProgress();
                 }
             }
         }
@@ -116,7 +115,7 @@ public class EpisodesImdbImporter(
                     IsCancelled = true
                 };
 
-                cacheService.SetValue<ImportEpisodesResponseDto>(importId, progress);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), progress);
             }
         }
         catch (Exception)
@@ -131,7 +130,7 @@ public class EpisodesImdbImporter(
                     ProgressCount = 100
                 };
 
-                cacheService.SetValue<ImportEpisodesResponseDto>(importId, progress);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), progress);
             }
         }
     }

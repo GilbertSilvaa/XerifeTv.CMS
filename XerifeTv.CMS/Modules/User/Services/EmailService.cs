@@ -20,7 +20,7 @@ public class EmailService(IConfiguration configuration) : IEmailService
 
         var mailMessage = new MailMessage()
         {
-            From = new MailAddress(_fromEmail),
+            From = new MailAddress(_fromEmail!),
             Subject = "Redefinir Senha",
             Body = $@"<h4>Clique no link para redefinir sua senha: {resetLink}</h4><hr/>
 			<span>O link possui um tempo de expiracao de 10 minutos</span>",

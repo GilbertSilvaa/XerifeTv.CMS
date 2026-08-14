@@ -23,7 +23,7 @@ public class SeriesSpreadsheetImporter(
     {
         var importId = Guid.NewGuid().ToString();
         var emptyDto = new ImportSpreadsheetResponseDto(ErrorList: []);
-        cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
+        await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(160), emptyDto);
 
         _ = HandleImportAsync(file, importId);
 
@@ -32,7 +32,7 @@ public class SeriesSpreadsheetImporter(
 
     public async Task<Result<ImportSpreadsheetResponseDto>> MonitorImportAsync(string importId)
     {
-        var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+        var response = await cacheService.GetValueAsync<ImportSpreadsheetResponseDto>(importId);
 
         if (response == null)
             return Result<ImportSpreadsheetResponseDto>.Failure(
@@ -43,12 +43,12 @@ public class SeriesSpreadsheetImporter(
 
     public async Task<Result<bool>> CancelImportAsync(string importId)
     {
-        var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+        var response = await cacheService.GetValueAsync<ImportSpreadsheetResponseDto>(importId);
 
         if (response == null)
             return Result<bool>.Failure(new Error("400", $"Import Id {importId} não encontrado"));
 
-        cacheService.SetValue<bool>($"cancelled_{importId}", true);
+        await cacheService.SetValueAsync($"cancelled_{importId}", TimeSpan.FromMinutes(60), true);
         return Result<bool>.Success(true);
     }
 
@@ -95,9 +95,9 @@ public class SeriesSpreadsheetImporter(
             ICollection<SpreadsheetSeriesResponseDto> seriesList = [];
             ICollection<SpreadsheetEpisodeResponseDto> episodeList = [];
 
-            void UpdateProgress()
+            async Task UpdateProgress()
             {
-                bool importCancelled = cacheService.GetValue<bool>($"cancelled_{importId}") == true;
+                bool importCancelled = await cacheService.GetValueAsync<bool>($"cancelled_{importId}") == true;
 
                 var successCount = seriesSuccessCount + episodesSuccessCount;
                 var failCount = seriesFailCount + episodesFailCount;
@@ -113,7 +113,7 @@ public class SeriesSpreadsheetImporter(
                     ProgressCount: progressCount,
                     IsCancelled: importCancelled);
 
-                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), _dto);
 
                 if (importCancelled)
                     throw new OperationCanceledException("Importação cancelada pelo usuário");
@@ -130,7 +130,7 @@ public class SeriesSpreadsheetImporter(
                 {
                     seriesFailCount++;
                     errorList.Add(ex.Message);
-                    UpdateProgress();
+                    await UpdateProgress();
                 }
             }
 
@@ -145,7 +145,7 @@ public class SeriesSpreadsheetImporter(
                 {
                     episodesFailCount++;
                     errorList.Add(ex.Message);
-                    UpdateProgress();
+                    await UpdateProgress();
                 }
             }
 
@@ -159,7 +159,7 @@ public class SeriesSpreadsheetImporter(
                     {
                         seriesFailCount++;
                         errorList.Add($"[{seriesItem.ImdbId}] {franchiseResponse.Error.Description ?? string.Empty}");
-                        UpdateProgress();
+                        await UpdateProgress();
                         continue;
                     }
 
@@ -172,7 +172,7 @@ public class SeriesSpreadsheetImporter(
                 {
                     seriesFailCount++;
                     errorList.Add($"[{seriesItem.ImdbId}] {seriesByImdbResponse.Error.Description ?? string.Empty}");
-                    UpdateProgress();
+                    await UpdateProgress();
                     continue;
                 }
 
@@ -204,8 +204,7 @@ public class SeriesSpreadsheetImporter(
                     errorList.Add($"[{seriesItem.ImdbId}] {response.Error?.Description ?? string.Empty}");
                 }
 
-                UpdateProgress();
-                await Task.Delay(500);
+                await UpdateProgress();
             }
 
             foreach (var item in episodeList)
@@ -218,7 +217,7 @@ public class SeriesSpreadsheetImporter(
                     {
                         episodesFailCount++;
                         errorList.Add($"[{item.SeriesImdbId}:S{item.Season}E{item.Episode}] {mediaProfileResponse.Error.Description ?? string.Empty}");
-                        UpdateProgress();
+                        await UpdateProgress();
                         continue;
                     }
 
@@ -231,7 +230,7 @@ public class SeriesSpreadsheetImporter(
                 {
                     episodesFailCount++;
                     errorList.Add($"[{item.SeriesImdbId}:S{item.Season}E{item.Episode}] {seriesResult.Error?.Description ?? string.Empty}");
-                    UpdateProgress();
+                    await UpdateProgress();
                     continue;
                 }
 
@@ -296,8 +295,7 @@ public class SeriesSpreadsheetImporter(
                     errorList.Add($"[{item.SeriesImdbId}:S{item.Season}E{item.Episode}] {responseCreateOrUpdate.Error?.Description ?? string.Empty}");
                 }
 
-                UpdateProgress();
-                await Task.Delay(500);
+                await UpdateProgress();
             }
         }
         catch (OperationCanceledException)
@@ -316,7 +314,7 @@ public class SeriesSpreadsheetImporter(
                     IsCancelled = true
                 };
 
-                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, progress);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), progress);
             }
         }
         catch (Exception ex)
@@ -335,7 +333,7 @@ public class SeriesSpreadsheetImporter(
                     ProgressCount = 100
                 };
 
-                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, progress);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), progress);
             }
         }
     }

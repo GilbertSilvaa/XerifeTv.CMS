@@ -14,6 +14,8 @@ public class ContentV2Controller(
     ILogger<ContentV2Controller> logger,
     ICacheService cacheService) : ControllerBase
 {
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(10);
+
     [HttpGet]
     [Route("movies")]
     public async Task<IActionResult> Movies()
@@ -21,18 +23,16 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /movies");
 
         var cacheKey = "content_v2_movies";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetMoviesAsync(ContentConstants.DefaultPageSizeMin);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetMoviesAsync(ContentConstants.DefaultPageSizeMin);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -42,18 +42,16 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /series");
 
         var cacheKey = "content_v2_series";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetSeriesAsync(ContentConstants.DefaultPageSizeMin);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetSeriesAsync(ContentConstants.DefaultPageSizeMin);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -63,23 +61,30 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /movies/{id}", id);
 
         var cacheKey = $"content_v2_movie_{id}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
+        var notFound = false;
+        var isFailure = false;
 
-        var response = await service.GetMovieByIdAsync(id);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            if (response.Data is null) return NotFound();
+            var response = await service.GetMovieByIdAsync(id);
 
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            if (response.IsSuccess)
+            {
+                if (response.Data is null) notFound = true;
+                return response.Data;
+            }
 
-        if (response.IsFailure && response.Error.Code == "404")
-            return NotFound();
+            if (response.IsFailure && response.Error.Code == "404") notFound = true;
+            else isFailure = true;
 
-        return BadRequest();
+            return null;
+        });
+
+        if (notFound) return NotFound();
+        if (isFailure) return BadRequest();
+        if (data is null) return NotFound();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -89,23 +94,30 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /series/{id}", id);
 
         var cacheKey = $"content_v2_series_{id}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
+        var notFound = false;
+        var isFailure = false;
 
-        var response = await service.GetSeriesByIdAsync(id);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            if (response.Data is null) return NotFound();
+            var response = await service.GetSeriesByIdAsync(id);
 
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            if (response.IsSuccess)
+            {
+                if (response.Data is null) notFound = true;
+                return response.Data;
+            }
 
-        if (response.IsFailure && response.Error.Code == "404")
-            return NotFound();
+            if (response.IsFailure && response.Error.Code == "404") notFound = true;
+            else isFailure = true;
 
-        return BadRequest();
+            return null;
+        });
+
+        if (notFound) return NotFound();
+        if (isFailure) return BadRequest();
+        if (data is null) return NotFound();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -115,25 +127,24 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /series/{seriesId}/season/{seasonNumber}/episodes", seriesId, seasonNumber);
 
         var cacheKey = $"content_v2_episodes_{seriesId}_{seasonNumber}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetEpisodesBySeriesIdAndSeasonAsync(seriesId, seasonNumber);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
-            var result = new
+            var response = await service.GetEpisodesBySeriesIdAndSeasonAsync(seriesId, seasonNumber);
+
+            if (!response.IsSuccess) return null;
+
+            return new
             {
                 seriesId,
                 seasonNumber,
                 episodes = response.Data
             };
+        });
 
-            cacheService.SetValue(cacheKey, result);
-            return Ok(result);
-        }
+        if (data is null) return BadRequest();
 
-        return BadRequest();
+        return Ok(data);
     }
 
     [HttpGet]
@@ -143,18 +154,16 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /movies/categories");
 
         var cacheKey = "content_v2_movies_categories";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetMoviesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetMoviesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -164,18 +173,16 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /series/categories");
 
         var cacheKey = "content_v2_series_categories";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetSeriesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetSeriesCategoriesAsync(ContentConstants.DefaultPageSizeContent);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -186,18 +193,16 @@ public class ContentV2Controller(
 
         var norm = NormalizeCsv(category);
         var cacheKey = $"content_v2_movies_by_category-{norm}-{page}-{pageSize}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetMoviesByCategoryAsync(category, page, pageSize);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetMoviesByCategoryAsync(category, page, pageSize);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -208,18 +213,16 @@ public class ContentV2Controller(
 
         var norm = NormalizeCsv(category);
         var cacheKey = $"content_v2_series_by_category-{norm}-{page}-{pageSize}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetSeriesByCategoryAsync(category, page, pageSize);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetSeriesByCategoryAsync(category, page, pageSize);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -229,18 +232,16 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /movies/{movieId}/recommended", movieId);
 
         var cacheKey = $"content_v2_movies_recommended_{movieId}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetMoviesRecommendedAsync(movieId);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetMoviesRecommendedAsync(movieId);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -250,17 +251,16 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /series/{seriesId}/recommended", seriesId);
 
         var cacheKey = $"content_v2_series_recommended_{seriesId}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetSeriesRecommendedAsync(seriesId);
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetSeriesRecommendedAsync(seriesId);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -270,25 +270,24 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /search term={term}", term);
 
         var cacheKey = $"content_v2_search_{term}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var moviesResponse = await service.GetMoviesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
-        var seriesResponse = await service.GetSeriesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
-
-        if (moviesResponse.IsSuccess && seriesResponse.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
-            var result = new
+            var moviesResponse = await service.GetMoviesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
+            var seriesResponse = await service.GetSeriesByTermAsync(term, limit: ContentConstants.DefaultPageSizeContent);
+
+            if (!moviesResponse.IsSuccess || !seriesResponse.IsSuccess) return null;
+
+            return new
             {
                 movies = moviesResponse.Data,
                 series = seriesResponse.Data
             };
+        });
 
-            cacheService.SetValue(cacheKey, result);
-            return Ok(result);
-        }
+        if (data is null) return BadRequest();
 
-        return BadRequest();
+        return Ok(data);
     }
 
     [HttpGet]
@@ -298,26 +297,25 @@ public class ContentV2Controller(
         logger.LogInformation("Request Content API v2 /home");
 
         var cacheKey = "content_v2_home";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetHomeContentAsync();
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
-            var result = new
+            var response = await service.GetHomeContentAsync();
+
+            if (!response.IsSuccess) return null;
+
+            return new
             {
                 featured = response.Data?.FeaturedContent,
                 featuredType = response.Data?.FeaturedContentType == EFeaturedContentType.MOVIE ? "movie" : "series",
                 movieCategories = response.Data?.MovieCategores,
                 seriesCategories = response.Data?.SeriesCategores
             };
+        });
 
-            cacheService.SetValue(cacheKey, result);
-            return Ok(result);
-        }
+        if (data is null) return BadRequest();
 
-        return BadRequest();
+        return Ok(data);
     }
 
     [HttpGet]
@@ -328,18 +326,16 @@ public class ContentV2Controller(
 
         var norm = NormalizeCsv(string.Join('_', categories));
         var cacheKey = $"content_v2_movies_by_categories-{norm}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetMoviesByCategoriesListAsync(categories, page, pageSize);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetMoviesByCategoriesListAsync(categories, page, pageSize);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     [HttpGet]
@@ -350,18 +346,16 @@ public class ContentV2Controller(
 
         var norm = NormalizeCsv(string.Join('_', categories));
         var cacheKey = $"content_v2_series_by_categories-{norm}";
-        var responseCache = cacheService.GetValue<object>(cacheKey);
-        if (responseCache != null) return Ok(responseCache);
 
-        var response = await service.GetSeriesByCategoriesListAsync(categories, page, pageSize);
-
-        if (response.IsSuccess)
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
         {
-            cacheService.SetValue(cacheKey, response.Data);
-            return Ok(response.Data);
-        }
+            var response = await service.GetSeriesByCategoriesListAsync(categories, page, pageSize);
+            return response.IsSuccess ? response.Data : default;
+        });
 
-        return BadRequest();
+        if (data is null) return BadRequest();
+
+        return Ok(data);
     }
 
     private static string NormalizeCsv(string csv)

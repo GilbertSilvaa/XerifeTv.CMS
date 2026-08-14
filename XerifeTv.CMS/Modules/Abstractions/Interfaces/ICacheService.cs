@@ -2,7 +2,8 @@ namespace XerifeTv.CMS.Modules.Abstractions.Interfaces;
 
 public interface ICacheService
 {
-    T? GetValue<T>(string key);
-    void SetValue<T>(string key, T value);
-    void Remove(string key);
+    Task<T?> GetOrCreateAsync<T>(string key, TimeSpan ttl, Func<Task<T?>> factory);
+    Task<T?> GetValueAsync<T>(string key);
+    Task SetValueAsync<T>(string key, TimeSpan ttl, T value);
+    Task RemoveAsync(string key);
 }

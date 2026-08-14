@@ -78,7 +78,7 @@ public class BackgroundJobQueueWorker(
                         {
                             while (!cancellation.Token.IsCancellationRequested)
                             {
-                                var cancellationRequest = cacheService.GetValue<bool>($"cancelledJob_{jobQueue.Id}");
+                                var cancellationRequest = await cacheService.GetValueAsync<bool>($"cancelledJob_{jobQueue.Id}");
 
                                 if (cancellationRequest)
                                 {

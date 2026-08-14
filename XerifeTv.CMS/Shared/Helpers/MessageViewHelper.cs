@@ -16,5 +16,5 @@ public class MessageViewHelper
         => JsonSerializer.Serialize(new MessageView(EMessageViewType.SUCCESS, message));
 
     public static MessageView JsonStrToMessageView(string jsonStr)
-        => JsonSerializer.Deserialize<MessageView>(jsonStr);
+        => JsonSerializer.Deserialize<MessageView>(jsonStr)!;
 }
