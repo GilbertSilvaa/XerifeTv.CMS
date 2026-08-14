@@ -23,7 +23,7 @@ public class MoviesSpreadsheetImporter(
     {
         var importId = Guid.NewGuid().ToString();
         var emptyDto = new ImportSpreadsheetResponseDto(ErrorList: []);
-        cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, emptyDto);
+        await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(160), emptyDto);
 
         _ = HandleImportAsync(file, importId);
 
@@ -32,7 +32,7 @@ public class MoviesSpreadsheetImporter(
 
     public async Task<Result<ImportSpreadsheetResponseDto>> MonitorImportAsync(string importId)
     {
-        var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+        var response = await cacheService.GetValueAsync<ImportSpreadsheetResponseDto>(importId);
 
         if (response == null)
             return Result<ImportSpreadsheetResponseDto>.Failure(
@@ -43,12 +43,12 @@ public class MoviesSpreadsheetImporter(
 
     public async Task<Result<bool>> CancelImportAsync(string importId)
     {
-        var response = cacheService.GetValue<ImportSpreadsheetResponseDto>(importId);
+        var response = await cacheService.GetValueAsync<ImportSpreadsheetResponseDto>(importId);
 
         if (response == null)
             return Result<bool>.Failure(new Error("400", $"Import Id {importId} não encontrado"));
 
-        cacheService.SetValue<bool>($"cancelled_{importId}", true);
+        await cacheService.SetValueAsync($"cancelled_{importId}", TimeSpan.FromMinutes(60), true);
         return Result<bool>.Success(true);
     }
 
@@ -79,9 +79,9 @@ public class MoviesSpreadsheetImporter(
             var spreadsheetResult = spreadsheetReaderService.Read(expectedColluns, stream);
             ICollection<SpreadsheetMovieResponseDto> movieList = [];
 
-            void UpdateProgress()
+            async Task UpdateProgress()
             {
-                bool importCancelled = cacheService.GetValue<bool>($"cancelled_{importId}") == true;
+                bool importCancelled = await cacheService.GetValueAsync<bool>($"cancelled_{importId}") == true;
 
                 var progressCount = (int)(((float)(failCount + successCount) / spreadsheetResult.Length) * 100);
 
@@ -94,7 +94,7 @@ public class MoviesSpreadsheetImporter(
                     ProgressCount: progressCount,
                     IsCancelled: importCancelled);
 
-                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, _dto);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), _dto);
 
                 if (importCancelled)
                     throw new OperationCanceledException("Importação cancelada pelo usuário");
@@ -111,7 +111,7 @@ public class MoviesSpreadsheetImporter(
                 {
                     failCount++;
                     errorList.Add(ex.Message);
-                    UpdateProgress();
+                    await UpdateProgress();
                 }
             }
 
@@ -125,7 +125,7 @@ public class MoviesSpreadsheetImporter(
                     {
                         failCount++;
                         errorList.Add($"[{movieItem.ImdbId}] {mediaProfileResponse.Error?.Description ?? string.Empty}");
-                        UpdateProgress();
+                        await UpdateProgress();
                         continue;
                     }
 
@@ -140,7 +140,7 @@ public class MoviesSpreadsheetImporter(
                     {
                         failCount++;
                         errorList.Add($"[{movieItem.ImdbId}] {franchiseResponse.Error?.Description ?? string.Empty}");
-                        UpdateProgress();
+                        await UpdateProgress();
                         continue;
                     }
 
@@ -153,7 +153,7 @@ public class MoviesSpreadsheetImporter(
                 {
                     failCount++;
                     errorList.Add($"[{movieItem.ImdbId}] {movieImdbAPIResponse.Error?.Description ?? string.Empty}");
-                    UpdateProgress();
+                    await UpdateProgress();
                     continue;
                 }
 
@@ -223,8 +223,7 @@ public class MoviesSpreadsheetImporter(
                     errorList.Add($"[{movieItem.ImdbId}] {responseCreateOrUpdate.Error?.Description ?? string.Empty}");
                 }
 
-                UpdateProgress();
-                await Task.Delay(1200);
+                await UpdateProgress();
             }
         }
         catch (OperationCanceledException)
@@ -243,7 +242,7 @@ public class MoviesSpreadsheetImporter(
                     IsCancelled = true
                 };
 
-                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, progress);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), progress);
             }
         }
         catch (Exception ex)
@@ -262,7 +261,7 @@ public class MoviesSpreadsheetImporter(
                     ProgressCount = 100
                 };
 
-                cacheService.SetValue<ImportSpreadsheetResponseDto>(importId, progress);
+                await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), progress);
             }
         }
     }

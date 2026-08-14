@@ -79,10 +79,10 @@
         {
             <div class="card col-md-4 col-xl-2 pt-2">
                 <div class="w-auto h-100 position-relative" style="cursor: pointer;" data-bs-toggle="modal" data-bs-target="#movielDetailsModal-@movie?.Id">
-                    <img src="@movie.PosterUrl"
+                    <img src="@movie?.PosterUrl"
                          onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
                          class="card-img-top object-fit-cover"
-                         alt="@movie.Title"
+                         alt="@movie?.Title"
                          loading="lazy" style="height: 14rem;" />
 
                     @if (!string.IsNullOrEmpty(@movie?.Video?.Subtitle))

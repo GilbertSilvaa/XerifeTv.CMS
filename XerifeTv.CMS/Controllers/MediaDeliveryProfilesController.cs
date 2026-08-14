@@ -19,6 +19,8 @@ public class MediaDeliveryProfilesController(
     IAuditLogService auditLogService,
     IConfiguration configuration) : Controller
 {
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(10);
+
     public async Task<IActionResult> Create(CreateMediaDeliveryProfileRequestDto dto)
     {
         var response = await service.CreateAsync(dto);
@@ -51,6 +53,8 @@ public class MediaDeliveryProfilesController(
 
         if (response.IsSuccess)
         {
+            await InvalidateMediaDeliveryProfileCacheAsync(dto.Id);
+
             await this.AddAuditLogAsync(
                 auditLogService,
                 "MediaDeliveryProfile",
@@ -80,6 +84,8 @@ public class MediaDeliveryProfilesController(
 
             if (response.IsSuccess)
             {
+                await InvalidateMediaDeliveryProfileCacheAsync(id);
+
                 await this.AddAuditLogAsync(
                     auditLogService,
                     "MediaDeliveryProfile",
@@ -99,19 +105,47 @@ public class MediaDeliveryProfilesController(
     {
         var normalizedPath = mediaPath.Trim().ToLowerInvariant();
         var cacheKey = $"resolve-url:{normalizedPath}:{mediaDeliveryProfileId}";
-        var responseCache = cacheService.GetValue<GetResolveUrlResponseDto?>(cacheKey);
 
-        if (responseCache != null && isCached)
-            return Ok(new { responseCache?.Url, responseCache?.StreamFormat });
+        int? errorStatusCode = null;
+        string? errorDescription = null;
 
-        var response = await urlResolver.ResolveUrlAsync(mediaPath, mediaDeliveryProfileId);
+        async Task<GetResolveUrlResponseDto?> ResolveAsync()
+        {
+            var response = await urlResolver.ResolveUrlAsync(mediaPath, mediaDeliveryProfileId);
 
-        if (response.IsFailure)
-            return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
+            if (response.IsFailure)
+            {
+                errorStatusCode = int.Parse(response.Error.Code);
+                errorDescription = response.Error.Description;
+                return null;
+            }
 
-        cacheService.SetValue<GetResolveUrlResponseDto?>(cacheKey, response.Data);
+            return response.Data;
+        }
 
-        return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
+        GetResolveUrlResponseDto? data;
+
+        if (isCached)
+        {
+            data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+            {
+                var result = await ResolveAsync();
+
+                if (result is not null)
+                    await RegisterInvalidationKeyAsync(MediaDeliveryProfileIndexKey(mediaDeliveryProfileId), cacheKey);
+
+                return result;
+            });
+        }
+        else
+        {
+            data = await ResolveAsync();
+        }
+
+        if (errorStatusCode is not null)
+            return StatusCode(errorStatusCode.Value, errorDescription);
+
+        return Ok(new { data?.Url, data?.StreamFormat });
     }
 
     [Authorize(Roles = "admin, common")]
@@ -135,19 +169,30 @@ public class MediaDeliveryProfilesController(
 
         var normalizedPath = mediaPath.Trim().ToLowerInvariant();
         var cacheKey = $"resolve-url:{normalizedPath}:{mediaDeliveryProfileId}";
-        var responseCache = cacheService.GetValue<GetResolveUrlResponseDto?>(cacheKey);
 
-        if (responseCache != null)
-            return Ok(new { responseCache?.Url, responseCache?.StreamFormat });
+        int? errorStatusCode = null;
+        string? errorDescription = null;
 
-        var response = await urlResolver.ResolveUrlAsync(mediaPath, mediaDeliveryProfileId);
+        var data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+        {
+            var response = await urlResolver.ResolveUrlAsync(mediaPath, mediaDeliveryProfileId);
 
-        if (response.IsFailure)
-            return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
+            if (response.IsFailure)
+            {
+                errorStatusCode = int.Parse(response.Error.Code);
+                errorDescription = response.Error.Description;
+                return null;
+            }
 
-        cacheService.SetValue<GetResolveUrlResponseDto?>(cacheKey, response.Data);
+            await RegisterInvalidationKeyAsync(MediaDeliveryProfileIndexKey(mediaDeliveryProfileId), cacheKey);
 
-        return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
+            return response.Data;
+        });
+
+        if (errorStatusCode is not null)
+            return StatusCode(errorStatusCode.Value, errorDescription);
+
+        return Ok(new { data?.Url, data?.StreamFormat });
     }
 
     [AllowAnonymous]
@@ -164,5 +209,31 @@ public class MediaDeliveryProfilesController(
 
         return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
     }
-}
 
+    private static string MediaDeliveryProfileIndexKey(string mediaDeliveryProfileId)
+        => $"invalidation-index-media-delivery-profile-{mediaDeliveryProfileId}";
+
+    private async Task RegisterInvalidationKeyAsync(string indexKey, string cacheKey)
+    {
+        var keys = await cacheService.GetValueAsync<List<string>>(indexKey) ?? [];
+
+        if (keys.Contains(cacheKey)) return;
+
+        keys.Add(cacheKey);
+
+        await cacheService.SetValueAsync(indexKey, CacheTtl, keys);
+    }
+
+    private async Task InvalidateMediaDeliveryProfileCacheAsync(string mediaDeliveryProfileId)
+    {
+        var indexKey = MediaDeliveryProfileIndexKey(mediaDeliveryProfileId);
+        var keys = await cacheService.GetValueAsync<List<string>>(indexKey);
+
+        if (keys is null) return;
+
+        foreach (var key in keys)
+            await cacheService.RemoveAsync(key);
+
+        await cacheService.RemoveAsync(indexKey);
+    }
+}

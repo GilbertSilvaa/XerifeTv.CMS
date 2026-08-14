@@ -13,7 +13,7 @@ namespace XerifeTv.CMS.Modules.BackgroundJobQueue.Services;
 public class BackgroundJobQueueService(
     IStorageFilesService storageFilesService,
     IBackgroundJobQueueRepository repository,
-    ICacheService cacheService, 
+    ICacheService cacheService,
     IUserService userService) : IBackgroundJobQueueService
 {
     private readonly string[] _acceptedExtensions = [".xlsx", ".xls"];
@@ -126,7 +126,7 @@ public class BackgroundJobQueueService(
             if (entity == null)
                 return Result<bool>.Failure(new Error("404", "Background Job não encontrado"));
 
-            cacheService.SetValue<bool>($"cancelledJob_{jobId}", true);
+            await cacheService.SetValueAsync($"cancelledJob_{jobId}", TimeSpan.FromMinutes(60), true);
             return Result<bool>.Success(true);
         }
         catch (Exception ex)
