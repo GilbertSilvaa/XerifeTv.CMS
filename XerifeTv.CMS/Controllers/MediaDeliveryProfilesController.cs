@@ -53,6 +53,8 @@ public class MediaDeliveryProfilesController(
 
         if (response.IsSuccess)
         {
+            await InvalidateMediaDeliveryProfileCacheAsync(dto.Id);
+
             await this.AddAuditLogAsync(
                 auditLogService,
                 "MediaDeliveryProfile",
@@ -82,6 +84,8 @@ public class MediaDeliveryProfilesController(
 
             if (response.IsSuccess)
             {
+                await InvalidateMediaDeliveryProfileCacheAsync(id);
+
                 await this.AddAuditLogAsync(
                     auditLogService,
                     "MediaDeliveryProfile",
@@ -119,9 +123,24 @@ public class MediaDeliveryProfilesController(
             return response.Data;
         }
 
-        var data = isCached
-            ? await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, ResolveAsync)
-            : await ResolveAsync();
+        GetResolveUrlResponseDto? data;
+
+        if (isCached)
+        {
+            data = await cacheService.GetOrCreateAsync(cacheKey, CacheTtl, async () =>
+            {
+                var result = await ResolveAsync();
+
+                if (result is not null)
+                    await RegisterInvalidationKeyAsync(MediaDeliveryProfileIndexKey(mediaDeliveryProfileId), cacheKey);
+
+                return result;
+            });
+        }
+        else
+        {
+            data = await ResolveAsync();
+        }
 
         if (errorStatusCode is not null)
             return StatusCode(errorStatusCode.Value, errorDescription);
@@ -165,6 +184,8 @@ public class MediaDeliveryProfilesController(
                 return null;
             }
 
+            await RegisterInvalidationKeyAsync(MediaDeliveryProfileIndexKey(mediaDeliveryProfileId), cacheKey);
+
             return response.Data;
         });
 
@@ -188,5 +209,31 @@ public class MediaDeliveryProfilesController(
 
         return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
     }
-}
 
+    private static string MediaDeliveryProfileIndexKey(string mediaDeliveryProfileId)
+        => $"invalidation-index-media-delivery-profile-{mediaDeliveryProfileId}";
+
+    private async Task RegisterInvalidationKeyAsync(string indexKey, string cacheKey)
+    {
+        var keys = await cacheService.GetValueAsync<List<string>>(indexKey) ?? [];
+
+        if (keys.Contains(cacheKey)) return;
+
+        keys.Add(cacheKey);
+
+        await cacheService.SetValueAsync(indexKey, CacheTtl, keys);
+    }
+
+    private async Task InvalidateMediaDeliveryProfileCacheAsync(string mediaDeliveryProfileId)
+    {
+        var indexKey = MediaDeliveryProfileIndexKey(mediaDeliveryProfileId);
+        var keys = await cacheService.GetValueAsync<List<string>>(indexKey);
+
+        if (keys is null) return;
+
+        foreach (var key in keys)
+            await cacheService.RemoveAsync(key);
+
+        await cacheService.RemoveAsync(indexKey);
+    }
+}
