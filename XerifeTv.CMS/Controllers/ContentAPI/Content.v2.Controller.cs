@@ -302,12 +302,11 @@ public class ContentV2Controller(
         {
             var response = await service.GetHomeContentAsync();
 
-            if (!response.IsSuccess) return null;
+            if (!response.IsSuccess) return null; 
 
             return new
             {
-                featured = response.Data?.FeaturedContent,
-                featuredType = response.Data?.FeaturedContentType == EFeaturedContentType.MOVIE ? "movie" : "series",
+                featureds = response.Data?.FeaturedContents,
                 movieCategories = response.Data?.MovieCategores,
                 seriesCategories = response.Data?.SeriesCategores
             };

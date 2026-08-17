@@ -259,48 +259,40 @@ public class ContentV2Service(
         }
     }
 
-    public async Task<Result<GetHomeContentV2ResponseDto>> GetHomeContentAsync()
+    public async Task<Result<GetHomeContentV2ResponseDto>> GetHomeContentAsync(int featuredContentsLimit = 5)
     {
         try
         {
-            var random = new Random();
-            int randomValue = random.Next(1, 21);
+            var moviesResult = await movieRepository.GetByFilterAsync(new(
+                filter: EMovieSearchFilter.TITLE,
+                order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
+                search: string.Empty,
+                limitResults: featuredContentsLimit,
+                currentPage: 1,
+                isIncludeDisabled: false));
 
-            bool isMovieFeatured = randomValue % 2 == 0;
+            var movieContents = moviesResult.Items
+                .Select(i => MovieContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!))
+                .Select(c => new FeaturedContent(c, "movie"))
+                .ToList();
 
-            object? featuredContent;
-            EFeaturedContentType featuredType = EFeaturedContentType.MOVIE;
+            var seriesResult = await seriesRepository.GetByFilterAsync(new(
+                 filter: ESeriesSearchFilter.TITLE,
+                 search: string.Empty,
+                 limitResults: featuredContentsLimit,
+                 currentPage: 1,
+                 isIncludeDisabled: false));
 
-            if (isMovieFeatured)
-            {
-                var moviesResult = await movieRepository.GetByFilterAsync(new(
-                    filter: EMovieSearchFilter.TITLE,
-                    order: EMovieOrderFilter.REGISTRATION_DATE_DESC,
-                    search: string.Empty,
-                    limitResults: 1,
-                    currentPage: 1,
-                    isIncludeDisabled: false));
+            var seriesContents = seriesResult.Items
+                .Select(SeriesSummaryContentV2ResponseDto.FromEntity)
+                .Select(c => new FeaturedContent(c, "series"))
+                .ToList();
 
-                featuredContent = moviesResult.Items.Select(
-                    i => MovieContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)).FirstOrDefault();
-            }
-            else
-            {
-                var seriesResult = await seriesRepository.GetByFilterAsync(new(
-                     filter: ESeriesSearchFilter.TITLE,
-                     search: string.Empty,
-                     limitResults: 1,
-                     currentPage: 1,
-                     isIncludeDisabled: false));
-
-                featuredContent = seriesResult.Items.Select(SeriesSummaryContentV2ResponseDto.FromEntity).FirstOrDefault();
-                featuredType = EFeaturedContentType.SERIES;
-            }
+            var featuredContents = InterleaveLists(movieContents, seriesContents);
 
             return Result<GetHomeContentV2ResponseDto>.Success(new()
             {
-                FeaturedContent = featuredContent,
-                FeaturedContentType = featuredType,
+                FeaturedContents = [.. featuredContents.Take(featuredContentsLimit)],
                 MovieCategores = (await GetMoviesCategoriesAsync(6)).Data ?? [],
                 SeriesCategores = (await GetSeriesCategoriesAsync(6)).Data ?? []
             });
@@ -353,6 +345,23 @@ public class ContentV2Service(
         {
             return Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>.Failure(new("500", ex.Message));
         }
+    }
+
+    private static List<FeaturedContent> InterleaveLists(List<FeaturedContent> first, List<FeaturedContent> second)
+    {
+        var result = new List<FeaturedContent>(first.Count + second.Count);
+        int maxCount = Math.Max(first.Count, second.Count);
+
+        for (int i = 0; i < maxCount; i++)
+        {
+            if (i < first.Count)
+                result.Add(first[i]);
+
+            if (i < second.Count)
+                result.Add(second[i]);
+        }
+
+        return result;
     }
 }
 
