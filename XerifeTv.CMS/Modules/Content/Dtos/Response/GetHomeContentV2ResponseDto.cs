@@ -2,14 +2,9 @@
 
 public class GetHomeContentV2ResponseDto
 {
-    public object? FeaturedContent { get; set; }
-    public EFeaturedContentType FeaturedContentType { get; set; }
+    public List<FeaturedContent> FeaturedContents = [];
     public string[] MovieCategores { get; set; } = [];
     public string[] SeriesCategores { get; set; } = [];
 }
 
-public enum EFeaturedContentType
-{
-    MOVIE,
-    SERIES
-}
+public record FeaturedContent(object? Content, string Type);
