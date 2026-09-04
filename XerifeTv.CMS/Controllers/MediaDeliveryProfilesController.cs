@@ -145,7 +145,12 @@ public class MediaDeliveryProfilesController(
         if (errorStatusCode is not null)
             return StatusCode(errorStatusCode.Value, errorDescription);
 
-        return Ok(new { data?.Url, data?.StreamFormat });
+        string urlResult = data?.Url ?? "";
+        string routeMidiaProxy = normalizedPath.EndsWith(".mp4") ? "mp4" : "hls";
+        string urlEncrypted = CryptographyHelper.Encrypt(urlResult, configuration["SecuritySettings:ContentEncryptionKey"]!);
+        string urlMidiaProxy = $"/MediaProxy/{routeMidiaProxy}?url={Uri.EscapeDataString(urlEncrypted)}";
+
+        return Ok(new { Url = urlMidiaProxy, data?.StreamFormat });
     }
 
     [Authorize(Roles = "admin, common")]
@@ -157,7 +162,20 @@ public class MediaDeliveryProfilesController(
         if (response.IsFailure)
             return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
 
-        return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
+        string urlResult = response.Data?.Url ?? "";
+
+        string routeMidiaProxy = "hls";
+
+        if (Uri.TryCreate(urlResult, UriKind.Absolute, out var uri) &&
+            uri.AbsolutePath.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
+        {
+            routeMidiaProxy = "mp4";
+        }
+
+        string urlEncrypted = CryptographyHelper.Encrypt(urlResult, configuration["SecuritySettings:ContentEncryptionKey"]!);
+        string urlMidiaProxy = $"/MediaProxy/{routeMidiaProxy}?url={Uri.EscapeDataString(urlEncrypted)}";
+
+        return Ok(new { Url = urlMidiaProxy, response.Data?.StreamFormat });
     }
 
     [AllowAnonymous]
@@ -192,7 +210,12 @@ public class MediaDeliveryProfilesController(
         if (errorStatusCode is not null)
             return StatusCode(errorStatusCode.Value, errorDescription);
 
-        return Ok(new { data?.Url, data?.StreamFormat });
+        string urlResult = data?.Url ?? "";
+        string routeMidiaProxy = normalizedPath.EndsWith(".mp4") ? "mp4" : "hls";
+        string urlEncrypted = CryptographyHelper.Encrypt(urlResult, configuration["SecuritySettings:ContentEncryptionKey"]!);
+        string urlMidiaProxy = $"/MediaProxy/{routeMidiaProxy}?url={Uri.EscapeDataString(urlEncrypted)}";
+
+        return Ok(new { Url = urlMidiaProxy, data?.StreamFormat });
     }
 
     [AllowAnonymous]
@@ -207,7 +230,20 @@ public class MediaDeliveryProfilesController(
         if (response.IsFailure)
             return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
 
-        return Ok(new { response.Data?.Url, response.Data?.StreamFormat });
+        string urlResult = response.Data?.Url ?? "";
+
+        string routeMidiaProxy = "hls";
+
+        if (Uri.TryCreate(urlResult, UriKind.Absolute, out var uri) &&
+            uri.AbsolutePath.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase))
+        {
+            routeMidiaProxy = "mp4";
+        }
+
+        string urlEncrypted = CryptographyHelper.Encrypt(urlResult, configuration["SecuritySettings:ContentEncryptionKey"]!);
+        string urlMidiaProxy = $"/MediaProxy/{routeMidiaProxy}?url={Uri.EscapeDataString(urlEncrypted)}";
+
+        return Ok(new { Url = urlMidiaProxy, response.Data?.StreamFormat });
     }
 
     private static string MediaDeliveryProfileIndexKey(string mediaDeliveryProfileId)
