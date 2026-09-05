@@ -1,4 +1,5 @@
-﻿using Scalar.AspNetCore;
+﻿using Microsoft.AspNetCore.HttpOverrides;
+using Scalar.AspNetCore;
 using System.Globalization;
 using System.Text.Encodings.Web;
 using System.Text.Unicode;
@@ -33,6 +34,15 @@ builder.Services.AddConfiguration(builder.Configuration);
 builder.Services.AddSingleton<HtmlEncoder>(HtmlEncoder.Create(UnicodeRanges.BasicLatin, UnicodeRanges.Latin1Supplement));
 
 var app = builder.Build();
+
+// REMOVE (or restrict KnownProxies) if hosted without a
+// reverse proxy in front — otherwise these headers can be spoofed.
+app.UseForwardedHeaders(new ForwardedHeadersOptions
+{
+    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
+    KnownNetworks = { },
+    KnownProxies = { }
+});
 
 if (!app.Environment.IsDevelopment())
 {
