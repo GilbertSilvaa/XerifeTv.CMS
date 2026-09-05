@@ -46,7 +46,10 @@ public class MediaProxyController(
         });
 
         if (!response.IsSuccessStatusCode)
-            return StatusCode((int)response.StatusCode, $"Erro no servidor upstream: {response.StatusCode}");
+        {
+            var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            return StatusCode((int)response.StatusCode, errorBody);
+        }
 
         Response.StatusCode = (int)response.StatusCode;
 
