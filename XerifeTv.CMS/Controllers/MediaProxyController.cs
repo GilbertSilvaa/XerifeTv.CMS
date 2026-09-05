@@ -46,7 +46,7 @@ public class MediaProxyController(
         });
 
         if (!response.IsSuccessStatusCode)
-            return StatusCode((int)response.StatusCode, $"Erro no servidor upstream: {response.StatusCode}");
+            return Redirect(decryptedUrl);
 
         Response.StatusCode = (int)response.StatusCode;
 
