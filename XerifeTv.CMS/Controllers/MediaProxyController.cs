@@ -28,6 +28,7 @@ public class MediaProxyController(
             return BadRequest("URL inválida.");
 
         var request = new HttpRequestMessage(HttpMethod.Get, uri);
+        request.Headers.UserAgent.ParseAdd("Mozilla/5.0 (compatible; XerifeTvProxy/1.0)");
 
         if (Request.Headers.TryGetValue("Range", out var range))
             request.Headers.TryAddWithoutValidation("Range", range.ToString());
