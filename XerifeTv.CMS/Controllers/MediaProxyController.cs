@@ -151,6 +151,6 @@ public class MediaProxyController(
         var isPlaylist = uri.AbsolutePath.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase);
         var route = isPlaylist ? "hls" : "mp4";
 
-        return $"{Request.Scheme}://{Request.Host}/MediaProxy/{route}?url={encodedUrl}";
+        return $"https://{Request.Host}/MediaProxy/{route}?url={encodedUrl}";
     }
 }
