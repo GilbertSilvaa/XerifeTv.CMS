@@ -35,15 +35,6 @@ builder.Services.AddSingleton<HtmlEncoder>(HtmlEncoder.Create(UnicodeRanges.Basi
 
 var app = builder.Build();
 
-// REMOVE (or restrict KnownProxies) if hosted without a
-// reverse proxy in front — otherwise these headers can be spoofed.
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto,
-    KnownNetworks = { },
-    KnownProxies = { }
-});
-
 if (!app.Environment.IsDevelopment())
 {
 	app.Urls.Add("http://*:80");
