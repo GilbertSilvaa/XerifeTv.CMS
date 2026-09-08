@@ -10,7 +10,8 @@ namespace XerifeTv.CMS.Controllers;
 [ApiController]
 public class MediaProxyController(
     IHttpClientFactory httpClientFactory,
-    IConfiguration configuration) : ControllerBase
+    IConfiguration configuration,
+    IWebHostEnvironment environment) : ControllerBase
 {
     private readonly HttpClient httpClient = httpClientFactory.CreateClient();
 
@@ -151,6 +152,8 @@ public class MediaProxyController(
         var isPlaylist = uri.AbsolutePath.EndsWith(".m3u8", StringComparison.OrdinalIgnoreCase);
         var route = isPlaylist ? "hls" : "mp4";
 
-        return $"https://{Request.Host}/MediaProxy/{route}?url={encodedUrl}";
+        string scheme = Request.IsHttps || !environment.IsDevelopment() ? "https" : Request.Scheme;
+
+        return $"{scheme}://{Request.Host}/MediaProxy/{route}?url={encodedUrl}";
     }
 }
