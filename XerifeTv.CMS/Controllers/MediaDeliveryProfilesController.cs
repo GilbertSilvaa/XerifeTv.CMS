@@ -146,6 +146,10 @@ public class MediaDeliveryProfilesController(
             return StatusCode(errorStatusCode.Value, errorDescription);
 
         string urlResult = data?.Url ?? "";
+
+        if (configuration["UseMediaProxy"]?.Equals("true") == false)
+            return Ok(new { Url = urlResult, data?.StreamFormat });
+
         string routeMidiaProxy = normalizedPath.EndsWith(".mp4") ? "mp4" : "hls";
         string urlEncrypted = CryptographyHelper.Encrypt(urlResult, configuration["SecuritySettings:ContentEncryptionKey"]!);
         string urlMidiaProxy = $"/MediaProxy/{routeMidiaProxy}?url={Uri.EscapeDataString(urlEncrypted)}";
@@ -163,6 +167,9 @@ public class MediaDeliveryProfilesController(
             return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
 
         string urlResult = response.Data?.Url ?? "";
+
+        if (configuration["UseMediaProxy"]?.Equals("true") == false)
+            return Ok(new { Url = urlResult, response.Data?.StreamFormat });
 
         string routeMidiaProxy = "hls";
 
@@ -211,6 +218,10 @@ public class MediaDeliveryProfilesController(
             return StatusCode(errorStatusCode.Value, errorDescription);
 
         string urlResult = data?.Url ?? "";
+
+        if (configuration["UseMediaProxy"]?.Equals("true") == false)
+            return Ok(new { Url = urlResult, data?.StreamFormat });
+
         string routeMidiaProxy = normalizedPath.EndsWith(".mp4") ? "mp4" : "hls";
         string urlEncrypted = CryptographyHelper.Encrypt(urlResult, configuration["SecuritySettings:ContentEncryptionKey"]!);
         string urlMidiaProxy = $"/MediaProxy/{routeMidiaProxy}?url={Uri.EscapeDataString(urlEncrypted)}";
@@ -231,6 +242,9 @@ public class MediaDeliveryProfilesController(
             return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
 
         string urlResult = response.Data?.Url ?? "";
+
+        if (configuration["UseMediaProxy"]?.Equals("true") == false)
+            return Ok(new { Url = urlResult, response.Data?.StreamFormat });
 
         string routeMidiaProxy = "hls";
 
