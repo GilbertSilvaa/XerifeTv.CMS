@@ -51,8 +51,8 @@
         <hr />
     </header>
 
-    <div class="row mb-4 input-group input-group-sm">
-        <select class="form-select shadow-none"
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <select class="form-select form-select-sm shadow-none"
                 name="seasonFilter"
                 id="seasonFilter">
 
@@ -68,15 +68,24 @@
                 }
             }
         </select>
+
+        <div class="btn-group btn-group-sm ms-auto d-none d-md-flex" role="group" aria-label="Modo de visualização">
+            <button type="button" class="btn btn-outline-secondary shadow-sm" data-view="grid" title="Grade">
+                <i class="fa-solid fa-table-cells-large"></i>
+            </button>
+            <button type="button" class="btn btn-outline-secondary shadow-sm" data-view="table" title="Tabela">
+                <i class="fa-solid fa-table-list"></i>
+            </button>
+        </div>
     </div>
 
-    <div class="row gap-2">
-        <input id="subtitle-file"
-               type="file"
-               accept=".vtt"
-               style="display: none"
-               onchange="uploadSubtitleFile()" />
+    <input id="subtitle-file"
+           type="file"
+           accept=".vtt"
+           style="display: none"
+           onchange="uploadSubtitleFile()" />
 
+    <div id="gridView" class="row gap-2">
         @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
         {
             <div class="card mb-3 col-md-12 col-lg-8 col-xl-5">
@@ -132,18 +141,116 @@
                     </div>
                 </div>
             </div>
-
-            @await Html.PartialAsync("_EpisodeFormModal", new EpisodeFormModelView(episode, Model?.MediaDeliveryProfiles ?? []))
-        }
-
-        @if (Model?.EpisodesDto?.Episodes.Count() == 0)
-        {
-            <p>Nenhum registro encontrado.</p>
         }
     </div>
 
+    <div id="tableView" class="table-responsive d-none">
+        <table class="table table-hover table-sm align-middle">
+            <thead>
+                <tr>
+                    <th style="width: 88px;"></th>
+                    <th class="p-2" style="width: 64px;">Nº</th>
+                    <th class="p-2">Título</th>
+                    <th class="d-none d-lg-table-cell p-2">Duração</th>
+                    <th class="p-2">Status</th>
+                    <th class="text-end p-2">...</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
+                {
+                    <tr>
+                        <td>
+                            <img src="@episode.BannerUrl"
+                                 class="rounded object-fit-cover"
+                                 width="72" height="40"
+                                 alt="@episode.Title"
+                                 loading="lazy" />
+                        </td>
+                        <td>@episode.Number</td>
+                        <td class="fw-semibold">
+                            @episode.Title
+                            @if (!string.IsNullOrEmpty(episode.Video?.Subtitle))
+                            {
+                                <span class="badge text-bg-warning text-white ms-1">CC</span>
+                            }
+                        </td>
+                        <td class="d-none d-lg-table-cell">@DateTimeHelper.ConvertSecondsToHHmm(episode.Video?.Duration ?? 0)</td>
+                        <td>
+                            @if (episode.Disabled)
+                            {
+                                <span class="badge text-bg-danger">Desativado</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-success">Ativo</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-info shadow-sm"
+                               data-bs-toggle="modal"
+                               data-bs-target="#videoModal"
+                               data-bs-title="@episode.Title"
+                               data-bs-banner="@episode.BannerUrl"
+                               data-bs-video-subtitle="@episode.Video?.Subtitle"
+                               data-bs-video-resolver="@episode.UrlResolverPath"
+                               title="Play">
+                                <i class="fa-solid fa-play"></i>
+                            </a>
+
+                            @if (!User.IsInRole("visitor"))
+                            {
+                                <a class="btn btn-sm btn-outline-primary shadow-sm"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#episodeFormModal-@episode.Id"
+                                   title="Editar">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (Model?.EpisodesDto?.Episodes.Count() == 0)
+    {
+        <p>Nenhum registro encontrado.</p>
+    }
+
+    @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
+    {
+        @await Html.PartialAsync("_EpisodeFormModal", new EpisodeFormModelView(episode, Model?.MediaDeliveryProfiles ?? []))
+    }
+
     @await Html.PartialAsync("_ImportEpisodesProgressModal")
 </div>
+
+<script>
+    (function () {
+        const KEY = 'episodes:view';
+        const grid = document.getElementById('gridView');
+        const table = document.getElementById('tableView');
+        const buttons = document.querySelectorAll('[data-view]');
+
+        function apply(view) {
+            const isTable = view === 'table' && window.matchMedia('(min-width: 768px)').matches;
+            grid.classList.toggle('d-none', isTable);
+            table.classList.toggle('d-none', !isTable);
+            buttons.forEach(b => b.classList.toggle('active', b.dataset.view === (isTable ? 'table' : 'grid')));
+        }
+
+        let saved = 'grid';
+        try { saved = localStorage.getItem(KEY) || 'grid'; } catch (e) { }
+        apply(saved);
+
+        buttons.forEach(b => b.addEventListener('click', function () {
+            apply(b.dataset.view);
+            try { localStorage.setItem(KEY, b.dataset.view); } catch (e) { }
+        }));
+    })();
+</script>
 
 @section scripts {
     <script defer>
