@@ -31,15 +31,15 @@
             <i class="fa-solid fa-rotate"></i>
         </a>
 
-        <div class="col-md-8 col-lg-5">
-            <form class="input-group input-group-sm"
+        <div class="col-md-8 col-lg-5 d-flex align-items-center gap-2">
+            <form class="input-group input-group-sm flex-grow-1"
                   asp-controller="Channels"
                   asp-action="Index"
                   method="get">
 
                 @* <input type="hidden"
-                       name="currentPage"
-                       value="@(ViewBag.Filter is not null ? ViewBag.CurrentPage : 1)" /> *@
+                   name="currentPage"
+                   value="@(ViewBag.Filter is not null ? ViewBag.CurrentPage : 1)" /> *@
 
                 <select class="form-select shadow-none" name="filter">
                     @foreach (var filter in filters)
@@ -64,13 +64,22 @@
                     <i class="fa-solid fa-magnifying-glass"></i>
                 </button>
             </form>
+
+            <div class="btn-group btn-group-sm flex-shrink-0 d-none d-md-flex" role="group" aria-label="Modo de visualização">
+                <button type="button" class="btn btn-outline-secondary shadow-sm" data-view="grid" title="Grade">
+                    <i class="fa-solid fa-table-cells-large"></i>
+                </button>
+                <button type="button" class="btn btn-outline-secondary shadow-sm" data-view="table" title="Tabela">
+                    <i class="fa-solid fa-table-list"></i>
+                </button>
+            </div>
         </div>
     </div>
 
 
     @await Html.PartialAsync("_VideoModal")
 
-    <div class="row gap-3">
+    <div id="gridView" class="row gap-3">
         @foreach (var channel in Model)
         {
             <div class="card col-md-4 col-xl-2 pt-2">
@@ -119,12 +128,98 @@
                 </div>
             </div>
         }
-
-        @if (Model?.Count() <= 0)
-        {
-            <p>Nenhum registro encontrado.</p>
-        }
     </div>
+
+    <div id="tableView" class="table-responsive d-none">
+        <table class="table table-hover table-sm align-middle">
+            <thead>
+                <tr>
+                    <th style="width: 88px;"></th>
+                    <th class="p-2">Título</th>
+                    <th class="p-2">Status</th>
+                    <th class="text-end p-2">...</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var channel in Model)
+                {
+                    <tr>
+                        <td>
+                            <img src="@channel.LogoUrl"
+                                 onerror="this.onerror=null; this.src='/assets/poster_default.jpg';"
+                                 class="rounded object-fit-cover"
+                                 width="72" height="40"
+                                 alt="@channel.Title"
+                                 loading="lazy" />
+                        </td>
+                        <td class="fw-semibold">@channel.Title</td>
+                        <td>
+                            @if (channel.Disabled)
+                            {
+                                <span class="badge text-bg-danger">Desativado</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-success">Ativo</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap">
+                            <a class="btn btn-sm btn-outline-info shadow-sm"
+                               data-bs-toggle="modal"
+                               data-bs-target="#videoModal"
+                               data-bs-title="@channel.Title"
+                               data-bs-banner="@channel.LogoUrl"
+                               data-bs-video-resolver="@channel.UrlResolverPath"
+                               title="Play">
+                                <i class="fa-solid fa-play"></i>
+                            </a>
+
+                            @if (!User.IsInRole("visitor"))
+                            {
+                                <a class="btn btn-sm btn-outline-primary shadow-sm"
+                                   asp-controller="Channels"
+                                   asp-action="Form"
+                                   asp-route-id="@channel.Id"
+                                   title="Editar">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <p>Nenhum registro encontrado.</p>
+    }
 
     @await Html.PartialAsync("_Pagination")
 </div>
+
+<script>
+    (function () {
+        const KEY = 'channels:view';
+        const grid = document.getElementById('gridView');
+        const table = document.getElementById('tableView');
+        const buttons = document.querySelectorAll('[data-view]');
+
+        function apply(view) {
+            const isTable = view === 'table' && window.matchMedia('(min-width: 768px)').matches;
+            grid.classList.toggle('d-none', isTable);
+            table.classList.toggle('d-none', !isTable);
+            buttons.forEach(b => b.classList.toggle('active', b.dataset.view === (isTable ? 'table' : 'grid')));
+        }
+
+        let saved = 'grid';
+        try { saved = localStorage.getItem(KEY) || 'grid'; } catch (e) { }
+        apply(saved);
+
+        buttons.forEach(b => b.addEventListener('click', function () {
+            apply(b.dataset.view);
+            try { localStorage.setItem(KEY, b.dataset.view); } catch (e) { }
+        }));
+    })();
+</script>
