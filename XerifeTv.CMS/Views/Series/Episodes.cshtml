@@ -10,12 +10,28 @@
     ViewData["Title"] = "Séries";
 
     var episodeEmpty = new Episode { Id = string.Empty };
+
+    var currentView = Context.Request.Cookies["episodes_view"] == "table" ? "table" : "grid";
 }
 
 <style>
     @@media (min-width: 800px) {
         #seasonFilter {
             max-width: 20%;
+        }
+    }
+
+    #episodesViews #tableView {
+        display: none;
+    }
+
+    @@media (min-width: 768px) {
+        #episodesViews[data-view="table"] #gridView {
+            display: none;
+        }
+
+        #episodesViews[data-view="table"] #tableView {
+            display: block;
         }
     }
 </style>
@@ -70,10 +86,14 @@
         </select>
 
         <div class="btn-group btn-group-sm ms-auto d-none d-md-flex" role="group" aria-label="Modo de visualização">
-            <button type="button" class="btn btn-outline-secondary shadow-sm" data-view="grid" title="Grade">
+            <button type="button"
+                    class="btn btn-outline-secondary shadow-sm @(currentView == "grid" ? "active" : "")"
+                    data-view="grid" title="Grade">
                 <i class="fa-solid fa-table-cells-large"></i>
             </button>
-            <button type="button" class="btn btn-outline-secondary shadow-sm" data-view="table" title="Tabela">
+            <button type="button"
+                    class="btn btn-outline-secondary shadow-sm @(currentView == "table" ? "active" : "")"
+                    data-view="table" title="Tabela">
                 <i class="fa-solid fa-table-list"></i>
             </button>
         </div>
@@ -85,133 +105,136 @@
            style="display: none"
            onchange="uploadSubtitleFile()" />
 
-    <div id="gridView" class="row gap-2">
-        @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
-        {
-            <div class="card mb-3 col-md-12 col-lg-8 col-xl-5">
-                <div class="row g-0">
-                    <div class="col-md-4">
-                        <div class="w-auto h-100 position-relative">
-                            <img src="@episode.BannerUrl"
-                                 class="img-fluid h-100 w-100 object-fit-cover"
-                                 alt="@episode.Title"
-                                 style="max-height: 188px;">
+    <div id="episodesViews" data-view="@currentView">
 
-                            @if (@episode.Disabled)
-                            {
-                                <span class="position-absolute text-danger"
-                                      style="top: 6px; left: 8px; font-size: 24px;">
-                                    <i class="fa-solid fa-circle-exclamation"></i>
-                                </span>
-                            }
+        <div id="gridView" class="row gap-2">
+            @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
+            {
+                <div class="card mb-3 col-md-12 col-lg-8 col-xl-5">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <div class="w-auto h-100 position-relative">
+                                <img src="@episode.BannerUrl"
+                                     class="img-fluid h-100 w-100 object-fit-cover"
+                                     alt="@episode.Title"
+                                     style="max-height: 188px;">
+
+                                @if (@episode.Disabled)
+                                {
+                                    <span class="position-absolute text-danger"
+                                          style="top: 6px; left: 8px; font-size: 24px;">
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">@episode.Title</h5>
+                                <p class="card-text">
+                                    @DateTimeHelper.ConvertSecondsToHHmm(episode.Video?.Duration ?? 0)
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-body-secondary">
+                                        Temporada @episode.Season | Episódio @episode.Number
+                                    </small>
+                                </p>
+
+                                <div class="d-flex gap-2">
+                                    <a class="btn btn-sm btn-info"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#videoModal"
+                                       data-bs-title="@episode.Title"
+                                       data-bs-banner="@episode.BannerUrl"
+                                       data-bs-video-subtitle="@episode.Video?.Subtitle"
+                                       data-bs-video-resolver="@episode.UrlResolverPath">
+                                        <i class="fa-solid fa-play"></i> Play
+                                    </a>
+
+                                    @if (!User.IsInRole("visitor"))
+                                    {
+                                        <a class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episode.Id">
+                                            <i class="fa-solid fa-pen-to-square"></i> Editar
+                                        </a>
+                                    }
+                                </div>
+
+                            </div>
                         </div>
                     </div>
-                    <div class="col-md-8">
-                        <div class="card-body">
-                            <h5 class="card-title">@episode.Title</h5>
-                            <p class="card-text">
-                                @DateTimeHelper.ConvertSecondsToHHmm(episode.Video?.Duration ?? 0)
-                            </p>
-                            <p class="card-text">
-                                <small class="text-body-secondary">
-                                    Temporada @episode.Season | Episódio @episode.Number
-                                </small>
-                            </p>
+                </div>
+            }
+        </div>
 
-                            <div class="d-flex gap-2">
-                                <a class="btn btn-sm btn-info"
+        <div id="tableView" class="table-responsive">
+            <table class="table table-hover table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 88px;"></th>
+                        <th class="p-2" style="width: 64px;">Nº</th>
+                        <th class="p-2">Título</th>
+                        <th class="d-none d-lg-table-cell p-2">Duração</th>
+                        <th class="p-2">Status</th>
+                        <th class="text-end p-2">...</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
+                    {
+                        <tr>
+                            <td>
+                                <img src="@episode.BannerUrl"
+                                     class="rounded object-fit-cover"
+                                     width="72" height="40"
+                                     alt="@episode.Title"
+                                     loading="lazy" />
+                            </td>
+                            <td>@episode.Number</td>
+                            <td class="fw-semibold">
+                                @episode.Title
+                                @if (!string.IsNullOrEmpty(episode.Video?.Subtitle))
+                                {
+                                    <span class="badge text-bg-warning text-white ms-1">CC</span>
+                                }
+                            </td>
+                            <td class="d-none d-lg-table-cell">@DateTimeHelper.ConvertSecondsToHHmm(episode.Video?.Duration ?? 0)</td>
+                            <td>
+                                @if (episode.Disabled)
+                                {
+                                    <span class="badge text-bg-danger">Desativado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-success">Ativo</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-info shadow-sm"
                                    data-bs-toggle="modal"
                                    data-bs-target="#videoModal"
                                    data-bs-title="@episode.Title"
                                    data-bs-banner="@episode.BannerUrl"
                                    data-bs-video-subtitle="@episode.Video?.Subtitle"
-                                   data-bs-video-resolver="@episode.UrlResolverPath">
-                                    <i class="fa-solid fa-play"></i> Play
+                                   data-bs-video-resolver="@episode.UrlResolverPath"
+                                   title="Play">
+                                    <i class="fa-solid fa-play"></i>
                                 </a>
 
                                 @if (!User.IsInRole("visitor"))
                                 {
-                                    <a class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episode.Id">
-                                        <i class="fa-solid fa-pen-to-square"></i> Editar
+                                    <a class="btn btn-sm btn-outline-primary shadow-sm"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#episodeFormModal-@episode.Id"
+                                       title="Editar">
+                                        <i class="fa-solid fa-pen-to-square"></i>
                                     </a>
                                 }
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-        }
-    </div>
-
-    <div id="tableView" class="table-responsive d-none">
-        <table class="table table-hover table-sm align-middle">
-            <thead>
-                <tr>
-                    <th style="width: 88px;"></th>
-                    <th class="p-2" style="width: 64px;">Nº</th>
-                    <th class="p-2">Título</th>
-                    <th class="d-none d-lg-table-cell p-2">Duração</th>
-                    <th class="p-2">Status</th>
-                    <th class="text-end p-2">...</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
-                {
-                    <tr>
-                        <td>
-                            <img src="@episode.BannerUrl"
-                                 class="rounded object-fit-cover"
-                                 width="72" height="40"
-                                 alt="@episode.Title"
-                                 loading="lazy" />
-                        </td>
-                        <td>@episode.Number</td>
-                        <td class="fw-semibold">
-                            @episode.Title
-                            @if (!string.IsNullOrEmpty(episode.Video?.Subtitle))
-                            {
-                                <span class="badge text-bg-warning text-white ms-1">CC</span>
-                            }
-                        </td>
-                        <td class="d-none d-lg-table-cell">@DateTimeHelper.ConvertSecondsToHHmm(episode.Video?.Duration ?? 0)</td>
-                        <td>
-                            @if (episode.Disabled)
-                            {
-                                <span class="badge text-bg-danger">Desativado</span>
-                            }
-                            else
-                            {
-                                <span class="badge text-bg-success">Ativo</span>
-                            }
-                        </td>
-                        <td class="text-end text-nowrap">
-                            <a class="btn btn-sm btn-outline-info shadow-sm"
-                               data-bs-toggle="modal"
-                               data-bs-target="#videoModal"
-                               data-bs-title="@episode.Title"
-                               data-bs-banner="@episode.BannerUrl"
-                               data-bs-video-subtitle="@episode.Video?.Subtitle"
-                               data-bs-video-resolver="@episode.UrlResolverPath"
-                               title="Play">
-                                <i class="fa-solid fa-play"></i>
-                            </a>
-
-                            @if (!User.IsInRole("visitor"))
-                            {
-                                <a class="btn btn-sm btn-outline-primary shadow-sm"
-                                   data-bs-toggle="modal"
-                                   data-bs-target="#episodeFormModal-@episode.Id"
-                                   title="Editar">
-                                    <i class="fa-solid fa-pen-to-square"></i>
-                                </a>
-                            }
-                        </td>
-                    </tr>
-                }
-            </tbody>
-        </table>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
     </div>
 
     @if (Model?.EpisodesDto?.Episodes.Count() == 0)
@@ -229,25 +252,13 @@
 
 <script>
     (function () {
-        const KEY = 'episodes:view';
-        const grid = document.getElementById('gridView');
-        const table = document.getElementById('tableView');
-        const buttons = document.querySelectorAll('[data-view]');
-
-        function apply(view) {
-            const isTable = view === 'table' && window.matchMedia('(min-width: 768px)').matches;
-            grid.classList.toggle('d-none', isTable);
-            table.classList.toggle('d-none', !isTable);
-            buttons.forEach(b => b.classList.toggle('active', b.dataset.view === (isTable ? 'table' : 'grid')));
-        }
-
-        let saved = 'grid';
-        try { saved = localStorage.getItem(KEY) || 'grid'; } catch (e) { }
-        apply(saved);
+        const container = document.getElementById('episodesViews');
+        const buttons = document.querySelectorAll('button[data-view]');
 
         buttons.forEach(b => b.addEventListener('click', function () {
-            apply(b.dataset.view);
-            try { localStorage.setItem(KEY, b.dataset.view); } catch (e) { }
+            container.dataset.view = b.dataset.view;
+            buttons.forEach(x => x.classList.toggle('active', x === b));
+            document.cookie = 'episodes_view=' + b.dataset.view + '; path=/; max-age=31536000; SameSite=Lax';
         }));
     })();
 </script>
