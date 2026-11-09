@@ -12,6 +12,8 @@ public class UpdateMovieRequestDto
     public string? FranchiseId { get; init; }
     public string PosterUrl { get; init; } = string.Empty;
     public string BannerUrl { get; init; } = string.Empty;
+    public string MobileBannerUrl { get; init; } = string.Empty;
+    public string? TitleImageUrl { get; init; }
     public int ReleaseYear { get; init; }
     public int ParentalRating { get; init; }
     public float Review { get; init; }
@@ -41,6 +43,8 @@ public class UpdateMovieRequestDto
             Categories = categorieList,
             PosterUrl = PosterUrl,
             BannerUrl = BannerUrl,
+            MobileBannerUrl = MobileBannerUrl,
+            TitleImageUrl = TitleImageUrl,
             ReleaseYear = ReleaseYear,
             ParentalRating = ParentalRating,
             Review = Review,

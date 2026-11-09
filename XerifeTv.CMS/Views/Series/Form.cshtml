@@ -197,6 +197,29 @@
                 </div>
             </div>
 
+            <div class="row mb-3">
+                <div class="col-6">
+                    <label for="titleImageUrl" class="form-label">Imagem do título (URL)</label>
+                    <input type="text"
+                           class="form-control"
+                           id="titleImageUrl"
+                           name="titleImageUrl"
+                           placeholder="http://imagem.com/title.png"
+                           value="@Model?.SeriesDto?.TitleImageUrl">
+                </div>
+
+                <div class="col-6">
+                    <label for="mobileBannerUrl" class="form-label">Banner mobile (URL)</label>
+                    <input type="text"
+                           class="form-control"
+                           id="mobileBannerUrl"
+                           name="mobileBannerUrl"
+                           placeholder="http://imagem.com/mobile.jpg"
+                           value="@Model?.SeriesDto?.MobileBannerUrl"
+                           required>
+                </div>
+            </div>
+
             <div class="col-12 col-md-6 mb-3">
                 <label for="numberSeasons" class="form-label">Qtde Temporadas</label>
                 <input type="number"
@@ -287,6 +310,8 @@
                 $('#review').val(String(response.voteAverage).replace(',', '.'));
                 $('#posterUrl').val(response.posterUrl);
                 $('#bannerUrl').val(response.bannerUrl);
+                $('#titleImageUrl').val(response.titleImageUrl);
+                $('#mobileBannerUrl').val(response.mobileBannerUrl);
                 $('#numberSeasons').val(response.numberSeasons);
             }
             finally {

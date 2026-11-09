@@ -41,5 +41,16 @@ public class GetMovieByImdbResponseDto
 
     public long DurationInSeconds => DurationInMinutes * 60L;
 
+    public string? TitleImageUrl { get; private set; }
+    public string MobileBannerUrl { get; private set; } = string.Empty;
+
+    public void ApplyImages(TmdbImagesResponseDto images)
+    {
+        TitleImageUrl = images.Logos.FirstOrDefault(image => image.Language == "pt")?.Url
+            ?? images.Logos.FirstOrDefault(image => image.Language is null)?.Url;
+        MobileBannerUrl = images.Posters.FirstOrDefault(image => image.Language is null)?.Url
+            ?? BannerUrl;
+    }
+
     public record GenreDto(int Id, string Name);
 }

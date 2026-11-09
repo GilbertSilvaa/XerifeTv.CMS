@@ -8,7 +8,7 @@ public class GetAllResultsByImdbIdResponseDto
     public List<TmdbTvShowDto> TvResults { get; set; } = new();
 
     [JsonProperty("movie_results")]
-    public List<object> MovieResults { get; set; } = new();
+    public List<TmdbMovieDto> MovieResults { get; set; } = new();
 
     [JsonProperty("person_results")]
     public List<object> PersonResults { get; set; } = new();
@@ -36,4 +36,10 @@ public class TmdbTvShowDto
         set => _posterUrl =
             $"https://images.plex.tv/photo?size=medium-360&scale=1&url=https://image.tmdb.org/t/p/original{value}";
     }
+}
+
+public class TmdbMovieDto
+{
+    [JsonProperty("id")]
+    public int Id { get; set; }
 }

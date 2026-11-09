@@ -9,6 +9,8 @@ public class SeriesSummaryContentV2ResponseDto
     public string[] Categories { get; private set; } = [];
     public string PosterURL { get; private set; } = string.Empty;
     public string BannerURL { get; private set; } = string.Empty;
+    public string MobileBannerURL { get; private set; } = string.Empty;
+    public string? TitleImageURL { get; private set; }
     public string ParentalRating { get; private set; } = string.Empty;
     public int ReleaseYear { get; private set; }
     public double RatingImdb { get; private set; }
@@ -26,6 +28,8 @@ public class SeriesSummaryContentV2ResponseDto
             Categories = [.. entity.Categories],
             PosterURL = entity.PosterUrl,
             BannerURL = entity.BannerUrl,
+            MobileBannerURL = entity.MobileBannerUrl,
+            TitleImageURL = entity.TitleImageUrl,
             ParentalRating = entity.ParentalRating == 0 ? "L" : entity.ParentalRating.ToString(),
             ReleaseYear = entity.ReleaseYear,
             RatingImdb = entity.Review,
