@@ -40,8 +40,16 @@ public class ImdbService(IConfiguration configuration) : IImdbService
     {
         try
         {
+            var allResults = await GetAllResultsByImdbIdAsync(imdbId);
+            if (allResults.IsFailure)
+                return Result<GetMovieByImdbResponseDto?>.Failure(allResults.Error);
+
+            var movieResult = allResults.Data?.MovieResults.FirstOrDefault();
+            if (movieResult is null)
+                return Result<GetMovieByImdbResponseDto?>.Failure(new Error("404", $"[{imdbId}] filme inválido"));
+
             var client = new HttpClient();
-            var url = $"https://api.themoviedb.org/3/movie/{imdbId}";
+            var url = $"https://api.themoviedb.org/3/movie/{movieResult.Id}";
             var tmdbKey = configuration["Tmdb:Key"];
 
             var response = await client.GetAsync($"{url}?api_key={tmdbKey}&language=pt-BR&page=1");
@@ -56,6 +64,10 @@ public class ImdbService(IConfiguration configuration) : IImdbService
             if (result is null)
                 return Result<GetMovieByImdbResponseDto?>.Failure(
                     new Error("404", $"Imdb ID: {imdbId} inválido"));
+
+            var images = await GetImagesAsync(client, "movie", movieResult.Id, tmdbKey);
+            if (images is not null) result.ApplyImages(images);
+            else result.ApplyImages(new TmdbImagesResponseDto());
 
             return Result<GetMovieByImdbResponseDto?>.Success(result);
         }
@@ -95,6 +107,10 @@ public class ImdbService(IConfiguration configuration) : IImdbService
             if (result is null)
                 return Result<GetSeriesByImdbResponseDto?>.Failure(
                     new Error("404", $"Imdb ID: {imdbId} inválido"));
+
+            var images = await GetImagesAsync(client, "tv", seriesResult.Id, tmdbKey);
+            if (images is not null) result.ApplyImages(images);
+            else result.ApplyImages(new TmdbImagesResponseDto());
 
             return Result<GetSeriesByImdbResponseDto?>.Success(result);
         }
@@ -137,6 +153,14 @@ public class ImdbService(IConfiguration configuration) : IImdbService
             var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
             return Result<GetSeriesEpisodesBySeasonResponseDto?>.Failure(error);
         }
+    }
+
+    private async Task<TmdbImagesResponseDto?> GetImagesAsync(HttpClient client, string mediaType, int tmdbId, string? tmdbKey)
+    {
+        var response = await client.GetAsync($"https://api.themoviedb.org/3/{mediaType}/{tmdbId}/images?api_key={tmdbKey}&include_image_language=pt,null");
+        if (!response.IsSuccessStatusCode) return null;
+
+        return JsonConvert.DeserializeObject<TmdbImagesResponseDto>(await response.Content.ReadAsStringAsync());
     }
 }
 

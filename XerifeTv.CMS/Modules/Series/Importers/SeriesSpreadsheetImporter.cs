@@ -184,6 +184,8 @@ public class SeriesSpreadsheetImporter(
                     Categories = String.Join(", ", seriesByImdbResponse?.Data?.Genres.Select(g => g.Name.ToLower()) ?? []),
                     PosterUrl = seriesByImdbResponse?.Data?.PosterUrl ?? string.Empty,
                     BannerUrl = seriesByImdbResponse?.Data?.BannerUrl ?? string.Empty,
+                    MobileBannerUrl = seriesByImdbResponse?.Data?.MobileBannerUrl ?? seriesByImdbResponse?.Data?.BannerUrl ?? string.Empty,
+                    TitleImageUrl = seriesByImdbResponse?.Data?.TitleImageUrl,
                     ReleaseYear = int.Parse(seriesByImdbResponse?.Data?.ReleaseYear ?? "0"),
                     ParentalRating = seriesItem.ParentalRating,
                     Review = seriesByImdbResponse?.Data?.VoteAverage ?? 0,

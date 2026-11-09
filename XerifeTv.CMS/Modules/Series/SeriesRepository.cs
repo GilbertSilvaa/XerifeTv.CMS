@@ -180,6 +180,8 @@ public sealed class SeriesRepository(IOptions<DBSettings> options, IMongoClient 
           .Set(r => r.Review, entity.Review)
           .Set(r => r.PosterUrl, entity.PosterUrl)
           .Set(r => r.BannerUrl, entity.BannerUrl)
+          .Set(r => r.MobileBannerUrl, entity.MobileBannerUrl)
+          .Set(r => r.TitleImageUrl, entity.TitleImageUrl)
           .Set(r => r.NumberSeasons, entity.NumberSeasons)
           .Set(r => r.ReleaseYear, entity.ReleaseYear)
           .Set(r => r.ParentalRating, entity.ParentalRating)

@@ -78,3 +78,6 @@ _[Ss]cripts
 env.js
 /XerifeTv.CMS/appsettings.Development.json
 /.idea
+
+/.agents
+/openspec
