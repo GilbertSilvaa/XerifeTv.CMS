@@ -180,6 +180,7 @@
                            class="form-control"
                            id="posterUrl"
                            name="posterUrl"
+                           data-image-url-preview
                            placeholder="http://imagem.com/image.jpg"
                            value="@Model?.SeriesDto?.PosterUrl"
                            required>
@@ -191,6 +192,7 @@
                            class="form-control"
                            id="bannerUrl"
                            name="bannerUrl"
+                           data-image-url-preview
                            placeholder="http://imagem.com/image.jpg"
                            value="@Model?.SeriesDto?.BannerUrl"
                            required>
@@ -204,6 +206,7 @@
                            class="form-control"
                            id="titleImageUrl"
                            name="titleImageUrl"
+                           data-image-url-preview
                            placeholder="http://imagem.com/title.png"
                            value="@Model?.SeriesDto?.TitleImageUrl">
                 </div>
@@ -214,6 +217,7 @@
                            class="form-control"
                            id="mobileBannerUrl"
                            name="mobileBannerUrl"
+                           data-image-url-preview
                            placeholder="http://imagem.com/mobile.jpg"
                            value="@Model?.SeriesDto?.MobileBannerUrl"
                            required>
@@ -312,6 +316,7 @@
                 $('#bannerUrl').val(response.bannerUrl);
                 $('#titleImageUrl').val(response.titleImageUrl);
                 $('#mobileBannerUrl').val(response.mobileBannerUrl);
+                $('#posterUrl, #bannerUrl, #titleImageUrl, #mobileBannerUrl').trigger('input');
                 $('#numberSeasons').val(response.numberSeasons);
             }
             finally {
