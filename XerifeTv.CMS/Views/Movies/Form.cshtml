@@ -164,6 +164,7 @@
                            class="form-control"
                            id="posterUrl"
                            name="posterUrl"
+                           data-image-url-preview
                            placeholder="http://imagem.com/image.jpg"
                            value="@Model?.MovieDto?.PosterUrl"
                            required>
@@ -175,6 +176,7 @@
                            class="form-control"
                            id="bannerUrl"
                            name="bannerUrl"
+                           data-image-url-preview
                            placeholder="http://imagem.com/image.jpg"
                            value="@Model?.MovieDto?.BannerUrl"
                            required>
@@ -188,6 +190,7 @@
                            class="form-control"
                            id="titleImageUrl"
                            name="titleImageUrl"
+                           data-image-url-preview
                            placeholder="http://imagem.com/title.png"
                            value="@Model?.MovieDto?.TitleImageUrl">
                 </div>
@@ -198,6 +201,7 @@
                            class="form-control"
                            id="mobileBannerUrl"
                            name="mobileBannerUrl"
+                           data-image-url-preview
                            placeholder="http://imagem.com/mobile.jpg"
                            value="@Model?.MovieDto?.MobileBannerUrl"
                            required>
@@ -304,7 +308,7 @@
 </div>
 
 @section scripts {
-    <script>
+    <script defer>
         async function getMovieByTmdb(imdbId) {
             const response = await fetch(`/Movies/GetByImdbId?imdbId=${imdbId}`);
             return await response.json();
@@ -334,6 +338,7 @@
                 $('#bannerUrl').val(response.bannerUrl);
                 $('#titleImageUrl').val(response.titleImageUrl);
                 $('#mobileBannerUrl').val(response.mobileBannerUrl);
+                $('#posterUrl, #bannerUrl, #titleImageUrl, #mobileBannerUrl').trigger('input');
                 $('#videoDuration').val(response.durationInSeconds);
             }
             finally {

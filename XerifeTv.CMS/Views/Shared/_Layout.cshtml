@@ -210,10 +210,25 @@
 
     <div class="toast-container position-fixed bottom-0 end-0 p-3 pe-4"></div>
 
+    <div class="modal fade" id="imageUrlPreviewModal" tabindex="-1" aria-labelledby="imageUrlPreviewModalTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="imageUrlPreviewModalTitle">Visualizar imagem</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img class="img-fluid" alt="Pré-visualização da imagem" style="max-height: 900px;"/>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/utils.js" asp-append-version="true"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <script src="~/js/image-url-preview.js" asp-append-version="true"></script>
     <script src="~/js/importFromSpreadsheetModal.js" asp-append-version="true"></script>
     <script src="~/js/video-setting.js" asp-append-version="true"></script>
     @await RenderSectionAsync("Scripts", required: false)
