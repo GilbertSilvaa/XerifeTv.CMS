@@ -21,4 +21,7 @@ public interface IContentV2Service
     Task<Result<GetHomeContentV2ResponseDto>> GetHomeContentAsync(int featuredContentsLimit = 5);
     Task<Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>> GetMoviesByCategoriesListAsync(List<string> categories, int page, int pageSize = 1);
     Task<Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>> GetSeriesByCategoriesListAsync(List<string> categories, int page, int pageSize = 1);
+    Task<Result<IEnumerable<ContentCreditResponseDto>>> GetMovieCreditsAsync(string movieId);
+    Task<Result<IEnumerable<ContentCreditResponseDto>>> GetSeriesCreditsAsync(string seriesId);
+    Task<Result<ContentPersonResponseDto?>> GetPersonByIdAsync(string personId);
 }

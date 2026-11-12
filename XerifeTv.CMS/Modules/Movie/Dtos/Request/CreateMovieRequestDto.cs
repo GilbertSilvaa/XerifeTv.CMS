@@ -1,4 +1,5 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
+using XerifeTv.CMS.Modules.People.Dtos.Request;
 
 namespace XerifeTv.CMS.Modules.Movie.Dtos.Request;
 
@@ -23,6 +24,7 @@ public class CreateMovieRequestDto
     public string? MediaDeliveryProfileId { get; set; }
     public string? MediaRoute { get; set; }
     public string? TrailerVideoYoutubeId { get; init; }
+    public ICollection<CreditRequestDto> Credits { get; init; } = [];
 
     public MovieEntity ToEntity()
     {
@@ -48,7 +50,8 @@ public class CreateMovieRequestDto
             Video = new Video(VideoUrl, VideoDuration, VideoStreamFormat, VideoSubtitle),
             MediaRoute = MediaRoute,
             MediaDeliveryProfileId = MediaDeliveryProfileId,
-            TrailerVideoYoutubeId = TrailerVideoYoutubeId
+            TrailerVideoYoutubeId = TrailerVideoYoutubeId,
+            Credits = (Credits ?? []).Select(x => x.ToCredit()).ToList()
         };
     }
 }

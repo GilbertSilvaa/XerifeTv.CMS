@@ -1,10 +1,10 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using XerifeTv.CMS.Modules.Common;
-using XerifeTv.CMS.Modules.Integrations.Imdb.Dtos;
+using XerifeTv.CMS.Modules.Integrations.Tmdb.Dtos;
 
-namespace XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+namespace XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 
-public class ImdbService(IConfiguration configuration) : IImdbService
+public class TmdbService(IConfiguration configuration) : ITmdbService
 {
     public async Task<Result<GetAllResultsByImdbIdResponseDto?>> GetAllResultsByImdbIdAsync(string imdbId)
     {
@@ -18,7 +18,7 @@ public class ImdbService(IConfiguration configuration) : IImdbService
 
             if (!response.IsSuccessStatusCode)
                 return Result<GetAllResultsByImdbIdResponseDto?>.Failure(
-                    new Error("400", $"[{imdbId}] IMDB API retornou: {response.ReasonPhrase}"));
+                    new Error("400", $"[{imdbId}] TMDB API retornou: {response.ReasonPhrase}"));
 
             var responseJsonString = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<GetAllResultsByImdbIdResponseDto>(responseJsonString);
@@ -56,7 +56,7 @@ public class ImdbService(IConfiguration configuration) : IImdbService
 
             if (!response.IsSuccessStatusCode)
                 return Result<GetMovieByImdbResponseDto?>.Failure(
-                    new Error("400", $"[{imdbId}] IMDB API retornou: {response.ReasonPhrase}"));
+                    new Error("400", $"[{imdbId}] TMDB API retornou: {response.ReasonPhrase}"));
 
             var responseJsonString = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<GetMovieByImdbResponseDto>(responseJsonString);
@@ -99,7 +99,7 @@ public class ImdbService(IConfiguration configuration) : IImdbService
 
             if (!response.IsSuccessStatusCode)
                 return Result<GetSeriesByImdbResponseDto?>.Failure(
-                    new Error("400", $"[{imdbId}] IMDB API retornou: {response.ReasonPhrase}"));
+                    new Error("400", $"[{imdbId}] TMDB API retornou: {response.ReasonPhrase}"));
 
             var responseJsonString = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<GetSeriesByImdbResponseDto>(responseJsonString);
@@ -137,7 +137,7 @@ public class ImdbService(IConfiguration configuration) : IImdbService
 
             if (!response.IsSuccessStatusCode)
                 return Result<GetSeriesEpisodesBySeasonResponseDto?>.Failure(
-                    new Error("400", $"[{imdbId}] IMDB API retornou: {response.ReasonPhrase}"));
+                    new Error("400", $"[{imdbId}] TMDB API retornou: {response.ReasonPhrase}"));
 
             var responseJsonString = await response.Content.ReadAsStringAsync();
             var result = JsonConvert.DeserializeObject<GetSeriesEpisodesBySeasonResponseDto>(responseJsonString);
@@ -157,7 +157,7 @@ public class ImdbService(IConfiguration configuration) : IImdbService
 
     private async Task<TmdbImagesResponseDto?> GetImagesAsync(HttpClient client, string mediaType, int tmdbId, string? tmdbKey)
     {
-        var response = await client.GetAsync($"https://api.themoviedb.org/3/{mediaType}/{tmdbId}/images?api_key={tmdbKey}&include_image_language=pt,null");
+        var response = await client.GetAsync($"https://api.themoviedb.org/3/{mediaType}/{tmdbId}/images?api_key={tmdbKey}&include_image_language=pt-BR,null");
         if (!response.IsSuccessStatusCode) return null;
 
         return JsonConvert.DeserializeObject<TmdbImagesResponseDto>(await response.Content.ReadAsStringAsync());
