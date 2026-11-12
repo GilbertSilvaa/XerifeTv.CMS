@@ -20,28 +20,30 @@ public sealed class WorkCreditsImportService(
         "Não foi possível consultar os créditos no TMDB. Tente novamente em instantes.";
 
     private const int MaxConcurrentPersonLookups = 4;
+    private const int MaxImportedCast = 80;
+    private const int MaxImportedCrew = 30;
 
-    private static readonly HashSet<string> ImportantCrewJobs = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly Dictionary<string, int> ImportantCrewJobs = new(StringComparer.OrdinalIgnoreCase)
     {
-        "Director",
-        "Creator",
-        "Writer",
-        "Screenplay",
-        "Story",
-        "Teleplay",
-        "Producer",
-        "Executive Producer",
-        "Co-Producer",
-        "Line Producer",
-        "Associate Producer",
-        "Casting",
-        "Director of Photography",
-        "Editor",
-        "Original Music Composer",
-        "Music",
-        "Production Design",
-        "Art Direction",
-        "Costume Design"
+        ["Director"] = 0,
+        ["Creator"] = 1,
+        ["Writer"] = 2,
+        ["Screenplay"] = 3,
+        ["Story"] = 4,
+        ["Teleplay"] = 5,
+        ["Producer"] = 6,
+        ["Executive Producer"] = 7,
+        ["Co-Producer"] = 8,
+        ["Line Producer"] = 9,
+        ["Associate Producer"] = 10,
+        ["Casting"] = 11,
+        ["Director of Photography"] = 12,
+        ["Editor"] = 13,
+        ["Original Music Composer"] = 14,
+        ["Music"] = 15,
+        ["Production Design"] = 16,
+        ["Art Direction"] = 17,
+        ["Costume Design"] = 18
     };
 
     public Task<Result<ImportWorkCreditsResponseDto>> ImportMovieCreditsAsync(ImportWorkCreditsRequestDto dto)
@@ -181,53 +183,83 @@ public sealed class WorkCreditsImportService(
 
     private static List<CreditCandidate> BuildCandidates(TmdbCreditsResponseDto credits, ref int ignored)
     {
-        var candidates = new List<CreditCandidate>(credits.Cast.Count + credits.Crew.Count);
+        var cast = new List<CreditCandidate>(credits.Cast.Count);
 
-        foreach (var cast in credits.Cast)
+        foreach (var castCredit in credits.Cast)
         {
-            if (cast.Id <= 0 || string.IsNullOrWhiteSpace(cast.Name))
+            if (castCredit.Id <= 0 || string.IsNullOrWhiteSpace(castCredit.Name))
             {
                 ignored++;
                 continue;
             }
 
-            candidates.Add(new CreditCandidate(
-                cast.Id,
-                cast.Name.Trim(),
-                cast.ProfileUrl,
+            cast.Add(new CreditCandidate(
+                castCredit.Id,
+                castCredit.Name.Trim(),
+                castCredit.ProfileUrl,
                 new Credit
                 {
                     Type = ECreditType.Cast,
-                    Character = cast.Character?.Trim() ?? string.Empty,
-                    Order = cast.Order
+                    Character = castCredit.Character?.Trim() ?? string.Empty,
+                    Order = castCredit.Order
                 }));
         }
 
-        foreach (var crew in credits.Crew)
+        var crew = new List<CreditCandidate>(credits.Crew.Count);
+
+        foreach (var crewCredit in credits.Crew)
         {
-            if (crew.Id <= 0 || string.IsNullOrWhiteSpace(crew.Name) ||
-                string.IsNullOrWhiteSpace(crew.Department) || string.IsNullOrWhiteSpace(crew.Job))
+            if (crewCredit.Id <= 0 || string.IsNullOrWhiteSpace(crewCredit.Name) ||
+                string.IsNullOrWhiteSpace(crewCredit.Department) || string.IsNullOrWhiteSpace(crewCredit.Job))
             {
                 ignored++;
                 continue;
             }
 
-            if (!ImportantCrewJobs.Contains(crew.Job.Trim()))
+            if (!ImportantCrewJobs.ContainsKey(crewCredit.Job.Trim()))
                 continue;
 
-            candidates.Add(new CreditCandidate(
-                crew.Id,
-                crew.Name.Trim(),
-                crew.ProfileUrl,
+            crew.Add(new CreditCandidate(
+                crewCredit.Id,
+                crewCredit.Name.Trim(),
+                crewCredit.ProfileUrl,
                 new Credit
                 {
                     Type = ECreditType.Crew,
-                    Department = crew.Department.Trim(),
-                    Job = crew.Job.Trim()
+                    Department = crewCredit.Department.Trim(),
+                    Job = crewCredit.Job.Trim()
                 }));
         }
 
-        return candidates;
+        var orderedCast = cast
+            .OrderBy(x => x.Credit.Order ?? int.MaxValue)
+            .ToList();
+
+        var orderedCrew = crew
+            .OrderBy(x => ImportantCrewJobs.TryGetValue(x.Credit.Job ?? string.Empty, out var rank) ? rank : int.MaxValue)
+            .ToList();
+
+        return SelectTopPeople(orderedCast, MaxImportedCast)
+            .Concat(SelectTopPeople(orderedCrew, MaxImportedCrew))
+            .ToList();
+    }
+
+    private static List<CreditCandidate> SelectTopPeople(
+        IReadOnlyCollection<CreditCandidate> orderedCandidates,
+        int limit)
+    {
+        var selected = new HashSet<int>();
+
+        foreach (var candidate in orderedCandidates)
+        {
+            if (selected.Count >= limit) break;
+
+            selected.Add(candidate.TmdbId);
+        }
+
+        return orderedCandidates
+            .Where(x => selected.Contains(x.TmdbId))
+            .ToList();
     }
 
     private async Task<Dictionary<string, PersonEntity>> LoadPeopleByIdAsync(IEnumerable<Credit> credits)
