@@ -67,9 +67,6 @@ public sealed class TmdbPersonDetailsDto
 
 public static class TmdbImageUrl
 {
-    // O TMDB entrega a imagem em "original"; o proxy da Plex redimensiona para
-    // medium-360 no carregamento, reduzindo o peso sem perder qualidade nos
-    // avatares e no modal. O tamanho não é gravado no TMDB, apenas a URL final.
     private const string TmdbBaseUrl = "https://image.tmdb.org/t/p/original";
     private const string ProxyPrefix = "https://images.plex.tv/photo?size=medium-360&scale=1&url=";
 
@@ -82,11 +79,6 @@ public static class TmdbImageUrl
         return $"{ProxyPrefix}{TmdbBaseUrl}{normalizedPath}";
     }
 
-    /// <summary>
-    /// Reaplica o formato com proxy em URLs de imagem de pessoa já gravadas,
-    /// convertendo qualquer tamanho do TMDB para "original". URLs externas
-    /// (não-TMDB) digitadas manualmente são preservadas.
-    /// </summary>
     public static string? NormalizeStoredUrl(string? url)
     {
         if (string.IsNullOrWhiteSpace(url)) return null;

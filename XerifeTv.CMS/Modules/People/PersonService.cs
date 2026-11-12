@@ -154,8 +154,6 @@ public sealed class PersonService(
                 }
                 catch (Exception ex)
                 {
-                    // O enriquecimento é melhor esforço: manter os dados locais já
-                    // carregados é preferível a descartar a pessoa da importação.
                     logger.LogWarning(ex, "Failed to enrich local person {TmdbId}", tmdbId);
                 }
 

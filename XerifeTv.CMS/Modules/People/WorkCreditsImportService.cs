@@ -19,19 +19,8 @@ public sealed class WorkCreditsImportService(
     private const string UnavailableMessage =
         "Não foi possível consultar os créditos no TMDB. Tente novamente em instantes.";
 
-    /// <summary>
-    /// O enriquecimento consulta os detalhes de cada pessoa no TMDB. Limitar a
-    /// concorrência evita rajadas de requisições em obras com elenco grande,
-    /// mantendo a importação dentro dos limites da API.
-    /// </summary>
     private const int MaxConcurrentPersonLookups = 4;
 
-    /// <summary>
-    /// Funções de equipe consideradas relevantes para o catálogo. O TMDB retorna
-    /// dezenas de funções por obra (assistentes, estagiários etc.); importar todas
-    /// geraria pessoas e créditos em excesso. Os nomes das funções não são
-    /// traduzidos pela API, mesmo com language=pt-BR.
-    /// </summary>
     private static readonly HashSet<string> ImportantCrewJobs = new(StringComparer.OrdinalIgnoreCase)
     {
         "Director",
@@ -154,9 +143,6 @@ public sealed class WorkCreditsImportService(
     private async Task<Dictionary<int, PersonUpsertResult>> ResolvePeopleAsync(
         IReadOnlyCollection<CreditCandidate> candidates)
     {
-        // Uma pessoa pode ter mais de um crédito na mesma obra (ex.: ator e
-        // diretor). Resolver por TMDB ID evita consultar o mesmo detalhe várias
-        // vezes e criar duplicatas.
         var distinct = candidates
             .GroupBy(x => x.TmdbId)
             .Select(group => group.First())
