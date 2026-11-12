@@ -1,4 +1,6 @@
-﻿namespace XerifeTv.CMS.Modules.Series.Dtos.Response;
+﻿using XerifeTv.CMS.Modules.People.Dtos.Response;
+
+namespace XerifeTv.CMS.Modules.Series.Dtos.Response;
 
 public class GetSeriesResponseDto
 {
@@ -19,6 +21,10 @@ public class GetSeriesResponseDto
     public int NumberSeasons { get; private set; }
     public string? TrailerVideoYoutubeId { get; private set; }
     public bool Disabled { get; private set; } = false;
+    public IReadOnlyCollection<GetCreditResponseDto> Credits { get; private set; } = [];
+
+    public void SetCredits(IEnumerable<GetCreditResponseDto> credits)
+        => Credits = credits.ToList();
 
     public static GetSeriesResponseDto FromEntity(SeriesEntity entity)
     {
@@ -40,7 +46,8 @@ public class GetSeriesResponseDto
             RegistrationDate = entity.CreateAt,
             NumberSeasons = entity.NumberSeasons,
             Disabled = entity.Disabled,
-            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId
+            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId,
+            Credits = (entity.Credits ?? []).Select(x => GetCreditResponseDto.FromCredit(x)).ToList()
         };
     }
 }

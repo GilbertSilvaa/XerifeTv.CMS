@@ -102,3 +102,40 @@ html {
     justify-content: center;
     align-items: center;
 }
+.form-step {
+  display: none;
+}
+
+.form-step.active {
+  display: block;
+}
+
+.credit-row.is-hidden {
+  display: none !important;
+}
+
+.credit-row-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.credit-row-avatar-placeholder {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #dee2e6;
+  color: #6c757d;
+}
+
+.credit-person-link {
+  text-decoration: none;
+  text-align: left;
+  vertical-align: baseline;
+}
+
+.credit-person-link:hover {
+  text-decoration: underline;
+}

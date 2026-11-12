@@ -1,4 +1,5 @@
-﻿using XerifeTv.CMS.Modules.Series;
+﻿using XerifeTv.CMS.Modules.People.Dtos.Request;
+using XerifeTv.CMS.Modules.Series;
 
 namespace XerifeTv.CMS.Modules.Series.Dtos.Request;
 
@@ -18,6 +19,7 @@ public class CreateSeriesRequestDto
     public float Review { get; init; }
     public int NumberSeasons { get; init; }
     public string? TrailerVideoYoutubeId { get; init; }
+    public ICollection<CreditRequestDto> Credits { get; init; } = [];
 
     public SeriesEntity ToEntity()
     {
@@ -41,7 +43,8 @@ public class CreateSeriesRequestDto
             ParentalRating = ParentalRating,
             NumberSeasons = NumberSeasons,
             Review = Review,
-            TrailerVideoYoutubeId = TrailerVideoYoutubeId
+            TrailerVideoYoutubeId = TrailerVideoYoutubeId,
+            Credits = (Credits ?? []).Select(x => x.ToCredit()).ToList()
         };
     }
 }

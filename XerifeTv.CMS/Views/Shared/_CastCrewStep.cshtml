@@ -1,0 +1,241 @@
+@using System.Text.Json
+@using XerifeTv.CMS.Modules.People.Dtos.Response
+@using XerifeTv.CMS.Views.Shared.Models
+
+@model CastCrewStepViewModel
+
+@{
+    var credits = Model.Credits.ToList();
+    var jsonOptions = new JsonSerializerOptions(JsonSerializerDefaults.Web);
+    var initialCreditsJson = JsonSerializer.Serialize(credits, jsonOptions).Replace("</", "<\\/");
+}
+
+<div class="form-step" data-step="2" id="castCrewStep" data-controller="@Model.Controller">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-2">
+        <div class="d-flex flex-wrap align-items-center gap-2">
+            <button type="button" class="btn btn-sm btn-outline-success" id="btn-import-credits">
+                <i class="fa-solid fa-cloud-arrow-down"></i> Importar elenco e equipe do TMDB
+            </button>
+            <span class="text-muted small" id="import-credits-hint">
+                Preencha o IMDb ID na etapa anterior.
+            </span>
+        </div>
+
+        <button type="button" class="btn btn-sm btn-primary" id="btn-add-credit">
+            <i class="fa-solid fa-plus"></i> Adicionar crédito
+        </button>
+    </div>
+
+    <div id="import-credits-feedback" class="small mb-2"></div>
+
+    <ul class="nav nav-tabs" id="credits-tabs">
+        <li class="nav-item">
+            <button type="button" class="nav-link active" data-credit-tab="Cast">
+                Elenco <span class="badge text-bg-secondary" data-credit-count="Cast">0</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button type="button" class="nav-link" data-credit-tab="Crew">
+                Equipe <span class="badge text-bg-secondary" data-credit-count="Crew">0</span>
+            </button>
+        </li>
+    </ul>
+
+    <div id="credits-list" class="pt-2"></div>
+
+    <div id="credits-empty" class="text-muted small py-3">
+        Nenhum crédito adicionado. Esta etapa é opcional.
+    </div>
+
+    <div id="server-credit-inputs">
+        @for (var i = 0; i < credits.Count; i++)
+        {
+            var credit = credits[i];
+
+            <input type="hidden" name="credits[@i].personId" value="@credit.PersonId" />
+            <input type="hidden" name="credits[@i].type" value="@credit.Type" />
+            <input type="hidden" name="credits[@i].character" value="@credit.Character" />
+            <input type="hidden" name="credits[@i].department" value="@credit.Department" />
+            <input type="hidden" name="credits[@i].job" value="@credit.Job" />
+            <input type="hidden" name="credits[@i].order" value="@credit.Order" />
+        }
+    </div>
+
+    <script type="application/json" id="initial-credits">@Html.Raw(initialCreditsJson)</script>
+</div>
+
+<div class="modal fade" id="creditModal" tabindex="-1" aria-labelledby="creditModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="creditModalTitle">Adicionar crédito</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert alert-danger py-2 small d-none" id="credit-modal-error"></div>
+
+                <div class="mb-3">
+                    <label for="credit-person-search" class="form-label">Pessoa</label>
+                    <div class="input-group">
+                        <input type="text"
+                               class="form-control"
+                               id="credit-person-search"
+                               placeholder="Pesquise uma pessoa no TMDB..."
+                               autocomplete="off" />
+                        <button type="button" class="btn btn-success shadow-none" id="btn-search-person">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+
+                    <div class="list-group mt-2 d-none" id="credit-person-results"></div>
+                    <div class="small text-muted mt-1" id="credit-person-search-hint">
+                        Digite ao menos 2 caracteres. Pessoas já cadastradas serão reutilizadas.
+                    </div>
+                </div>
+
+                <div class="border rounded p-2 mb-3 d-none" id="credit-selected-person">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="" alt="" class="credit-row-avatar d-none" id="credit-selected-person-image" />
+                            <span class="fw-semibold" id="credit-selected-person-name"></span>
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-outline-danger" id="btn-clear-selected-person">
+                            Trocar
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="credit-type" class="form-label">Classificação</label>
+                    <select id="credit-type" class="form-select">
+                        <option value="Cast">Elenco</option>
+                        <option value="Crew">Equipe</option>
+                    </select>
+                </div>
+
+                <div id="credit-cast-fields">
+                    <div class="mb-3">
+                        <label for="credit-character" class="form-label">Personagem</label>
+                        <input type="text" class="form-control" id="credit-character" placeholder="Nome do personagem" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="credit-order" class="form-label">Ordem de exibição (opcional)</label>
+                        <input type="number" class="form-control" id="credit-order" placeholder="0" min="0" />
+                    </div>
+                </div>
+
+                <div id="credit-crew-fields" class="d-none">
+                    <div class="mb-3">
+                        <label for="credit-department" class="form-label">Departamento</label>
+                        <input type="text" class="form-control" id="credit-department" placeholder="Direção, Roteiro, Produção..." />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="credit-job" class="form-label">Função</label>
+                        <input type="text" class="form-control" id="credit-job" placeholder="Director, Writer..." />
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btn-save-credit">Salvar crédito</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="personModal" tabindex="-1" aria-labelledby="personModalTitle" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="personModalTitle">Dados da pessoa</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+
+            <div class="modal-body">
+                <div class="alert alert-danger py-2 small d-none" id="person-modal-error"></div>
+
+                <input type="hidden" id="person-id" />
+
+                <div class="row">
+                    <div class="col-12 col-md-8">
+                        <div class="mb-3">
+                            <label for="person-name" class="form-label">Nome</label>
+                            <input type="text" class="form-control" id="person-name" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label for="person-tmdb-id" class="form-label">TMDB Person ID</label>
+                                    <input type="number" class="form-control" id="person-tmdb-id" min="1" />
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-md-6">
+                                <div class="mb-3">
+                                    <label for="person-imdb-id" class="form-label">IMDb ID</label>
+                                    <input type="text" class="form-control" id="person-imdb-id" />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="mb-3 text-center">
+                            <img src="" alt="" class="img-fluid rounded d-none" id="person-profile-image" style="max-height: 180px;" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-12 col-md-4">
+                        <div class="mb-3">
+                            <label for="person-birthday" class="form-label">Nascimento</label>
+                            <input type="date" class="form-control" id="person-birthday" />
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="mb-3">
+                            <label for="person-deathday" class="form-label">Falecimento</label>
+                            <input type="date" class="form-control" id="person-deathday" />
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-md-4">
+                        <div class="mb-3">
+                            <label for="person-place-of-birth" class="form-label">Local de nascimento</label>
+                            <input type="text" class="form-control" id="person-place-of-birth" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="person-profile-url" class="form-label">Imagem de perfil (URL)</label>
+                    <input type="text" class="form-control" id="person-profile-url" />
+                </div>
+
+                <div class="mb-3">
+                    <label for="person-biography" class="form-label">Biografia</label>
+                    <textarea class="form-control" id="person-biography" style="height: 140px"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer justify-content-between">
+                <button type="button" class="btn btn-outline-success" id="btn-refresh-person">
+                    <i class="fa-solid fa-arrows-rotate"></i> Enriquecer pelo TMDB
+                </button>
+
+                <div>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-person">Salvar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

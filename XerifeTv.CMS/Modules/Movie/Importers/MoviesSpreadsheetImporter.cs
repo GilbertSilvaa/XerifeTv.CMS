@@ -1,9 +1,9 @@
-using XerifeTv.CMS.Modules.Abstractions.Exceptions;
+﻿using XerifeTv.CMS.Modules.Abstractions.Exceptions;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
-using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
@@ -13,7 +13,7 @@ namespace XerifeTv.CMS.Modules.Movie.Importers;
 
 public class MoviesSpreadsheetImporter(
   IMovieService service,
-  IImdbService imdbService,
+  ITmdbService tmdbService,
   ICacheService cacheService,
   ISpreadsheetReaderService spreadsheetReaderService,
   IMediaDeliveryProfileService mediaDeliveryProfileService,
@@ -147,12 +147,12 @@ public class MoviesSpreadsheetImporter(
                     movieItem.FranchiseId = franchiseResponse.Data!.Id;
                 }
 
-                var movieImdbAPIResponse = await imdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
+                var movieTmdbResponse = await tmdbService.GetMovieByImdbIdAsync(movieItem.ImdbId);
 
-                if (movieImdbAPIResponse.IsFailure)
+                if (movieTmdbResponse.IsFailure)
                 {
                     failCount++;
-                    errorList.Add($"[{movieItem.ImdbId}] {movieImdbAPIResponse.Error?.Description ?? string.Empty}");
+                    errorList.Add($"[{movieItem.ImdbId}] {movieTmdbResponse.Error?.Description ?? string.Empty}");
                     await UpdateProgress();
                     continue;
                 }
@@ -194,18 +194,18 @@ public class MoviesSpreadsheetImporter(
                     var createMovieDto = new CreateMovieRequestDto
                     {
                         ImdbId = movieItem.ImdbId,
-                        Title = movieImdbAPIResponse.Data?.Title ?? string.Empty,
-                        Synopsis = movieImdbAPIResponse.Data?.Overview ?? string.Empty,
-                        Categories = String.Join(", ", movieImdbAPIResponse?.Data?.Genres.Select(g => g.Name.ToLower()) ?? []),
-                        PosterUrl = movieImdbAPIResponse?.Data?.PosterUrl ?? string.Empty,
-                        BannerUrl = movieImdbAPIResponse?.Data?.BannerUrl ?? string.Empty,
-                        MobileBannerUrl = movieImdbAPIResponse?.Data?.MobileBannerUrl ?? movieImdbAPIResponse?.Data?.BannerUrl ?? string.Empty,
-                        TitleImageUrl = movieImdbAPIResponse?.Data?.TitleImageUrl,
-                        ReleaseYear = int.Parse(movieImdbAPIResponse?.Data?.ReleaseYear ?? "0"),
-                        Review = movieImdbAPIResponse?.Data?.VoteAverage ?? 0,
+                        Title = movieTmdbResponse.Data?.Title ?? string.Empty,
+                        Synopsis = movieTmdbResponse.Data?.Overview ?? string.Empty,
+                        Categories = String.Join(", ", movieTmdbResponse?.Data?.Genres.Select(g => g.Name.ToLower()) ?? []),
+                        PosterUrl = movieTmdbResponse?.Data?.PosterUrl ?? string.Empty,
+                        BannerUrl = movieTmdbResponse?.Data?.BannerUrl ?? string.Empty,
+                        MobileBannerUrl = movieTmdbResponse?.Data?.MobileBannerUrl ?? movieTmdbResponse?.Data?.BannerUrl ?? string.Empty,
+                        TitleImageUrl = movieTmdbResponse?.Data?.TitleImageUrl,
+                        ReleaseYear = int.Parse(movieTmdbResponse?.Data?.ReleaseYear ?? "0"),
+                        Review = movieTmdbResponse?.Data?.VoteAverage ?? 0,
                         ParentalRating = movieItem.ParentalRating,
                         VideoUrl = movieItem.Video?.Url ?? string.Empty,
-                        VideoDuration = movieImdbAPIResponse?.Data?.DurationInSeconds ?? 0,
+                        VideoDuration = movieTmdbResponse?.Data?.DurationInSeconds ?? 0,
                         VideoStreamFormat = movieItem.Video?.StreamFormat ?? string.Empty,
                         VideoSubtitle = movieItem.Video?.Subtitle,
                         MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,

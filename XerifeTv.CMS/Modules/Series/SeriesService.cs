@@ -7,6 +7,9 @@ using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Interfaces;
 using XerifeTv.CMS.Modules.Series.Specifications;
+using XerifeTv.CMS.Modules.People;
+using XerifeTv.CMS.Modules.People.Dtos.Response;
+using XerifeTv.CMS.Modules.People.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Series;
 
@@ -14,7 +17,9 @@ public class SeriesService(
     ISeriesRepository repository,
     IFranchiseService franchiseService,
     IBackgroundJobQueueService backgroundJobQueueService,
-    IConfiguration configuration) : ISeriesService
+    IConfiguration configuration,
+    IPersonRepository personRepository,
+    CreditValidator creditValidator) : ISeriesService
 {
     public async Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -47,7 +52,7 @@ public class SeriesService(
                   .Failure(new Error("404", "Conteúdo não encontrado"));
 
             return Result<GetSeriesResponseDto?>
-              .Success(GetSeriesResponseDto.FromEntity(response));
+              .Success(await MapWithPeopleAsync(response));
         }
         catch (Exception ex)
         {
@@ -83,6 +88,10 @@ public class SeriesService(
             var entity = dto.ToEntity();
             var imdbIdSpec = new UniqueImdbIdSpecification(repository);
 
+            var creditsValidation = await creditValidator.ValidateAsync(entity.Credits);
+            if (creditsValidation.IsFailure)
+                return Result<string>.Failure(creditsValidation.Error);
+
             if (!await imdbIdSpec.IsSatisfiedByAsync(entity))
                 return Result<string>.Failure(
                   new Error("409", $"Série não cadastrada. Imdb ID {entity.ImdbId} duplicado"));
@@ -109,6 +118,10 @@ public class SeriesService(
 
             if (response is null)
                 return Result<string>.Failure(new Error("404", "Conteúdo não encontrado"));
+
+            var creditsValidation = await creditValidator.ValidateAsync(entity.Credits);
+            if (creditsValidation.IsFailure)
+                return Result<string>.Failure(creditsValidation.Error);
 
             var imdbIdSpec = new UniqueImdbIdSpecification(repository);
 
@@ -302,6 +315,22 @@ public class SeriesService(
             var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
             return Result<bool>.Failure(error);
         }
+    }
+
+    private async Task<GetSeriesResponseDto> MapWithPeopleAsync(SeriesEntity entity)
+    {
+        var dto = GetSeriesResponseDto.FromEntity(entity);
+
+        if (entity.Credits is null || entity.Credits.Count == 0)
+            return dto;
+
+        var people = await personRepository.GetByIdsAsync(entity.Credits.Select(x => x.PersonId));
+        var peopleById = people.ToDictionary(x => x.Id, x => x);
+
+        dto.SetCredits(entity.Credits.Select(
+            credit => GetCreditResponseDto.FromCredit(credit, peopleById.GetValueOrDefault(credit.PersonId))));
+
+        return dto;
     }
 }
 

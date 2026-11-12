@@ -19,4 +19,5 @@ public interface ISeriesRepository : IBaseRepository<SeriesEntity>
     Task<ICollection<SeriesEntity>> GetSeriesRecommendedBySeriesIdAsync(string seriesId, int limit);
     Task<IEnumerable<SeriesEntity>> GetSeriesByFranchiseIdAsync(string franchiseId, int limit, string? seriesIdIgnore = null);
     Task<long> CountByFranchiseIdAsync(string franchiseId);
+    Task<IReadOnlyCollection<SeriesEntity>> GetByPersonIdAsync(string personId);
 }

@@ -1,4 +1,5 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
+using XerifeTv.CMS.Modules.People.Dtos.Response;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.Movie.Dtos.Response;
@@ -25,6 +26,10 @@ public sealed class GetMovieResponseDto
     public string? TrailerVideoYoutubeId { get; private set; }
     public string DurationHHmm => DateTimeHelper.ConvertSecondsToHHmm(Video?.Duration ?? 0);
     public bool Disabled { get; private set; } = false;
+    public IReadOnlyCollection<GetCreditResponseDto> Credits { get; private set; } = [];
+
+    public void SetCredits(IEnumerable<GetCreditResponseDto> credits)
+        => Credits = credits.ToList();
 
     public string? UrlResolverPath
         => !string.IsNullOrWhiteSpace(MediaDeliveryProfileId)
@@ -53,7 +58,8 @@ public sealed class GetMovieResponseDto
             Disabled = entity.Disabled,
             MediaRoute = entity.MediaRoute,
             MediaDeliveryProfileId = entity.MediaDeliveryProfileId,
-            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId
+            TrailerVideoYoutubeId = entity.TrailerVideoYoutubeId,
+            Credits = (entity.Credits ?? []).Select(x => GetCreditResponseDto.FromCredit(x)).ToList()
         };
     }
 }
