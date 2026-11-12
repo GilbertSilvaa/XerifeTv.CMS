@@ -22,7 +22,7 @@ using XerifeTv.CMS.Modules.Dashboard;
 using XerifeTv.CMS.Modules.Dashboard.Interfaces;
 using XerifeTv.CMS.Modules.Franchise;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
-using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Repositories;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Services;
@@ -33,6 +33,8 @@ using XerifeTv.CMS.Modules.Media.Delivery.Services.MediaTokenStrategies;
 using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Importers;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Modules.People;
+using XerifeTv.CMS.Modules.People.Interfaces;
 using XerifeTv.CMS.Modules.Series;
 using XerifeTv.CMS.Modules.Series.Importers;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -70,6 +72,7 @@ public static class ConfigureServices
         services.AddScoped<IChannelRepository, ChannelRepository>();
         services.AddScoped<IFranchiseRepository, FranchiseRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IWebhookRepository, WebhookRepository>();
         services.AddScoped<IMediaDeliveryProfileRepository, MediaDeliveryProfileRepository>();
         services.AddScoped<IContentSettingsRepository, ContentSettingsRepository>();
@@ -99,8 +102,13 @@ public static class ConfigureServices
         services.AddScoped<ISpreadsheetBatchImporter<IMovieService>, MoviesSpreadsheetImporter>();
         services.AddScoped<ISpreadsheetBatchImporter<IChannelService>, ChannelsSpreadsheetImporter>();
         services.AddScoped<ISpreadsheetBatchImporter<ISeriesService>, SeriesSpreadsheetImporter>();
-        services.AddScoped<IEpisodesImporter, EpisodesImdbImporter>();
-        services.AddScoped<IImdbService, ImdbService>();
+        services.AddScoped<IEpisodesImporter, EpisodesTmdbImporter>();
+        services.AddScoped<ITmdbService, TmdbService>();
+        services.AddScoped<ITmdbPersonService, TmdbPersonService>();
+        services.AddScoped<ITmdbCreditsService, TmdbCreditsService>();
+        services.AddScoped<IPersonService, PersonService>();
+        services.AddScoped<IWorkCreditsImportService, WorkCreditsImportService>();
+        services.AddScoped<CreditValidator>();
         services.AddScoped<IBackgroundJobQueueRepository, BackgroundJobQueueRepository>();
         services.AddScoped<IBackgroundJobQueueService, BackgroundJobQueueService>();
         services.AddScoped<ILoginStrategy, BasicLoginStrategy>();
@@ -122,6 +130,7 @@ public static class ConfigureServices
         services.AddScoped<IAuditLogService, AuditLogService>();
 
         services.AddHostedService<BackgroundJobQueueWorker>();
+        services.AddHostedService<PeopleIndexInitializer>();
 
         return services;
     }

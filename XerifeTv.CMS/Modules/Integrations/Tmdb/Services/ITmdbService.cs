@@ -1,9 +1,9 @@
 ﻿using XerifeTv.CMS.Modules.Common;
-using XerifeTv.CMS.Modules.Integrations.Imdb.Dtos;
+using XerifeTv.CMS.Modules.Integrations.Tmdb.Dtos;
 
-namespace XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+namespace XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 
-public interface IImdbService
+public interface ITmdbService
 {
     Task<Result<GetAllResultsByImdbIdResponseDto?>> GetAllResultsByImdbIdAsync(string imdbId);
     Task<Result<GetMovieByImdbResponseDto?>> GetMovieByImdbIdAsync(string imdbId);

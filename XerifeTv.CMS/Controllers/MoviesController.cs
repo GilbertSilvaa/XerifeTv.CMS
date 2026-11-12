@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.AuditLog.Interfaces;
@@ -6,13 +6,15 @@ using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Franchise.Dtos.Response;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
-using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Modules.People.Dtos.Request;
+using XerifeTv.CMS.Modules.People.Interfaces;
 using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
 using XerifeTv.CMS.Views.Movies.Models;
@@ -22,12 +24,13 @@ namespace XerifeTv.CMS.Controllers;
 [Authorize]
 public class MoviesController(
   IMovieService service,
-  IImdbService imdbService,
+  ITmdbService tmdbService,
   ILogger<MoviesController> logger,
   ISpreadsheetBatchImporter<IMovieService> spreadsheetBatchImporter,
   IMediaDeliveryProfileService mediaDeliveryProfileService,
   IFranchiseService franchiseService,
-  IAuditLogService auditLogService) : Controller
+  IAuditLogService auditLogService,
+  IWorkCreditsImportService workCreditsImportService) : Controller
 {
     private const int limitResultsPage = 20;
 
@@ -165,9 +168,30 @@ public class MoviesController(
     {
         if (string.IsNullOrEmpty(imdbId)) return BadRequest();
 
-        var response = await imdbService.GetMovieByImdbIdAsync(imdbId);
+        var response = await tmdbService.GetMovieByImdbIdAsync(imdbId);
 
         return response.IsFailure ? BadRequest() : Ok(response.Data);
+    }
+
+    [Authorize(Roles = "admin, common")]
+    [HttpPost]
+    public async Task<IActionResult> ImportCredits([FromBody] ImportWorkCreditsRequestDto dto)
+    {
+        var response = await workCreditsImportService.ImportMovieCreditsAsync(dto);
+
+        if (response.IsFailure)
+            return BadRequest(response.Error.Description ?? string.Empty);
+
+        var imported = response.Data!;
+
+        await this.AddAuditLogAsync(
+            auditLogService,
+            "Movie",
+            string.IsNullOrWhiteSpace(dto.WorkId) ? dto.ImdbId : dto.WorkId,
+            $"importou {imported.Imported} créditos de elenco e equipe da obra {dto.WorkTitle ?? dto.ImdbId} " +
+            $"({imported.Ignored} ignorados, {imported.PeopleCreated} pessoas criadas)");
+
+        return Ok(imported);
     }
 
     [Authorize(Roles = "admin, common")]

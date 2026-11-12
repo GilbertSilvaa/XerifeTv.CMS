@@ -1,9 +1,12 @@
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
+using XerifeTv.CMS.Modules.Abstractions.Enums;
+using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
 using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Movie.Enums;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Modules.People.Interfaces;
 using XerifeTv.CMS.Modules.Series;
 using XerifeTv.CMS.Modules.Series.Enums;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -14,6 +17,7 @@ public class ContentV2Service(
     IMovieRepository movieRepository,
     ISeriesRepository seriesRepository,
     IContentSettingsRepository contentSettingsRepository,
+    IPersonRepository personRepository,
     IConfiguration configuration) : IContentV2Service
 {
     public async Task<Result<IEnumerable<MovieContentV2ResponseDto>>> GetMoviesAsync(int limit)
@@ -346,6 +350,157 @@ public class ContentV2Service(
             return Result<PagedList<ItemsByCategory<SeriesSummaryContentV2ResponseDto>>>.Failure(new("500", ex.Message));
         }
     }
+
+    public async Task<Result<IEnumerable<ContentCreditResponseDto>>> GetMovieCreditsAsync(string movieId)
+    {
+        try
+        {
+            var movie = await movieRepository.GetAsync(movieId);
+
+            if (movie is null || movie.Disabled)
+                return Result<IEnumerable<ContentCreditResponseDto>>.Failure(new("404", "Conteúdo não encontrado"));
+
+            return Result<IEnumerable<ContentCreditResponseDto>>.Success(await MapCreditsAsync(movie.Credits));
+        }
+        catch (Exception ex)
+        {
+            return Result<IEnumerable<ContentCreditResponseDto>>.Failure(new("500", ex.Message));
+        }
+    }
+
+    public async Task<Result<IEnumerable<ContentCreditResponseDto>>> GetSeriesCreditsAsync(string seriesId)
+    {
+        try
+        {
+            var series = await seriesRepository.GetAsync(seriesId);
+
+            if (series is null || series.Disabled)
+                return Result<IEnumerable<ContentCreditResponseDto>>.Failure(new("404", "Conteúdo não encontrado"));
+
+            return Result<IEnumerable<ContentCreditResponseDto>>.Success(await MapCreditsAsync(series.Credits));
+        }
+        catch (Exception ex)
+        {
+            return Result<IEnumerable<ContentCreditResponseDto>>.Failure(new("500", ex.Message));
+        }
+    }
+
+    public async Task<Result<ContentPersonResponseDto?>> GetPersonByIdAsync(string personId)
+    {
+        try
+        {
+            var person = await personRepository.GetByIdAsync(personId);
+
+            if (person is null)
+                return Result<ContentPersonResponseDto?>.Failure(new("404", "Pessoa não encontrada"));
+
+            var moviesTask = movieRepository.GetByPersonIdAsync(personId);
+            var seriesTask = seriesRepository.GetByPersonIdAsync(personId);
+
+            await Task.WhenAll(moviesTask, seriesTask);
+
+            var movies = (await moviesTask)
+                .Where(x => !x.Disabled)
+                .Select(x => ToWork(
+                    x.Id,
+                    x.Title,
+                    x.PosterUrl,
+                    x.ReleaseYear,
+                    "movie",
+                    (x.Credits ?? []).Where(credit => credit.PersonId == personId)))
+                .OrderByDescending(x => x.ReleaseYear)
+                .ThenBy(x => x.Title)
+                .ToList();
+
+            var series = (await seriesTask)
+                .Where(x => !x.Disabled)
+                .Select(x => ToWork(
+                    x.Id,
+                    x.Title,
+                    x.PosterUrl,
+                    x.ReleaseYear,
+                    "series",
+                    (x.Credits ?? []).Where(credit => credit.PersonId == personId)))
+                .OrderByDescending(x => x.ReleaseYear)
+                .ThenBy(x => x.Title)
+                .ToList();
+
+            return Result<ContentPersonResponseDto?>.Success(new ContentPersonResponseDto
+            {
+                Id = person.Id,
+                TmdbId = person.TmdbId,
+                ImdbId = person.ImdbId,
+                Name = person.Name,
+                Biography = person.Biography,
+                Birthday = person.Birthday,
+                Deathday = person.Deathday,
+                PlaceOfBirth = person.PlaceOfBirth,
+                ProfileURL = person.ProfileUrl,
+                Movies = movies,
+                Series = series
+            });
+        }
+        catch (Exception ex)
+        {
+            return Result<ContentPersonResponseDto?>.Failure(new("500", ex.Message));
+        }
+    }
+
+    private async Task<IEnumerable<ContentCreditResponseDto>> MapCreditsAsync(ICollection<Credit> credits)
+    {
+        if (credits is null || credits.Count == 0) return [];
+
+        var people = await personRepository.GetByIdsAsync(credits.Select(x => x.PersonId));
+        var peopleById = people.ToDictionary(x => x.Id, x => x);
+
+        var items = credits
+            .Select(credit => ContentCreditResponseDto.FromCredit(credit, peopleById.GetValueOrDefault(credit.PersonId)))
+            .ToList();
+
+        return items
+            .Where(x => x.Type == nameof(ECreditType.Cast))
+            .OrderBy(x => x.Order ?? int.MaxValue)
+            .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+            .Concat(items
+                .Where(x => x.Type == nameof(ECreditType.Crew))
+                .OrderBy(x => x.Department, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.Job, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase));
+    }
+
+    private static ContentPersonWorkResponseDto ToWork(
+        string id,
+        string title,
+        string posterUrl,
+        int releaseYear,
+        string type,
+        IEnumerable<Credit> credits)
+        => new()
+        {
+            Id = id,
+            Title = title,
+            PosterURL = posterUrl,
+            ReleaseYear = releaseYear,
+            Type = type,
+            Participations = credits
+                .Select(credit => new ContentParticipationResponseDto
+                {
+                    Type = credit.Type.ToString(),
+                    Character = credit.Type == ECreditType.Cast
+                        ? (string.IsNullOrWhiteSpace(credit.Character) ? null : credit.Character)
+                        : null,
+                    Department = credit.Type == ECreditType.Crew
+                        ? (string.IsNullOrWhiteSpace(credit.Department) ? null : credit.Department)
+                        : null,
+                    Job = credit.Type == ECreditType.Crew
+                        ? (string.IsNullOrWhiteSpace(credit.Job) ? null : credit.Job)
+                        : null,
+                    Order = credit.Type == ECreditType.Cast ? credit.Order : null
+                })
+                .OrderBy(x => x.Type == nameof(ECreditType.Cast) ? 0 : 1)
+                .ThenBy(x => x.Order ?? int.MaxValue)
+                .ToList()
+        };
 
     private static List<FeaturedContent> InterleaveLists(List<FeaturedContent> first, List<FeaturedContent> second)
     {

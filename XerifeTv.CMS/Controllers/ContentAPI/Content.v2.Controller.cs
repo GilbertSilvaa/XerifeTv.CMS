@@ -357,6 +357,97 @@ public class ContentV2Controller(
         return Ok(data);
     }
 
+    [HttpGet]
+    [Route("movies/{id}/credits")]
+    public async Task<IActionResult> MovieCredits(string id)
+    {
+        logger.LogInformation("Request Content API v2 /movies/{id}/credits", id);
+
+        var cacheKey = $"content_v2_movie_credits_{id}";
+        var notFound = false;
+        var isFailure = false;
+
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
+        {
+            var response = await service.GetMovieCreditsAsync(id);
+
+            if (response.IsSuccess) return response.Data;
+
+            if (response.Error.Code == "404") notFound = true;
+            else isFailure = true;
+
+            return null;
+        });
+
+        if (notFound) return NotFound();
+        if (isFailure) return BadRequest();
+        if (data is null) return NotFound();
+
+        return Ok(data);
+    }
+
+    [HttpGet]
+    [Route("series/{id}/credits")]
+    public async Task<IActionResult> SeriesCredits(string id)
+    {
+        logger.LogInformation("Request Content API v2 /series/{id}/credits", id);
+
+        var cacheKey = $"content_v2_series_credits_{id}";
+        var notFound = false;
+        var isFailure = false;
+
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
+        {
+            var response = await service.GetSeriesCreditsAsync(id);
+
+            if (response.IsSuccess) return response.Data;
+
+            if (response.Error.Code == "404") notFound = true;
+            else isFailure = true;
+
+            return null;
+        });
+
+        if (notFound) return NotFound();
+        if (isFailure) return BadRequest();
+        if (data is null) return NotFound();
+
+        return Ok(data);
+    }
+
+    [HttpGet]
+    [Route("people/{id}")]
+    public async Task<IActionResult> PersonById(string id)
+    {
+        logger.LogInformation("Request Content API v2 /people/{id}", id);
+
+        var cacheKey = $"content_v2_person_{id}";
+        var notFound = false;
+        var isFailure = false;
+
+        var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
+        {
+            var response = await service.GetPersonByIdAsync(id);
+
+            if (response.IsSuccess)
+            {
+                if (response.Data is null) notFound = true;
+                return response.Data;
+            }
+
+            if (response.Error.Code == "404") notFound = true;
+            else isFailure = true;
+
+            return null;
+        });
+
+        if (notFound) return NotFound();
+        if (isFailure) return BadRequest();
+        if (data is null) return NotFound();
+
+        return Ok(data);
+    }
+
     private static string NormalizeCsv(string csv)
         => string.Join(',',
             csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)

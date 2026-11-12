@@ -44,9 +44,24 @@
     </header>
 
     <main>
-        <form asp-controller="Series" asp-action="@(Model?.SeriesDto is null ? "Create" : "Update")">
+        <form asp-controller="Series" asp-action="@(Model?.SeriesDto is null ? "Create" : "Update")" novalidate>
             <input type="hidden" name="id" value="@Model?.SeriesDto?.Id">
 
+            <ul class="nav nav-tabs mb-3" id="work-form-steps">
+                <li class="nav-item">
+                    <button type="button" class="nav-link active" data-step-target="1" aria-selected="true">
+                        <i class="fa-regular fa-file-lines"></i> Informações da Série
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <button type="button" class="nav-link" data-step-target="2" aria-selected="false">
+                        <i class="fa-solid fa-users"></i> Elenco e equipe
+                        <span class="badge text-bg-secondary" id="credits-count-badge">@(Model?.SeriesDto?.Credits.Count ?? 0)</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="form-step active" data-step="1">
             <div class="row mb-3">
                 <div class="col-12 col-md-3">
                     <label for="imdbId" class="form-label">Imdb ID</label>
@@ -266,6 +281,12 @@
                 </div>
             }
 
+            </div>
+
+            @await Html.PartialAsync("_CastCrewStep", new CastCrewStepViewModel(
+                "Series",
+                Model?.SeriesDto?.Credits ?? []))
+
             <hr />
             <div class="d-flex align-items-center justify-content-between">
                 <div>
@@ -352,4 +373,7 @@
             return (match && match[2].length === 11) ? match[2] : null;
         }
     </script>
+
+    <script src="~/js/form-steps.js" asp-append-version="true"></script>
+    <script src="~/js/cast-crew.js" asp-append-version="true"></script>
 }

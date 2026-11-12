@@ -211,4 +211,11 @@ public sealed class MovieRepository(IOptions<DBSettings> options, IMongoClient m
     {
         return await _collection.CountDocumentsAsync(r => r.FranchiseId == franchiseId);
     }
+
+    public async Task<IReadOnlyCollection<MovieEntity>> GetByPersonIdAsync(string personId)
+    {
+        return await _collection
+            .Find(r => r.Credits.Any(c => c.PersonId == personId))
+            .ToListAsync();
+    }
 }

@@ -187,6 +187,7 @@ public sealed class SeriesRepository(IOptions<DBSettings> options, IMongoClient 
           .Set(r => r.ParentalRating, entity.ParentalRating)
           .Set(r => r.UpdateAt, DateTime.UtcNow)
           .Set(r => r.TrailerVideoYoutubeId, entity.TrailerVideoYoutubeId)
+          .Set(r => r.Credits, entity.Credits)
           .Set(r => r.Disabled, entity.Disabled);
 
         await _collection.UpdateOneAsync(filter, update);
@@ -331,5 +332,15 @@ public sealed class SeriesRepository(IOptions<DBSettings> options, IMongoClient 
     public async Task<long> CountByFranchiseIdAsync(string franchiseId)
     {
         return await _collection.CountDocumentsAsync(r => r.FranchiseId == franchiseId);
+    }
+
+    public async Task<IReadOnlyCollection<SeriesEntity>> GetByPersonIdAsync(string personId)
+    {
+        var projection = Builders<SeriesEntity>.Projection.Exclude(r => r.Episodes);
+
+        return await _collection
+            .Find(r => r.Credits.Any(c => c.PersonId == personId))
+            .Project<SeriesEntity>(projection)
+            .ToListAsync();
     }
 }

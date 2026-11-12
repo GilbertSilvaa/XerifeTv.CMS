@@ -1,4 +1,6 @@
-﻿namespace XerifeTv.CMS.Modules.Abstractions.Entities;
+﻿using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
+
+namespace XerifeTv.CMS.Modules.Abstractions.Entities;
 
 public abstract class MediaContent : BaseEntity
 {
@@ -10,4 +12,5 @@ public abstract class MediaContent : BaseEntity
     public string? TitleImageUrl { get; set; }
     public int ReleaseYear { get; set; } = 1800;
     public int ParentalRating { get; set; } = 0;
+    public ICollection<Credit> Credits { get; set; } = [];
 }

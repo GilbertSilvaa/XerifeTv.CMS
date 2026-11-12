@@ -1,9 +1,9 @@
-using XerifeTv.CMS.Modules.Abstractions.Exceptions;
+﻿using XerifeTv.CMS.Modules.Abstractions.Exceptions;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
-using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
@@ -13,7 +13,7 @@ namespace XerifeTv.CMS.Modules.Series.Importers;
 
 public class SeriesSpreadsheetImporter(
     ISeriesService service,
-    IImdbService imdbService,
+    ITmdbService tmdbService,
     ICacheService cacheService,
     ISpreadsheetReaderService spreadsheetReaderService,
     IMediaDeliveryProfileService mediaDeliveryProfileService,
@@ -166,7 +166,7 @@ public class SeriesSpreadsheetImporter(
                     seriesItem.FranchiseId = franchiseResponse.Data!.Id;
                 }
 
-                var seriesByImdbResponse = await imdbService.GetSeriesByImdbIdAsync(seriesItem.ImdbId);
+                var seriesByImdbResponse = await tmdbService.GetSeriesByImdbIdAsync(seriesItem.ImdbId);
 
                 if (seriesByImdbResponse.IsFailure)
                 {

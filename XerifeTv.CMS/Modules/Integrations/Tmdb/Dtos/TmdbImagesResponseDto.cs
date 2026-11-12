@@ -1,6 +1,6 @@
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 
-namespace XerifeTv.CMS.Modules.Integrations.Imdb.Dtos;
+namespace XerifeTv.CMS.Modules.Integrations.Tmdb.Dtos;
 
 public sealed class TmdbImagesResponseDto
 {

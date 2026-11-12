@@ -1,15 +1,15 @@
-using XerifeTv.CMS.Modules.Abstractions.Interfaces;
+﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
-using XerifeTv.CMS.Modules.Integrations.Imdb.Services;
+using XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Series.Importers;
 
-public class EpisodesImdbImporter(
+public class EpisodesTmdbImporter(
     ISeriesService service,
-    IImdbService imdbService,
+    ITmdbService tmdbService,
     ICacheService cacheService) : IEpisodesImporter
 {
     public async Task<Result<string>> ImportAsync(string seriesId)
@@ -52,10 +52,10 @@ public class EpisodesImdbImporter(
             var seriesResult = await service.GetAsync(seriesId);
             if (seriesResult.IsFailure) throw new Exception(seriesResult.Error.Description);
 
-            var seriesImdbResult = await imdbService.GetSeriesByImdbIdAsync(seriesResult.Data?.ImdbId ?? string.Empty);
-            if (seriesImdbResult.IsFailure) throw new Exception(seriesImdbResult.Error.Description);
+            var seriesTmdbResult = await tmdbService.GetSeriesByImdbIdAsync(seriesResult.Data?.ImdbId ?? string.Empty);
+            if (seriesTmdbResult.IsFailure) throw new Exception(seriesTmdbResult.Error.Description);
 
-            var seriesEpisodesImdbCount = seriesImdbResult.Data?.NumberEpisodes ?? 0;
+            var seriesEpisodesCount = seriesTmdbResult.Data?.NumberEpisodes ?? 0;
             var createdEpisodesCount = 0;
             var episodeCreationAttemptsCount = 0;
 
@@ -63,9 +63,9 @@ public class EpisodesImdbImporter(
             {
                 bool importCancelled = await cacheService.GetValueAsync<bool>($"cancelled_{importId}") == true;
 
-                var progressCount = (int)(((float)episodeCreationAttemptsCount / seriesEpisodesImdbCount) * 100);
+                var progressCount = (int)(((float)episodeCreationAttemptsCount / seriesEpisodesCount) * 100);
                 var _dto = new ImportEpisodesResponseDto(
-                    TotalItemsCount: seriesEpisodesImdbCount,
+                    TotalItemsCount: seriesEpisodesCount,
                     ImportedCount: createdEpisodesCount,
                     ProgressCount: progressCount,
                     ProcessedCount: episodeCreationAttemptsCount,
@@ -77,9 +77,9 @@ public class EpisodesImdbImporter(
                     throw new OperationCanceledException("Importação cancelada pelo usuário");
             }
 
-            for (int i = 1; i <= seriesImdbResult?.Data?.NumberSeasons; i++)
+            for (int i = 1; i <= seriesTmdbResult?.Data?.NumberSeasons; i++)
             {
-                var result = await imdbService.GetSeriesEpisodesBySeasonAsync(seriesResult.Data!.ImdbId, i);
+                var result = await tmdbService.GetSeriesEpisodesBySeasonAsync(seriesResult.Data!.ImdbId, i);
                 if (result.IsFailure || result.Data == null) continue;
 
                 foreach (var episode in result.Data.Episodes)
