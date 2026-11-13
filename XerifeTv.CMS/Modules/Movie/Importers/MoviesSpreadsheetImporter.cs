@@ -8,6 +8,8 @@ using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
 using XerifeTv.CMS.Modules.Movie.Dtos.Response;
 using XerifeTv.CMS.Modules.Movie.Interfaces;
+using XerifeTv.CMS.Modules.People.Dtos.Request;
+using XerifeTv.CMS.Modules.People.Interfaces;
 
 namespace XerifeTv.CMS.Modules.Movie.Importers;
 
@@ -17,7 +19,8 @@ public class MoviesSpreadsheetImporter(
   ICacheService cacheService,
   ISpreadsheetReaderService spreadsheetReaderService,
   IMediaDeliveryProfileService mediaDeliveryProfileService,
-  IFranchiseService franchiseService) : ISpreadsheetBatchImporter<IMovieService>
+  IFranchiseService franchiseService,
+  IWorkCreditsImportService workCreditsImportService) : ISpreadsheetBatchImporter<IMovieService>
 {
     public async Task<Result<string>> ImportAsync(IFormFile file)
     {
@@ -184,13 +187,18 @@ public class MoviesSpreadsheetImporter(
                         MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,
                         MediaRoute = movieItem.MediaRoute,
                         TrailerVideoYoutubeId = movieItem.TrailerVideoYoutubeId,
-                        FranchiseId = movieItem.FranchiseId
+                        FranchiseId = movieItem.FranchiseId,
+                        Credits = movieByImdbIdResponse.Data!.Credits
+                            .Select(CreditRequestDto.FromResponse)
+                            .ToList()
                     };
 
                     responseCreateOrUpdate = await service.UpdateAsync(updateMovieDto);
                 }
                 else
                 {
+                    var credits = await ImportCreditsAsync(movieItem.ImdbId, movieTmdbResponse.Data?.Title);
+
                     var createMovieDto = new CreateMovieRequestDto
                     {
                         ImdbId = movieItem.ImdbId,
@@ -211,7 +219,8 @@ public class MoviesSpreadsheetImporter(
                         MediaDeliveryProfileId = movieItem.MediaDeliveryProfileId,
                         MediaRoute = movieItem.MediaRoute,
                         TrailerVideoYoutubeId = movieItem.TrailerVideoYoutubeId,
-                        FranchiseId = movieItem.FranchiseId
+                        FranchiseId = movieItem.FranchiseId,
+                        Credits = credits
                     };
 
                     responseCreateOrUpdate = await service.CreateAsync(createMovieDto);
@@ -268,6 +277,21 @@ public class MoviesSpreadsheetImporter(
                 await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), progress);
             }
         }
+    }
+
+    private async Task<ICollection<CreditRequestDto>> ImportCreditsAsync(string imdbId, string? workTitle)
+    {
+        var response = await workCreditsImportService.ImportMovieCreditsAsync(
+            new ImportWorkCreditsRequestDto
+            {
+                ImdbId = imdbId,
+                WorkTitle = workTitle
+            });
+
+        if (response.IsFailure)
+            return [];
+
+        return [.. response.Data!.Credits.Select(CreditRequestDto.FromResponse)];
     }
 
 }
