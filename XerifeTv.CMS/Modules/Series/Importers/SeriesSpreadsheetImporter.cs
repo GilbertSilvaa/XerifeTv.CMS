@@ -5,6 +5,8 @@ using XerifeTv.CMS.Modules.Common.Dtos;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
+using XerifeTv.CMS.Modules.People.Dtos.Request;
+using XerifeTv.CMS.Modules.People.Interfaces;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
 using XerifeTv.CMS.Modules.Series.Interfaces;
@@ -17,7 +19,8 @@ public class SeriesSpreadsheetImporter(
     ICacheService cacheService,
     ISpreadsheetReaderService spreadsheetReaderService,
     IMediaDeliveryProfileService mediaDeliveryProfileService,
-    IFranchiseService franchiseService) : ISpreadsheetBatchImporter<ISeriesService>
+    IFranchiseService franchiseService,
+    IWorkCreditsImportService workCreditsImportService) : ISpreadsheetBatchImporter<ISeriesService>
 {
     public async Task<Result<string>> ImportAsync(IFormFile file)
     {
@@ -176,6 +179,8 @@ public class SeriesSpreadsheetImporter(
                     continue;
                 }
 
+                var credits = await ImportCreditsAsync(seriesItem.ImdbId, seriesItem.Title);
+
                 var createSeriesDto = new CreateSeriesRequestDto
                 {
                     ImdbId = seriesItem.ImdbId,
@@ -191,7 +196,8 @@ public class SeriesSpreadsheetImporter(
                     Review = seriesByImdbResponse?.Data?.VoteAverage ?? 0,
                     NumberSeasons = seriesByImdbResponse?.Data?.NumberSeasons ?? 0,
                     TrailerVideoYoutubeId = seriesItem.TrailerVideoYoutubeId,
-                    FranchiseId = seriesItem.FranchiseId
+                    FranchiseId = seriesItem.FranchiseId,
+                    Credits = credits
                 };
 
                 var response = await service.CreateAsync(createSeriesDto);
@@ -338,6 +344,21 @@ public class SeriesSpreadsheetImporter(
                 await cacheService.SetValueAsync(importId, TimeSpan.FromMinutes(5), progress);
             }
         }
+    }
+
+    private async Task<ICollection<CreditRequestDto>> ImportCreditsAsync(string imdbId, string? workTitle)
+    {
+        var response = await workCreditsImportService.ImportSeriesCreditsAsync(
+            new ImportWorkCreditsRequestDto
+            {
+                ImdbId = imdbId,
+                WorkTitle = workTitle
+            });
+
+        if (response.IsFailure)
+            return [];
+
+        return [.. response.Data!.Credits.Select(CreditRequestDto.FromResponse)];
     }
 }
 
