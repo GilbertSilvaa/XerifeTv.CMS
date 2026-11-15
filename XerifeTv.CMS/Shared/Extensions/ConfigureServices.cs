@@ -18,6 +18,9 @@ using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Content;
 using XerifeTv.CMS.Modules.Content.Interfaces;
 using XerifeTv.CMS.Modules.Content.Services;
+using XerifeTv.CMS.Modules.ContentCuration;
+using XerifeTv.CMS.Modules.ContentCuration.Interfaces;
+using XerifeTv.CMS.Modules.ContentCuration.Services;
 using XerifeTv.CMS.Modules.Dashboard;
 using XerifeTv.CMS.Modules.Dashboard.Interfaces;
 using XerifeTv.CMS.Modules.Franchise;
@@ -78,6 +81,10 @@ public static class ConfigureServices
         services.AddScoped<IContentSettingsRepository, ContentSettingsRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IWebhookDispatchHistoryRepository, WebhookDispatchHistoryRepository>();
+        services.AddScoped<IFeaturedRepository, FeaturedRepository>();
+        services.AddScoped<ICurationCollectionRepository, CurationCollectionRepository>();
+        services.AddScoped<ICurationSettingsRepository, CurationSettingsRepository>();
+        services.AddScoped<ICurationContentRepository, CurationContentRepository>();
 
         return services;
     }
@@ -91,6 +98,12 @@ public static class ConfigureServices
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IContentV1Service, ContentV1Service>();
         services.AddScoped<IContentV2Service, ContentV2Service>();
+        services.AddSingleton<CategoryDistributionCalculator>();
+        services.AddScoped<ICurationContentResolver, CurationContentResolver>();
+        services.AddScoped<ICurationCollectionResolver, CurationCollectionResolver>();
+        services.AddScoped<IFeaturedService, FeaturedService>();
+        services.AddScoped<ICurationCollectionService, CurationCollectionService>();
+        services.AddScoped<ICurationCompositionService, CurationCompositionService>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
@@ -131,6 +144,7 @@ public static class ConfigureServices
 
         services.AddHostedService<BackgroundJobQueueWorker>();
         services.AddHostedService<PeopleIndexInitializer>();
+        services.AddHostedService<CurationIndexInitializer>();
 
         return services;
     }

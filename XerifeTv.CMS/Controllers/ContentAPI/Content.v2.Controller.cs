@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using System.Net;
+using System.Text.Json;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Content;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
+using XerifeTv.CMS.Modules.ContentCuration.Interfaces;
 
 namespace XerifeTv.CMS.Controllers.ContentAPI;
 
@@ -11,8 +14,10 @@ namespace XerifeTv.CMS.Controllers.ContentAPI;
 [ApiController]
 public class ContentV2Controller(
     IContentV2Service service,
+    ICurationCompositionService curationService,
     ILogger<ContentV2Controller> logger,
-    ICacheService cacheService) : ControllerBase
+    ICacheService cacheService,
+    IOptions<JsonOptions> jsonOptions) : ControllerBase
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(10);
 
@@ -315,6 +320,83 @@ public class ContentV2Controller(
         if (data is null) return BadRequest();
 
         return Ok(data);
+    }
+
+    [HttpGet]
+    [Route("curation/home")]
+    public async Task<IActionResult> CurationHome()
+    {
+        logger.LogInformation("Request Content API v2 /curation/home");
+
+        var version = await curationService.GetCacheVersionAsync();
+        var cacheKey = $"content_v2_curation_home_v{version}";
+
+        var payload = await cacheService.GetOrCreateAsync<string>(cacheKey, CacheTtl, async () =>
+        {
+            var response = await curationService.GetHomeAsync();
+
+            if (!response.IsSuccess || response.Data is null) return null;
+
+            return JsonSerializer.Serialize(new
+            {
+                featureds = response.Data.Featureds
+                    .Select(f => new { content = f.Content, type = f.Type }),
+                categories = response.Data.Categories
+            }, jsonOptions.Value.JsonSerializerOptions);
+        });
+
+        if (payload is null) return BadRequest();
+
+        return Content(payload, "application/json");
+    }
+
+    [HttpGet]
+    [Route("curation/category/{category}")]
+    public async Task<IActionResult> CurationCategory(string category, int page = 1, int pageSize = 0)
+    {
+        logger.LogInformation(
+            "Request Content API v2 /curation/category/{category} page={page} pageSize={pageSize}",
+            category, page, pageSize);
+
+        if (string.IsNullOrWhiteSpace(category)) return NotFound(new { error = "Categoria não encontrada." });
+
+        page = Math.Max(1, page);
+        var requestedPageSize = Math.Max(0, pageSize);
+
+        var version = await curationService.GetCacheVersionAsync();
+        var cacheKey =
+            $"content_v2_curation_category_{category.Trim().ToLowerInvariant()}_v{version}_p{page}_s{requestedPageSize}";
+
+        var payload = await cacheService.GetOrCreateAsync<string>(cacheKey, CacheTtl, async () =>
+        {
+            var response = await curationService.GetCategoryAsync(category, page, requestedPageSize);
+
+            if (!response.IsSuccess || response.Data is null) return null;
+
+            var data = response.Data;
+
+            object body = data.IsPaginated
+                ? new
+                {
+                    category = data.Category,
+                    currentPage = data.CurrentPage,
+                    totalPageCount = data.TotalPageCount,
+                    hasPrevious = data.HasPrevious,
+                    hasNext = data.HasNext,
+                    items = data.Items
+                }
+                : new
+                {
+                    category = data.Category,
+                    items = data.Items
+                };
+
+            return JsonSerializer.Serialize(body, jsonOptions.Value.JsonSerializerOptions);
+        });
+
+        if (payload is null) return NotFound(new { error = "Categoria não encontrada." });
+
+        return Content(payload, "application/json");
     }
 
     [HttpGet]

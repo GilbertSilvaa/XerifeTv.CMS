@@ -1,0 +1,533 @@
+@using System.Text.Json
+@using XerifeTv.CMS.Modules.ContentCuration
+@using XerifeTv.CMS.Modules.ContentCuration.Enums
+@using XerifeTv.CMS.Modules.ContentCuration.Filters
+@using XerifeTv.CMS.Views.ContentCuration.Models
+
+@model CollectionFormModelView
+
+@{
+    ViewData["Title"] = "Curadoria de Conteúdo";
+
+    var collection = Model.Collection;
+    var isEditing = collection is not null;
+    var selectedTypes = collection?.ContentTypes ?? [EContentType.MOVIE, EContentType.SERIES];
+    var mode = collection?.Mode ?? ECurationCollectionMode.STATIC;
+
+    var items = collection?.Items
+        .Select(i => new ContentPickerItem(i.ContentId, i.ContentType, i.Title, i.PosterUrl))
+        .ToList() ?? [];
+
+    var filterCatalog = CurationFilterCatalog.Properties.Select(p => new
+    {
+        name = p.Name,
+        label = p.Label,
+        valueType = (int)p.ValueType,
+        supportsMovies = p.SupportsMovies,
+        supportsSeries = p.SupportsSeries,
+        operators = CurationFilterCatalog.AllowedOperators(p.ValueType)
+            .Select(o => new { value = (int)o, label = CurationDisplay.Operator(o) })
+    });
+
+    var initialFilters = collection?.Filters.Select(f => new
+    {
+        property = f.Property,
+        @operator = (int)f.Operator,
+        value = f.Value,
+        secondValue = f.SecondValue
+    }) ?? [];
+}
+
+<div class="container">
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4 flex-wrap">
+            <div class="d-flex align-items-center gap-4">
+                <a asp-controller="ContentCuration" asp-action="Index" class="fs-4">
+                    <i class="fa fa-undo" aria-hidden="true"></i>
+                </a>
+                <span class="fs-3 fw-normal">@(isEditing ? "Editar" : "Cadastrar") Categoria</span>
+            </div>
+
+            @if (isEditing)
+            {
+                <button type="button" class="btn btn-outline-info" id="openPreview">
+                    <i class="fa-solid fa-eye"></i> Pré-visualizar resultados
+                </button>
+            }
+        </div>
+        <hr />
+    </header>
+
+    <main>
+        <form asp-controller="ContentCuration" asp-action="SaveCollection" method="post">
+            <input type="hidden" name="Id" value="@collection?.Id" />
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-8">
+                    <label for="name" class="form-label">Nome</label>
+                    <input type="text"
+                           class="form-control"
+                           id="name"
+                           name="Name"
+                           placeholder="Ex.: Adicionados Recentemente"
+                           value="@collection?.Name"
+                           required />
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="order" class="form-label">Ordem</label>
+                    <input type="number"
+                           class="form-control"
+                           id="order"
+                           name="Order"
+                           min="1"
+                           value="@(collection?.Order > 0 ? collection.Order : null)" />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Descrição</label>
+                <textarea class="form-control"
+                          id="description"
+                          name="Description"
+                          rows="2"
+                          placeholder="Descrição opcional...">@collection?.Description</textarea>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-4">
+                    <span class="form-label d-block">Tipos de conteúdo</span>
+
+                    @foreach (var type in new[] { EContentType.MOVIE, EContentType.SERIES })
+                    {
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input content-type-checkbox"
+                                   type="checkbox"
+                                   id="contentType_@((int)type)"
+                                   name="ContentTypes"
+                                   value="@((int)type)"
+                                   checked="@selectedTypes.Contains(type)" />
+                            <label class="form-check-label" for="contentType_@((int)type)">
+                                @CurationDisplay.ContentType(type)
+                            </label>
+                        </div>
+                    }
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="mode" class="form-label">Modo de seleção</label>
+                    <select class="form-select" id="mode" name="Mode">
+                        <option value="@((int)ECurationCollectionMode.STATIC)" selected="@(mode == ECurationCollectionMode.STATIC)">Estática</option>
+                        <option value="@((int)ECurationCollectionMode.DYNAMIC)" selected="@(mode == ECurationCollectionMode.DYNAMIC)">Dinâmica</option>
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="limit" class="form-label">Limite de conteúdos</label>
+                    <input type="number"
+                           class="form-control"
+                           id="limit"
+                           name="Limit"
+                           min="1"
+                           value="@(collection?.Limit ?? 20)"
+                           required />
+                </div>
+            </div>
+
+            <div class="row mb-3 d-none" id="paginationSection">
+                <div class="col-12 col-md-8">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               id="allowsPagination"
+                               name="AllowsPagination"
+                               value="true"
+                               checked="@(collection?.AllowsPagination ?? true)" />
+                        <input type="hidden" name="AllowsPagination" value="false" />
+                        <label class="form-check-label" for="allowsPagination">Permite paginação</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-4">
+                    <label for="orderBy" class="form-label">Ordenar por</label>
+                    <select class="form-select" id="orderBy" name="OrderBy">
+                        @foreach (var option in Enum.GetValues<ECurationOrderBy>())
+                        {
+                            <option value="@((int)option)" selected="@(collection?.OrderBy == option)">@CurationDisplay.OrderBy(option)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="sortDirection" class="form-label">Direção</label>
+                    <select class="form-select" id="sortDirection" name="SortDirection">
+                        @foreach (var option in Enum.GetValues<ECurationSortDirection>())
+                        {
+                            <option value="@((int)option)" selected="@(collection?.SortDirection == option)">@CurationDisplay.SortDirection(option)</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-12 col-md-4 d-flex align-items-center">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               id="isActive"
+                               name="IsActive"
+                               value="true"
+                               checked="@(collection?.IsActive ?? true)" />
+                        <input type="hidden" name="IsActive" value="false" />
+                        <label class="form-check-label" for="isActive">Ativa</label>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+
+            <section id="staticSection">
+                <h2 class="fs-5">Conteúdos selecionados</h2>
+
+                @await Html.PartialAsync("_ContentPicker", new ContentPickerViewModel
+                {
+                    IdPrefix = "collectionPicker",
+                    InputName = "Items",
+                    AllowedTypes = [.. selectedTypes],
+                    Items = items
+                })
+            </section>
+
+            <section id="dynamicSection">
+                <div class="d-flex align-items-center justify-content-between gap-2 flex-wrap mb-2">
+                    <h2 class="fs-5 mb-0">Filtros dinâmicos</h2>
+
+                    <div class="d-flex align-items-end gap-2">
+                        <div>
+                            <label class="form-label mb-1 small">Combinação</label>
+                            <select class="form-select form-select-sm" name="LogicalOperator">
+                                <option value="@((int)ECurationLogicalOperator.AND)" selected="@(collection?.LogicalOperator != ECurationLogicalOperator.OR)">Todas as condições (AND)</option>
+                                <option value="@((int)ECurationLogicalOperator.OR)" selected="@(collection?.LogicalOperator == ECurationLogicalOperator.OR)">Qualquer condição (OR)</option>
+                            </select>
+                        </div>
+
+                        <button type="button" class="btn btn-sm btn-outline-info" id="addFilter">
+                            <i class="fa-solid fa-plus"></i> Adicionar filtro
+                        </button>
+                    </div>
+                </div>
+
+                <div id="filterRows"></div>
+
+                <datalist id="franchiseOptions">
+                    @foreach (var franchise in Model.Franchises)
+                    {
+                        <option value="@franchise.Name"></option>
+                    }
+                </datalist>
+
+                <p class="text-muted small">Os resultados são atualizados automaticamente conforme os conteúdos atendem aos filtros.</p>
+            </section>
+
+            <hr />
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    @if (isEditing)
+                    {
+                        <button type="button" class="btn btn-outline-danger" onclick="deleteCollection()">
+                            <i class="fa fa-trash" aria-hidden="true"></i> Remover
+                        </button>
+                    }
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-2">
+                    @(isEditing ? "Editar" : "Cadastrar")
+                </button>
+            </div>
+        </form>
+    </main>
+</div>
+
+@if (isEditing)
+{
+    <div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5">Pré-visualização de @collection?.Name</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="previewContent" class="row gap-2"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section scripts {
+    <script>
+        (function () {
+            const catalog = @Html.Raw(JsonSerializer.Serialize(filterCatalog));
+            const franchises = @Html.Raw(JsonSerializer.Serialize(Model.Franchises.Select(f => new { id = f.Id, name = f.Name })));
+            const modeSelect = document.getElementById('mode');
+            const staticSection = document.getElementById('staticSection');
+            const dynamicSection = document.getElementById('dynamicSection');
+            const paginationSection = document.getElementById('paginationSection');
+            const filterRows = document.getElementById('filterRows');
+            const addFilterButton = document.getElementById('addFilter');
+            const typeCheckboxes = document.querySelectorAll('.content-type-checkbox');
+
+            let filters = @Html.Raw(JsonSerializer.Serialize(initialFilters));
+
+            function admitsMovies() {
+                const checkbox = document.getElementById(`contentType_@((int)EContentType.MOVIE)`);
+                return checkbox?.checked ?? false;
+            }
+
+            function admitsSeries() {
+                const checkbox = document.getElementById(`contentType_@((int)EContentType.SERIES)`);
+                return checkbox?.checked ?? false;
+            }
+
+            function availableProperties() {
+                const movies = admitsMovies();
+                const series = admitsSeries();
+
+                return catalog.filter(property =>
+                    (!movies || property.supportsMovies) &&
+                    (!series || property.supportsSeries));
+            }
+
+            function findProperty(name) {
+                return catalog.find(property => property.name === name);
+            }
+
+            function franchiseName(id) {
+                if (!id) return '';
+                return franchises.find(franchise => franchise.id === id)?.name ?? '';
+            }
+
+            function escapeHtml(value) {
+                return String(value ?? '')
+                    .replaceAll('&', '&amp;')
+                    .replaceAll('<', '&lt;')
+                    .replaceAll('>', '&gt;')
+                    .replaceAll('"', '&quot;')
+                    .replaceAll("'", '&#39;');
+            }
+
+            function valueInputType(valueType) {
+                if (valueType === @((int)ECurationFilterValueType.NUMBER)) return 'number';
+                if (valueType === @((int)ECurationFilterValueType.DATE)) return 'date';
+                return 'text';
+            }
+
+            function renderFilters() {
+                const properties = availableProperties();
+
+                filters = filters.filter(filter => properties.some(p => p.name === filter.property));
+
+                filterRows.innerHTML = filters.map((filter, index) => {
+                    const property = findProperty(filter.property) ?? properties[0];
+                    if (!property) return '';
+
+                    const operators = property.operators;
+                    if (!operators.some(o => o.value === Number(filter.operator))) {
+                        filter.operator = operators[0].value;
+                    }
+
+                    const isBetween = Number(filter.operator) === @((int)ECurationFilterOperator.BETWEEN);
+                    const isReference = property.valueType === @((int)ECurationFilterValueType.REFERENCE);
+                    const inputType = valueInputType(property.valueType);
+
+                    const valueInput = isReference
+                        ? `<input type="text" list="franchiseOptions" class="form-control form-control-sm filter-reference" data-index="${index}" value="${escapeHtml(franchiseName(filter.value))}" placeholder="Selecione a franquia" autocomplete="off" />
+                           <input type="hidden" name="Filters[${index}].Value" value="${escapeHtml(filter.value ?? '')}" />`
+                        : `<input type="${inputType}" step="any" class="form-control form-control-sm filter-value" data-index="${index}" name="Filters[${index}].Value" value="${escapeHtml(filter.value ?? '')}" placeholder="Valor" />`;
+
+                    return `<div class="row g-2 align-items-end mb-2 filter-row">
+                                <div class="col-12 col-md-3">
+                                    <select class="form-select form-select-sm filter-property" data-index="${index}">
+                                        ${properties.map(p => `<option value="${p.name}" ${p.name === filter.property ? 'selected' : ''}>${escapeHtml(p.label)}</option>`).join('')}
+                                    </select>
+                                    <input type="hidden" name="Filters[${index}].Property" value="${escapeHtml(filter.property)}" />
+                                </div>
+                                <div class="col-12 col-md-3">
+                                    <select class="form-select form-select-sm filter-operator" data-index="${index}">
+                                        ${operators.map(o => `<option value="${o.value}" ${Number(o.value) === Number(filter.operator) ? 'selected' : ''}>${escapeHtml(o.label)}</option>`).join('')}
+                                    </select>
+                                    <input type="hidden" name="Filters[${index}].Operator" value="${Number(filter.operator)}" />
+                                </div>
+                                <div class="col-6 col-md-2">
+                                    ${valueInput}
+                                </div>
+                                <div class="col-6 col-md-2 ${isBetween ? '' : 'd-none'} filter-second">
+                                    <input type="${inputType}" step="any" class="form-control form-control-sm filter-second-value" data-index="${index}" name="Filters[${index}].SecondValue" value="${escapeHtml(filter.secondValue ?? '')}" placeholder="Até" />
+                                </div>
+                                <div class="col-12 col-md-2">
+                                    <button type="button" class="btn btn-sm btn-outline-danger filter-remove" data-index="${index}" title="Remover filtro">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </div>
+                            </div>`;
+                }).join('');
+
+                if (filters.length === 0) {
+                    filterRows.innerHTML = '<p class="text-muted small">Nenhum filtro adicionado.</p>';
+                }
+            }
+
+            function refreshSections() {
+                const isDynamic = Number(modeSelect.value) === @((int)ECurationCollectionMode.DYNAMIC);
+
+                staticSection.classList.toggle('d-none', isDynamic);
+                dynamicSection.classList.toggle('d-none', !isDynamic);
+                paginationSection.classList.toggle('d-none', !isDynamic);
+            }
+
+            modeSelect.addEventListener('change', refreshSections);
+
+            addFilterButton.addEventListener('click', function () {
+                const properties = availableProperties();
+                if (properties.length === 0) return;
+
+                const property = properties[0];
+
+                filters.push({
+                    property: property.name,
+                    operator: property.operators[0].value,
+                    value: '',
+                    secondValue: ''
+                });
+
+                renderFilters();
+            });
+
+            filterRows.addEventListener('change', function (event) {
+                if (event.target.classList.contains('filter-property')) {
+                    const index = Number(event.target.dataset.index);
+                    const previous = findProperty(filters[index].property);
+                    const property = findProperty(event.target.value);
+
+                    if (!property) return;
+
+                    filters[index].property = property.name;
+                    filters[index].operator = property.operators[0].value;
+
+                    if (property.valueType === @((int)ECurationFilterValueType.REFERENCE) ||
+                        previous?.valueType === @((int)ECurationFilterValueType.REFERENCE)) {
+                        filters[index].value = '';
+                    }
+
+                    renderFilters();
+                }
+
+                if (event.target.classList.contains('filter-operator')) {
+                    const index = Number(event.target.dataset.index);
+                    filters[index].operator = Number(event.target.value);
+                    renderFilters();
+                }
+            });
+
+            filterRows.addEventListener('input', function (event) {
+                if (event.target.classList.contains('filter-value')) {
+                    filters[Number(event.target.dataset.index)].value = event.target.value;
+                }
+
+                if (event.target.classList.contains('filter-second-value')) {
+                    filters[Number(event.target.dataset.index)].secondValue = event.target.value;
+                }
+
+                if (event.target.classList.contains('filter-reference')) {
+                    const index = Number(event.target.dataset.index);
+                    const typed = event.target.value.trim();
+                    const match = franchises.find(franchise =>
+                        franchise.name.toLocaleLowerCase() === typed.toLocaleLowerCase());
+
+                    filters[index].value = match?.id ?? '';
+
+                    const hidden = event.target
+                        .closest('.filter-row')
+                        .querySelector(`input[type="hidden"][name="Filters[${index}].Value"]`);
+
+                    if (hidden) hidden.value = filters[index].value;
+                }
+            });
+
+            filterRows.addEventListener('click', function (event) {
+                const button = event.target.closest('.filter-remove');
+                if (!button) return;
+
+                filters.splice(Number(button.dataset.index), 1);
+                renderFilters();
+            });
+
+            typeCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', function () {
+                    const movies = admitsMovies();
+                    const series = admitsSeries();
+
+                    if (!movies && !series) {
+                        checkbox.checked = true;
+                    }
+
+                    renderFilters();
+                });
+            });
+
+            renderFilters();
+            refreshSections();
+        })();
+
+        function deleteCollection() {
+            if (!confirm('Deseja realmente remover a categoria?')) return;
+            location.href = '/ContentCuration/DeleteCollection/@Model.Collection?.Id';
+        }
+
+        @if (isEditing)
+        {
+            <text>
+            document.getElementById('openPreview').addEventListener('click', async function () {
+                const modal = new bootstrap.Modal(document.getElementById('previewModal'));
+                const content = document.getElementById('previewContent');
+
+                content.innerHTML = '<p class="text-muted">Carregando...</p>';
+                modal.show();
+
+                try {
+                    const response = await fetch('/ContentCuration/PreviewCollection?id=@Model.Collection?.Id');
+                    if (!response.ok) throw new Error('Falha ao carregar a pré-visualização.');
+
+                    const data = await response.json();
+                    const items = data.Items || data.items || [];
+
+                    if (items.length === 0) {
+                        content.innerHTML = '<p class="text-muted">Nenhum conteúdo habilitado nesta categoria.</p>';
+                        return;
+                    }
+
+                    content.innerHTML = items.map(item => {
+                        const title = item.Title || item.title;
+                        const poster = item.PosterUrl || item.posterUrl;
+                        const type = (item.ContentType ?? item.contentType) === 0 ? 'Filme' : 'Série';
+
+                        return `<div class="card col-6 col-md-3 pt-2">
+                                    <img src="${poster}" class="card-img-top object-fit-cover" style="height: 9rem;"
+                                         onerror="this.onerror=null; this.src='/assets/poster_default.jpg';" />
+                                    <div class="card-body p-1">
+                                        <div class="small fw-semibold text-truncate">${title}</div>
+                                        <div class="small text-muted">${type}</div>
+                                    </div>
+                                </div>`;
+                    }).join('');
+                } catch (error) {
+                    content.innerHTML = `<p class="text-danger">${error.message}</p>`;
+                }
+            });
+            </text>
+        }
+    </script>
+}
