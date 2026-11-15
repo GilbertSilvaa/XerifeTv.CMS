@@ -1,0 +1,231 @@
+@using XerifeTv.CMS.Modules.ContentCuration
+@using XerifeTv.CMS.Modules.ContentCuration.Dtos.Response
+@using XerifeTv.CMS.Modules.ContentCuration.Enums
+
+@model IEnumerable<GetCurationCollectionResponseDto>
+
+@{
+    ViewData["Title"] = "Curadoria de Conteúdo";
+}
+
+<div class="container">
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4 flex-wrap">
+            <div>
+                <span class="fs-3 fw-normal">Categorias da Curadoria</span>
+                <p class="text-muted mb-0 small">
+                    Ordem em que as categorias aparecem na home curada.
+                </p>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a class="btn btn-outline-info" asp-controller="ContentCuration" asp-action="Featured">
+                    <i class="fa-solid fa-star"></i> Destaques
+                </a>
+
+                @if (!User.IsInRole("visitor"))
+                {
+                    <form asp-controller="ContentCuration"
+                          asp-action="ReorderAutomatically"
+                          method="post"
+                          id="reorderForm"
+                          class="d-inline">
+                        <button type="submit"
+                                id="reorderButton"
+                                class="btn btn-outline-success"
+                                title="Reorganiza as categorias para reduzir conteúdo repetido. A ordenação manual continua disponível.">
+                            <span id="reorderSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
+                            <i id="reorderIcon" class="fa-solid fa-wand-magic-sparkles"></i>
+                            Reordenar automaticamente
+                        </button>
+                    </form>
+
+                    <a class="btn btn-primary" asp-controller="ContentCuration" asp-action="CollectionForm">
+                        <i class="fa-solid fa-plus"></i> Cadastrar
+                    </a>
+                }
+            </div>
+        </div>
+        <hr />
+    </header>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle">
+            <thead>
+                <tr>
+                    <th class="p-2" style="width: 90px;">Ordem</th>
+                    <th class="p-2">Nome</th>
+                    <th class="p-2">Modo</th>
+                    <th class="p-2">Tipos</th>
+                    <th class="p-2">Limite</th>
+                    <th class="p-2">Status</th>
+                    <th class="text-end p-2">...</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var collection in Model)
+                {
+                    <tr>
+                        <td class="p-2">
+                            <span class="badge text-bg-light border">@collection.Order</span>
+                        </td>
+                        <td class="p-2 fw-semibold">@collection.Name</td>
+                        <td class="p-2">@CurationDisplay.Mode(collection.Mode)</td>
+                        <td class="p-2">
+                            @if (collection.ContentTypes.Count == 0)
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                            else
+                            {
+                                @string.Join(" e ", collection.ContentTypes.Select(CurationDisplay.ContentType))
+                            }
+                        </td>
+                        <td class="p-2">@collection.Limit</td>
+                        <td class="p-2">
+                            @if (collection.IsActive)
+                            {
+                                <span class="badge text-bg-success">Ativa</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Inativa</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap p-2">
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-info shadow-sm"
+                                    title="Pré-visualizar"
+                                    data-preview-id="@collection.Id"
+                                    data-preview-name="@collection.Name">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+
+                            @if (!User.IsInRole("visitor"))
+                            {
+                                <a class="btn btn-sm btn-outline-warning shadow-sm"
+                                   asp-controller="ContentCuration"
+                                   asp-action="MoveCollection"
+                                   asp-route-id="@collection.Id"
+                                   asp-route-direction="-1"
+                                   title="Mover para cima">
+                                    <i class="fa-solid fa-arrow-up"></i>
+                                </a>
+
+                                <a class="btn btn-sm btn-outline-warning shadow-sm"
+                                   asp-controller="ContentCuration"
+                                   asp-action="MoveCollection"
+                                   asp-route-id="@collection.Id"
+                                   asp-route-direction="1"
+                                   title="Mover para baixo">
+                                    <i class="fa-solid fa-arrow-down"></i>
+                                </a>
+
+                                <a class="btn btn-sm btn-outline-primary shadow-sm"
+                                   asp-controller="ContentCuration"
+                                   asp-action="CollectionForm"
+                                   asp-route-id="@collection.Id"
+                                   title="Editar">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger shadow-sm"
+                                        title="Remover"
+                                        data-delete-id="@collection.Id"
+                                        data-delete-name="@collection.Name">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <p>Nenhuma categoria cadastrada.</p>
+    }
+
+    @await Html.PartialAsync("_Pagination")
+</div>
+
+<div class="modal fade" id="previewModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h1 class="modal-title fs-5" id="previewTitle">Pré-visualização</h1>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="previewContent" class="row gap-2"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script>
+        (function () {
+            const reorderForm = document.getElementById('reorderForm');
+            if (reorderForm) {
+                reorderForm.addEventListener('submit', function () {
+                    document.getElementById('reorderButton').disabled = true;
+                    document.getElementById('reorderSpinner').classList.remove('d-none');
+                    document.getElementById('reorderIcon').classList.add('d-none');
+                });
+            }
+
+            const previewModal = new bootstrap.Modal(document.getElementById('previewModal'));
+            const previewContent = document.getElementById('previewContent');
+            const previewTitle = document.getElementById('previewTitle');
+
+            document.querySelectorAll('[data-preview-id]').forEach(button => {
+                button.addEventListener('click', async function () {
+                    const id = button.dataset.previewId;
+                    previewTitle.textContent = button.dataset.previewName;
+                    previewContent.innerHTML = '<p class="text-muted">Carregando...</p>';
+                    previewModal.show();
+
+                    try {
+                        const response = await fetch(`/ContentCuration/PreviewCollection?id=${encodeURIComponent(id)}`);
+                        if (!response.ok) throw new Error('Falha ao carregar a pré-visualização.');
+
+                        const data = await response.json();
+                        const items = data.Items || data.items || [];
+
+                        if (items.length === 0) {
+                            previewContent.innerHTML = '<p class="text-muted">Nenhum conteúdo habilitado nesta categoria.</p>';
+                            return;
+                        }
+
+                        previewContent.innerHTML = items.map(item => {
+                            const title = item.Title || item.title;
+                            const poster = item.PosterUrl || item.posterUrl;
+                            const type = (item.ContentType ?? item.contentType) === 0 ? 'Filme' : 'Série';
+                            return `<div class="card col-6 col-md-3 pt-2">
+                                        <img src="${poster}" class="card-img-top object-fit-cover" style="height: 9rem;"
+                                             onerror="this.onerror=null; this.src='/assets/poster_default.jpg';" />
+                                        <div class="card-body p-1">
+                                            <div class="small fw-semibold text-truncate">${title}</div>
+                                            <div class="small text-muted">${type}</div>
+                                        </div>
+                                    </div>`;
+                        }).join('');
+                    } catch (error) {
+                        previewContent.innerHTML = `<p class="text-danger">${error.message}</p>`;
+                    }
+                });
+            });
+
+            document.querySelectorAll('[data-delete-id]').forEach(button => {
+                button.addEventListener('click', function () {
+                    if (!confirm(`Deseja realmente remover a categoria "${button.dataset.deleteName}"?`)) return;
+                    location.href = `/ContentCuration/DeleteCollection/${encodeURIComponent(button.dataset.deleteId)}`;
+                });
+            });
+        })();
+    </script>
+}
