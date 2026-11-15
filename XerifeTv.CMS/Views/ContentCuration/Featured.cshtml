@@ -1,0 +1,137 @@
+@using XerifeTv.CMS.Modules.ContentCuration.Dtos.Response
+
+@model IEnumerable<GetFeaturedResponseDto>
+
+@{
+    ViewData["Title"] = "Curadoria de Conteúdo";
+}
+
+<div class="container">
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4 flex-wrap">
+            <div>
+                <span class="fs-3 fw-normal">Destaques da Curadoria</span>
+                <p class="text-muted mb-0 small">
+                    O destaque principal ativo alimenta os itens em destaque da home curada.
+                </p>
+            </div>
+
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <a class="btn btn-outline-info" asp-controller="ContentCuration" asp-action="Index">
+                    <i class="fa-solid fa-layer-group"></i> Categorias
+                </a>
+
+                @if (!User.IsInRole("visitor"))
+                {
+                    <a class="btn btn-primary" asp-controller="ContentCuration" asp-action="FeaturedForm">
+                        <i class="fa-solid fa-plus"></i> Cadastrar
+                    </a>
+                }
+            </div>
+        </div>
+        <hr />
+    </header>
+
+    <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle">
+            <thead>
+                <tr>
+                    <th class="p-2" style="width: 90px;">Ordem</th>
+                    <th class="p-2">Título</th>
+                    <th class="p-2">Itens</th>
+                    <th class="p-2">Principal</th>
+                    <th class="p-2">Status</th>
+                    <th class="text-end p-2">...</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var featured in Model)
+                {
+                    <tr>
+                        <td class="p-2">
+                            <span class="badge text-bg-light border">@featured.Order</span>
+                        </td>
+                        <td class="p-2 fw-semibold">@featured.Title</td>
+                        <td class="p-2">@featured.Items.Count / @featured.MaxItems</td>
+                        <td class="p-2">
+                            @if (featured.IsHomeHero)
+                            {
+                                <span class="badge text-bg-primary">Principal</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        </td>
+                        <td class="p-2">
+                            @if (featured.IsActive)
+                            {
+                                <span class="badge text-bg-success">Ativo</span>
+                            }
+                            else
+                            {
+                                <span class="badge text-bg-secondary">Inativo</span>
+                            }
+                        </td>
+                        <td class="text-end text-nowrap p-2">
+                            @if (!User.IsInRole("visitor"))
+                            {
+                                <a class="btn btn-sm btn-outline-warning shadow-sm"
+                                   asp-controller="ContentCuration"
+                                   asp-action="MoveFeatured"
+                                   asp-route-id="@featured.Id"
+                                   asp-route-direction="-1"
+                                   title="Mover para cima">
+                                    <i class="fa-solid fa-arrow-up"></i>
+                                </a>
+
+                                <a class="btn btn-sm btn-outline-warning shadow-sm"
+                                   asp-controller="ContentCuration"
+                                   asp-action="MoveFeatured"
+                                   asp-route-id="@featured.Id"
+                                   asp-route-direction="1"
+                                   title="Mover para baixo">
+                                    <i class="fa-solid fa-arrow-down"></i>
+                                </a>
+
+                                <a class="btn btn-sm btn-outline-primary shadow-sm"
+                                   asp-controller="ContentCuration"
+                                   asp-action="FeaturedForm"
+                                   asp-route-id="@featured.Id"
+                                   title="Editar">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-danger shadow-sm"
+                                        title="Remover"
+                                        data-delete-id="@featured.Id"
+                                        data-delete-name="@featured.Title">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <p>Nenhum destaque cadastrado.</p>
+    }
+
+    @await Html.PartialAsync("_Pagination")
+</div>
+
+@section scripts {
+    <script>
+        document.querySelectorAll('[data-delete-id]').forEach(button => {
+            button.addEventListener('click', function () {
+                if (!confirm(`Deseja realmente remover o destaque "${button.dataset.deleteName}"?`)) return;
+                location.href = `/ContentCuration/DeleteFeatured/${encodeURIComponent(button.dataset.deleteId)}`;
+            });
+        });
+    </script>
+}

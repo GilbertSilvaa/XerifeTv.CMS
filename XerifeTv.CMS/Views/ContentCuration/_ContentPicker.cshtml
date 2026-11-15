@@ -1,0 +1,221 @@
+@using System.Text.Json
+@using XerifeTv.CMS.Modules.ContentCuration
+@using XerifeTv.CMS.Modules.ContentCuration.Enums
+@using XerifeTv.CMS.Views.ContentCuration.Models
+
+@model ContentPickerViewModel
+
+@{
+    var id = Model.IdPrefix;
+    var allowed = Model.AllowedTypes.Count > 0
+        ? Model.AllowedTypes
+        : new List<EContentType> { EContentType.MOVIE, EContentType.SERIES };
+    var initialItems = Model.Items.Select(x => new
+    {
+        contentId = x.ContentId,
+        contentType = (int)x.ContentType,
+        title = x.Title,
+        posterUrl = x.PosterUrl
+    });
+}
+
+<div id="@id" class="content-picker" data-input-name="@Model.InputName">
+    <div class="row g-2 mb-2">
+        @if (allowed.Count > 1)
+        {
+            <div class="col-auto">
+                <select class="form-select form-select-sm picker-type" aria-label="Tipo de conteúdo">
+                    @foreach (var type in allowed)
+                    {
+                        <option value="@((int)type)">@CurationDisplay.ContentType(type)</option>
+                    }
+                </select>
+            </div>
+        }
+        else
+        {
+            <input type="hidden" class="picker-type" value="@((int)allowed[0])" />
+        }
+
+        <div class="col">
+            <div class="input-group input-group-sm">
+                <input type="text" class="form-control picker-term" placeholder="Pesquisar por título..." />
+                <button type="button" class="btn btn-outline-success picker-search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="picker-results list-group mb-3" style="max-height: 14rem; overflow-y: auto;"></div>
+    <div class="picker-selected list-group mb-1"></div>
+    <p class="text-muted small mb-0">Use as setas para ajustar a ordem dos conteúdos selecionados.</p>
+</div>
+
+<script>
+    (function () {
+        const root = document.getElementById('@id');
+        if (!root) return;
+
+        const inputName = root.dataset.inputName;
+        const typeElement = root.querySelector('.picker-type');
+        const termInput = root.querySelector('.picker-term');
+        const searchButton = root.querySelector('.picker-search');
+        const results = root.querySelector('.picker-results');
+        const selectedRoot = root.querySelector('.picker-selected');
+
+        let selected = @Html.Raw(JsonSerializer.Serialize(initialItems));
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#39;');
+        }
+
+        function typeLabel(type) {
+            return Number(type) === @((int)EContentType.MOVIE) ? 'Filme' : 'Série';
+        }
+
+        function renderSelected() {
+            selectedRoot.innerHTML = '';
+
+            selected.forEach((item, index) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'list-group-item d-flex align-items-center gap-2 py-1';
+
+                wrapper.innerHTML = `
+                    <img src="${escapeHtml(item.posterUrl)}"
+                         class="rounded object-fit-cover"
+                         style="width: 42px; height: 28px;"
+                         onerror="this.onerror=null; this.src='/assets/poster_default.jpg';" />
+                    <div class="flex-grow-1">
+                        <div class="small fw-semibold text-truncate">${escapeHtml(item.title)}</div>
+                        <div class="text-muted" style="font-size: .75rem;">${typeLabel(item.contentType)}</div>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button type="button" class="btn btn-outline-warning" data-move="up" data-index="${index}" title="Subir">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-warning" data-move="down" data-index="${index}" title="Descer">
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </button>
+                        <button type="button" class="btn btn-outline-danger" data-remove="${index}" title="Remover">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <input type="hidden" name="${inputName}[${index}].ContentId" value="${escapeHtml(item.contentId)}" />
+                    <input type="hidden" name="${inputName}[${index}].ContentType" value="${Number(item.contentType)}" />
+                    <input type="hidden" name="${inputName}[${index}].Order" value="${index + 1}" />
+                `;
+
+                selectedRoot.appendChild(wrapper);
+            });
+        }
+
+        function renderResults(items) {
+            if (!items || items.length === 0) {
+                results.innerHTML = '<div class="list-group-item text-muted small">Nenhum resultado encontrado.</div>';
+                return;
+            }
+
+            results.innerHTML = items.map(item => {
+                const id = item.Id ?? item.id;
+                const title = item.Title ?? item.title;
+                const poster = item.PosterUrl ?? item.posterUrl;
+                const releaseYear = item.ReleaseYear ?? item.releaseYear;
+                const contentType = Number(item.ContentType ?? item.contentType);
+
+                return `<button type="button"
+                            class="list-group-item list-group-item-action d-flex align-items-center gap-2 py-1"
+                            data-add-id="${escapeHtml(id)}"
+                            data-add-type="${contentType}"
+                            data-add-title="${escapeHtml(title)}"
+                            data-add-poster="${escapeHtml(poster)}">
+                            <img src="${escapeHtml(poster)}"
+                                 class="rounded object-fit-cover"
+                                 style="width: 42px; height: 28px;"
+                                 onerror="this.onerror=null; this.src='/assets/poster_default.jpg';" />
+                            <span class="small text-truncate">${escapeHtml(title)}</span>
+                            <span class="text-muted ms-auto small">${escapeHtml(releaseYear)}</span>
+                        </button>`;
+            }).join('');
+        }
+
+        function alreadySelected(contentId, contentType) {
+            return selected.some(x =>
+                x.contentId === contentId && Number(x.contentType) === Number(contentType));
+        }
+
+        async function search() {
+            const type = typeElement.value;
+            const term = termInput.value.trim();
+
+            results.innerHTML = '<div class="list-group-item text-muted small">Pesquisando...</div>';
+
+            try {
+                const response = await fetch(`/ContentCuration/SearchContents?term=${encodeURIComponent(term)}&contentType=${type}&limit=20`);
+
+                if (!response.ok) throw new Error('Falha ao pesquisar conteúdos.');
+
+                renderResults(await response.json());
+            } catch (error) {
+                results.innerHTML = `<div class="list-group-item text-danger small">${escapeHtml(error.message)}</div>`;
+            }
+        }
+
+        searchButton.addEventListener('click', search);
+
+        termInput.addEventListener('keydown', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                search();
+            }
+        });
+
+        results.addEventListener('click', function (event) {
+            const button = event.target.closest('[data-add-id]');
+            if (!button) return;
+
+            const contentId = button.dataset.addId;
+            const contentType = Number(button.dataset.addType);
+
+            if (alreadySelected(contentId, contentType)) return;
+
+            selected.push({
+                contentId: contentId,
+                contentType: contentType,
+                title: button.dataset.addTitle,
+                posterUrl: button.dataset.addPoster
+            });
+
+            renderSelected();
+            search();
+        });
+
+        selectedRoot.addEventListener('click', function (event) {
+            const moveButton = event.target.closest('[data-move]');
+            const removeButton = event.target.closest('[data-remove]');
+
+            if (moveButton) {
+                const index = Number(moveButton.dataset.index);
+                const target = moveButton.dataset.move === 'up' ? index - 1 : index + 1;
+
+                if (target < 0 || target >= selected.length) return;
+
+                [selected[index], selected[target]] = [selected[target], selected[index]];
+                renderSelected();
+            }
+
+            if (removeButton) {
+                selected.splice(Number(removeButton.dataset.remove), 1);
+                renderSelected();
+            }
+        });
+
+        renderSelected();
+        search();
+    })();
+</script>
