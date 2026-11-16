@@ -17,13 +17,18 @@ public sealed class CurationCollectionResolver(
     ICurationContentRepository contentRepository,
     ICurationContentResolver contentResolver) : ICurationCollectionResolver
 {
-    public async Task<IReadOnlyList<ResolvedCurationContent>> ResolveItemsAsync(CurationCollectionEntity collection)
+    public Task<IReadOnlyList<ResolvedCurationContent>> ResolveItemsAsync(CurationCollectionEntity collection)
     {
         var limit = Math.Max(1, collection.Limit);
 
-        if (collection.Mode == ECurationCollectionMode.STATIC)
-            return await ResolveStaticAsync(collection.Items, limit);
+        return collection.Mode == ECurationCollectionMode.STATIC
+            ? ResolveStaticAsync(collection.Items, limit)
+            : ResolveDynamicAsync(collection, limit);
+    }
 
+    private async Task<IReadOnlyList<ResolvedCurationContent>> ResolveDynamicAsync(
+        CurationCollectionEntity collection, int limit)
+    {
         var types = collection.ContentTypes.Distinct().ToList();
         if (types.Count == 0) return [];
 
@@ -53,9 +58,9 @@ public sealed class CurationCollectionResolver(
         candidates.AddRange(seriesTask.Result
             .Select(s => new ResolvedCurationContent(s.Id, EContentType.SERIES, null, s)));
 
-        return OrderCandidates(candidates, collection.OrderBy, collection.SortDirection)
-            .Take(limit)
-            .ToList();
+        var ordered = OrderCandidates(candidates, collection.OrderBy, collection.SortDirection);
+
+        return ordered.Take(limit).ToList();
     }
 
     public async Task<IReadOnlyList<ResolvedCurationContent>> ResolveStaticAsync(
