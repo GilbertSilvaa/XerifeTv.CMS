@@ -7,5 +7,6 @@ public interface ICurationCollectionRepository : IBaseRepository<CurationCollect
 {
     Task<IReadOnlyList<CurationCollectionEntity>> GetOrderedAsync(bool onlyActive);
     Task<CurationCollectionEntity?> GetByNameAsync(string name);
+    Task<IReadOnlyList<CurationCollectionEntity>> GetByNamesAsync(IEnumerable<string> names);
     Task<bool> NameExistsAsync(string name, string? ignoreId = null);
 }

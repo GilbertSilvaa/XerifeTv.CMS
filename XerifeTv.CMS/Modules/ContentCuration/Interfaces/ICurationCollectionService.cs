@@ -20,4 +20,5 @@ public interface ICurationCollectionService
     Task<Result<CurationReorderResponseDto>> ReorderAutomaticallyAsync();
     Task<Result<string[]>> GetActiveCategoryNamesAsync();
     Task<Result<CurationCollectionEntity?>> GetActiveByNameAsync(string name);
+    Task<Result<IReadOnlyDictionary<string, CurationCollectionEntity>>> GetActiveByNamesAsync(IEnumerable<string> names);
 }
