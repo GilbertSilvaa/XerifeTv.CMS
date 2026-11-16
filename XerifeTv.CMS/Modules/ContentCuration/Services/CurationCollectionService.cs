@@ -435,6 +435,25 @@ public sealed class CurationCollectionService(
         }
     }
 
+    public async Task<Result<IReadOnlyDictionary<string, CurationCollectionEntity>>> GetActiveByNamesAsync(
+        IEnumerable<string> names)
+    {
+        try
+        {
+            var entities = await repository.GetByNamesAsync(names);
+
+            var map = entities.ToDictionary(
+                entity => entity.Name,
+                StringComparer.OrdinalIgnoreCase);
+
+            return Result<IReadOnlyDictionary<string, CurationCollectionEntity>>.Success(map);
+        }
+        catch (Exception ex)
+        {
+            return Result<IReadOnlyDictionary<string, CurationCollectionEntity>>.Failure(new("500", ex.Message));
+        }
+    }
+
     private async Task<GetCurationCollectionResponseDto> BuildResponseAsync(
         CurationCollectionEntity entity)
     {

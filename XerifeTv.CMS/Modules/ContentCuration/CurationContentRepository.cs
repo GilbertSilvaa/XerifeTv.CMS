@@ -17,6 +17,9 @@ namespace XerifeTv.CMS.Modules.ContentCuration;
 
 public sealed class CurationContentRepository : ICurationContentRepository
 {
+    private static readonly ProjectionDefinition<SeriesEntity> SeriesSummaryProjection =
+        Builders<SeriesEntity>.Projection.Exclude(x => x.Episodes);
+
     private readonly IMongoCollection<MovieEntity> _movies;
     private readonly IMongoCollection<SeriesEntity> _series;
 
@@ -33,7 +36,7 @@ public sealed class CurationContentRepository : ICurationContentRepository
         if (idList.Count == 0) return [];
 
         var filter = Builders<MovieEntity>.Filter.In(x => x.Id, idList)
-            & Builders<MovieEntity>.Filter.Ne(x => x.Disabled, true);
+            & Builders<MovieEntity>.Filter.Eq(x => x.Disabled, false);
 
         return await _movies.Find(filter).ToListAsync();
     }
@@ -44,9 +47,12 @@ public sealed class CurationContentRepository : ICurationContentRepository
         if (idList.Count == 0) return [];
 
         var filter = Builders<SeriesEntity>.Filter.In(x => x.Id, idList)
-            & Builders<SeriesEntity>.Filter.Ne(x => x.Disabled, true);
+            & Builders<SeriesEntity>.Filter.Eq(x => x.Disabled, false);
 
-        return await _series.Find(filter).ToListAsync();
+        return await _series
+            .Find(filter)
+            .Project<SeriesEntity>(SeriesSummaryProjection)
+            .ToListAsync();
     }
 
     public async Task<IReadOnlyList<MovieEntity>> GetMoviesAsync(DynamicCollectionQuery query)
@@ -68,6 +74,7 @@ public sealed class CurationContentRepository : ICurationContentRepository
 
         return await _series
             .Find(filter)
+            .Project<SeriesEntity>(SeriesSummaryProjection)
             .Sort(sort)
             .Limit(Math.Max(1, query.Limit))
             .ToListAsync();
@@ -124,7 +131,7 @@ public sealed class CurationContentRepository : ICurationContentRepository
     private static FilterDefinition<T> BuildFilter<T>(DynamicCollectionQuery query, EContentType contentType)
         where T : BaseEntity
     {
-        var enabled = Builders<T>.Filter.Ne(new StringFieldDefinition<T, bool>("Disabled"), true);
+        var enabled = Builders<T>.Filter.Eq(new StringFieldDefinition<T, bool>("Disabled"), false);
 
         if (query.Filters.Count == 0)
             return enabled;
@@ -215,10 +222,14 @@ public sealed class CurationContentRepository : ICurationContentRepository
 
         var direction = query.SortDirection == ECurationSortDirection.ASC ? 1 : -1;
 
+        if (query.Reverse) direction = -direction;
+
+        var idDirection = query.Reverse ? -1 : 1;
+
         var document = new BsonDocument
         {
             { field, direction },
-            { "_id", 1 }
+            { "_id", idDirection }
         };
 
         return new BsonDocumentSortDefinition<T>(document);

@@ -8,4 +8,5 @@ public sealed record DynamicCollectionQuery(
     ECurationLogicalOperator LogicalOperator,
     ECurationOrderBy OrderBy,
     ECurationSortDirection SortDirection,
-    int Limit);
+    int Limit,
+    bool Reverse = false);
