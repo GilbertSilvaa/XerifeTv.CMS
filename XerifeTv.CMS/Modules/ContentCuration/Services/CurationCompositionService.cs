@@ -107,6 +107,75 @@ public sealed class CurationCompositionService(
 
     public Task<long> GetCacheVersionAsync() => settingsRepository.GetVersionAsync();
 
+    public async Task<Result<IReadOnlyList<CurationCategoryGroupV2ResponseDto>>> GetCategoriesGroupsAsync(
+        IReadOnlyList<string> categories)
+    {
+        try
+        {
+            var groups = new List<CurationCategoryGroupV2ResponseDto>();
+            var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            foreach (var name in categories.Where(x => !string.IsNullOrWhiteSpace(x)))
+            {
+                var collectionResult = await collectionService.GetActiveByNameAsync(name.Trim());
+
+                if (collectionResult.IsFailure)
+                    return Result<IReadOnlyList<CurationCategoryGroupV2ResponseDto>>.Failure(collectionResult.Error);
+
+                var collection = collectionResult.Data;
+
+                if (collection is null)
+                    continue;
+
+                var group = new CurationCategoryGroupV2ResponseDto
+                {
+                    Category = collection.Name
+                };
+
+                IReadOnlyList<ResolvedCurationContent> items;
+
+                if (collection.Mode == ECurationCollectionMode.DYNAMIC && collection.AllowsPagination)
+                {
+                    var pageResult = await collectionResolver.ResolvePageAsync(collection, page: 1, pageSize: 0);
+
+                    group.PageSize = pageResult.PageSize;
+                    group.CurrentPage = pageResult.CurrentPage;
+                    group.TotalPageCount = pageResult.TotalPageCount;
+                    group.HasPrevious = pageResult.HasPrevious;
+                    group.HasNext = pageResult.HasNext;
+
+                    items = pageResult.Items;
+                }
+                else
+                {
+                    items = await collectionResolver.ResolveItemsAsync(collection);
+                }
+
+                if (items.Count == 0)
+                    continue;
+
+                var ordered = items
+                    .OrderBy(item => seen.Contains(ItemKey(item)))
+                    .ToList();
+
+                foreach (var item in items)
+                    seen.Add(ItemKey(item));
+
+                group.Items = [.. ordered.Select(ToCategoryItem)];
+                groups.Add(group);
+            }
+
+            return Result<IReadOnlyList<CurationCategoryGroupV2ResponseDto>>.Success(groups);
+        }
+        catch (Exception ex)
+        {
+            return Result<IReadOnlyList<CurationCategoryGroupV2ResponseDto>>.Failure(new("500", ex.Message));
+        }
+    }
+
+    private static string ItemKey(ResolvedCurationContent item) =>
+        $"{item.ContentType}:{item.ContentId}";
+
     private FeaturedContent ToFeaturedContent(ResolvedCurationContent item)
     {
         return item.ContentType == EContentType.MOVIE

@@ -400,6 +400,32 @@ public class ContentV2Controller(
     }
 
     [HttpGet]
+    [Route("curation/categories/groups")]
+    public async Task<IActionResult> CurationCategoriesGroups([FromQuery] List<string> categories)
+    {
+        logger.LogInformation(
+            "Request Content API v2 /curation/categories/groups categories={categories}",
+            string.Join(", ", categories));
+
+        var norm = NormalizeCsvPreservingOrder(categories);
+        var version = await curationService.GetCacheVersionAsync();
+        var cacheKey = $"content_v2_curation_categories_groups-{norm}_v{version}";
+
+        var payload = await cacheService.GetOrCreateAsync<string>(cacheKey, CacheTtl, async () =>
+        {
+            var response = await curationService.GetCategoriesGroupsAsync(categories);
+
+            if (!response.IsSuccess || response.Data is null) return null;
+
+            return JsonSerializer.Serialize(response.Data, jsonOptions.Value.JsonSerializerOptions);
+        });
+
+        if (payload is null) return BadRequest();
+
+        return Content(payload, "application/json");
+    }
+
+    [HttpGet]
     [Route("movies/categories/groups")]
     public async Task<IActionResult> MoviesByCategories([FromQuery] List<string> categories, int page = 1, int pageSize = 10)
     {
@@ -535,5 +561,12 @@ public class ContentV2Controller(
             csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                .Select(x => x.ToLowerInvariant())
                .OrderBy(x => x)
+        );
+
+    private static string NormalizeCsvPreservingOrder(IEnumerable<string> values)
+        => string.Join(',',
+            values
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Select(x => x.Trim().ToLowerInvariant())
         );
 }

@@ -7,5 +7,7 @@ public interface ICurationCompositionService
 {
     Task<Result<GetCurationHomeV2ResponseDto>> GetHomeAsync();
     Task<Result<GetCurationCategoryV2ResponseDto?>> GetCategoryAsync(string category, int page = 1, int pageSize = 0);
+    Task<Result<IReadOnlyList<CurationCategoryGroupV2ResponseDto>>> GetCategoriesGroupsAsync(
+        IReadOnlyList<string> categories);
     Task<long> GetCacheVersionAsync();
 }
