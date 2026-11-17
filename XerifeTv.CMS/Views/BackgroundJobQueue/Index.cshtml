@@ -1,11 +1,15 @@
 @using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
 @using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums
+@using XerifeTv.CMS.Modules.BackgroundJobQueue
 @using XerifeTv.CMS.Views.BackgroundJobQueue.Models
 
 @model BackgroundJobQueueModelView;
 
 @{
     ViewData["Title"] = "Fila de Processamentos";
+
+    var selectedUsername = ViewBag.Username as string;
+    var isSystemSelected = selectedUsername == BackgroundJobQueueConstants.SystemResponsibleUsername;
 
     ICollection<string[]> statusList = [];
     statusList.Add([$"{(int)EBackgroundJobStatus.PENDING}", "Pendente"]);
@@ -41,9 +45,18 @@
                 <div class="input-group d-flex justify-content-center align-items-center users-select-group">
                     <span class="input-group-text">Usuário</span>
                     <select class="form-select shadow-none" id="username" name="username">
+                        @if (isSystemSelected)
+                        {
+                            <option value="@BackgroundJobQueueConstants.SystemResponsibleUsername" selected>@BackgroundJobQueueConstants.SystemResponsibleLabel</option>
+                        }
+                        else
+                        {
+                            <option value="@BackgroundJobQueueConstants.SystemResponsibleUsername">@BackgroundJobQueueConstants.SystemResponsibleLabel</option>
+                        }
+
                         @foreach (var user in Model.Users)
                         {
-                            if (user.UserName.Equals(ViewBag.Username))
+                            if (user.UserName.Equals(selectedUsername))
                             {
                                 <option value="@user.UserName" selected>@user.UserName</option>
                             }
