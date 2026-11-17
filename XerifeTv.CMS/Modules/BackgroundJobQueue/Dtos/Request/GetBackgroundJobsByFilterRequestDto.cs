@@ -15,4 +15,5 @@ public class GetBackgroundJobsByFilterRequestDto(
 	public int LimitResults { get; } = limitResults ?? 1;
 	public int CurrentPage { get; } = currentPage ?? 1;
 	public string? ResponsibleUserId { get; set; } = null;
+	public bool WithoutResponsible { get; set; } = false;
 }

@@ -41,6 +41,8 @@ public class BackgroundJobQueueController(
             responsibleUsername: usernameSearch,
             status));
 
+        ViewBag.Username = usernameSearch;
+
         if (jobsResult.IsSuccess)
         {
             modelView.Jobs = jobsResult.Data?.Items ?? [];
@@ -48,7 +50,6 @@ public class BackgroundJobQueueController(
             ViewBag.TotalPages = jobsResult.Data?.TotalPageCount ?? 1;
             ViewBag.HasNextPage = jobsResult.Data?.HasNext;
             ViewBag.HasPrevPage = jobsResult.Data?.HasPrevious;
-            ViewBag.Username = usernameSearch;
             ViewBag.Status = status != null ? $"{(int)status}" : string.Empty;
 
             return View(modelView);

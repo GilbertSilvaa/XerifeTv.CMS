@@ -14,10 +14,23 @@ public class BackgroundJobQueueRepository(IOptions<DBSettings> options, IMongoCl
 {
 	public async Task<PagedList<BackgroundJobEntity>> GetByFilterAsync(GetBackgroundJobsByFilterRequestDto dto)
 	{
-		FilterDefinition<BackgroundJobEntity> filter = Builders<BackgroundJobEntity>.Filter
-			.Where(r => (r.Status == dto.Status || dto.Status == null)
-				&& (r.RequestedByUserId == dto.ResponsibleUserId || dto.ResponsibleUserId == null)
-				&& r.CreateAt >= DateTime.UtcNow.AddDays(-30));
+		var builder = Builders<BackgroundJobEntity>.Filter;
+
+		var filter = builder.Gte(r => r.CreateAt, DateTime.UtcNow.AddDays(-30));
+
+		if (dto.Status is EBackgroundJobStatus status)
+			filter &= builder.Eq(r => r.Status, status);
+
+		if (dto.WithoutResponsible)
+		{
+			filter &= builder.Or(
+				builder.Eq(r => r.RequestedByUserId, string.Empty),
+				builder.Eq(r => r.RequestedByUserId, (string?)null));
+		}
+		else if (dto.ResponsibleUserId is not null)
+		{
+			filter &= builder.Eq(r => r.RequestedByUserId, dto.ResponsibleUserId);
+		}
 
 		var count = await _collection.CountDocumentsAsync(filter);
 

@@ -176,7 +176,12 @@ public class BackgroundJobQueueService(
     {
         try
         {
-            if (dto.ResponsibleUsername is string username)
+            if (dto.ResponsibleUsername == BackgroundJobQueueConstants.SystemResponsibleUsername)
+            {
+                dto.WithoutResponsible = true;
+                dto.ResponsibleUserId = null;
+            }
+            else if (dto.ResponsibleUsername is string username)
             {
                 var userResult = await userService.GetByUsernameAsync(username);
 
