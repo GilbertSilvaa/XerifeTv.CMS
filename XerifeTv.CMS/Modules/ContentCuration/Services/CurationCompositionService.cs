@@ -14,6 +14,7 @@ public sealed class CurationCompositionService(
     ICurationCollectionService collectionService,
     ICurationCollectionResolver collectionResolver,
     ICurationContentResolver contentResolver,
+    ICurationSnapshotService snapshotService,
     ICurationSettingsRepository settingsRepository,
     IConfiguration configuration) : ICurationCompositionService
 {
@@ -76,7 +77,7 @@ public sealed class CurationCompositionService(
 
             if (collection.Mode == ECurationCollectionMode.STATIC || !collection.AllowsPagination)
             {
-                var resolved = await collectionResolver.ResolveItemsAsync(collection);
+                var resolved = await ResolveCollectionItemsAsync(collection);
 
                 return Result<GetCurationCategoryV2ResponseDto?>.Success(
                     new GetCurationCategoryV2ResponseDto
@@ -86,7 +87,7 @@ public sealed class CurationCompositionService(
                     });
             }
 
-            var pageResult = await collectionResolver.ResolvePageAsync(collection, page, pageSize);
+            var pageResult = await ResolveCollectionPageAsync(collection, page, pageSize);
 
             return Result<GetCurationCategoryV2ResponseDto?>.Success(
                 new GetCurationCategoryV2ResponseDto
@@ -137,6 +138,7 @@ public sealed class CurationCompositionService(
                 .ToList();
 
             var resolutions = new GroupResolution[distinctCollections.Count];
+            var snapshotSlices = await snapshotService.GetFirstSlicesAsync(distinctCollections);
 
             using var semaphore = new SemaphoreSlim(CurationConstants.MaxParallelCategoryResolutions);
 
@@ -145,7 +147,8 @@ public sealed class CurationCompositionService(
                 await semaphore.WaitAsync();
                 try
                 {
-                    resolutions[index] = await ResolveGroupAsync(collection);
+                    snapshotSlices.TryGetValue(collection.Id, out var snapshot);
+                    resolutions[index] = await ResolveGroupAsync(collection, snapshot);
                 }
                 finally
                 {
@@ -198,9 +201,30 @@ public sealed class CurationCompositionService(
         }
     }
 
-    private async Task<GroupResolution> ResolveGroupAsync(CurationCollectionEntity collection)
+    private async Task<GroupResolution> ResolveGroupAsync(
+        CurationCollectionEntity collection,
+        CurationSnapshotSlice? snapshot)
     {
-        if (collection.Mode == ECurationCollectionMode.DYNAMIC && collection.AllowsPagination)
+        var isPaginated = collection.Mode == ECurationCollectionMode.DYNAMIC
+            && collection.AllowsPagination;
+
+        if (snapshot is not null)
+        {
+            var resolved = await ResolveSnapshotAsync(snapshot.Items);
+
+            if (isPaginated)
+            {
+                var size = collection.Limit > 0
+                    ? collection.Limit
+                    : CurationConstants.DefaultCollectionLimit;
+
+                return new(resolved, new CurationPageResult(resolved, snapshot.TotalCount, 1, size));
+            }
+
+            return new(resolved, null);
+        }
+
+        if (isPaginated)
         {
             var page = await collectionResolver.ResolvePageAsync(collection, page: 1, pageSize: 0);
             return new(page.Items, page);
@@ -208,6 +232,56 @@ public sealed class CurationCompositionService(
 
         var items = await collectionResolver.ResolveItemsAsync(collection);
         return new(items, null);
+    }
+
+    private async Task<IReadOnlyList<ResolvedCurationContent>> ResolveCollectionItemsAsync(
+        CurationCollectionEntity collection)
+    {
+        if (collection.Mode == ECurationCollectionMode.DYNAMIC)
+        {
+            var snapshot = await snapshotService.GetSliceAsync(collection, page: 1, pageSize: 0);
+
+            if (snapshot is not null)
+                return await ResolveSnapshotAsync(snapshot.Items);
+        }
+
+        return await collectionResolver.ResolveItemsAsync(collection);
+    }
+
+    private async Task<CurationPageResult> ResolveCollectionPageAsync(
+        CurationCollectionEntity collection, int page, int pageSize)
+    {
+        if (collection.Mode == ECurationCollectionMode.DYNAMIC)
+        {
+            var snapshot = await snapshotService.GetSliceAsync(collection, page, pageSize);
+
+            if (snapshot is not null)
+            {
+                var size = pageSize > 0
+                    ? pageSize
+                    : collection.Limit > 0
+                        ? collection.Limit
+                        : CurationConstants.DefaultCollectionLimit;
+
+                var resolved = await ResolveSnapshotAsync(snapshot.Items);
+
+                return new CurationPageResult(resolved, snapshot.TotalCount, Math.Max(1, page), size);
+            }
+        }
+
+        return await collectionResolver.ResolvePageAsync(collection, page, pageSize);
+    }
+
+    private async Task<IReadOnlyList<ResolvedCurationContent>> ResolveSnapshotAsync(
+        IReadOnlyList<CurationSnapshotItem> items)
+    {
+        if (items.Count == 0) return [];
+
+        var references = items
+            .Select(item => new CurationContentReference(item.ContentId, item.ContentType))
+            .ToList();
+
+        return await contentResolver.ResolveAsync(references);
     }
 
     private sealed record GroupResolution(

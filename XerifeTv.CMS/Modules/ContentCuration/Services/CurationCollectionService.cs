@@ -17,6 +17,7 @@ public sealed class CurationCollectionService(
     ICurationContentRepository contentRepository,
     ICurationContentResolver contentResolver,
     ICurationCollectionResolver collectionResolver,
+    ICurationSnapshotScheduler snapshotScheduler,
     CategoryDistributionCalculator categoryDistributionCalculator) : ICurationCollectionService
 {
     public async Task<Result<PagedList<GetCurationCollectionResponseDto>>> GetAsync(
@@ -123,6 +124,9 @@ public sealed class CurationCollectionService(
             var id = await repository.CreateAsync(entity);
             await settingsRepository.IncrementVersionAsync();
 
+            if (entity.Mode == ECurationCollectionMode.DYNAMIC)
+                await snapshotScheduler.ScheduleRebuildAsync(id, entity.Name);
+
             return Result<string>.Success(id);
         }
         catch (Exception ex)
@@ -169,6 +173,12 @@ public sealed class CurationCollectionService(
                 : [];
 
             await repository.UpdateAsync(entity);
+
+            if (entity.Mode == ECurationCollectionMode.DYNAMIC)
+                await snapshotScheduler.ScheduleRebuildAsync(entity.Id, entity.Name);
+            else
+                await snapshotScheduler.RemoveSnapshotAsync(entity.Id);
+
             await settingsRepository.IncrementVersionAsync();
 
             return Result<string>.Success(entity.Id);
@@ -190,6 +200,7 @@ public sealed class CurationCollectionService(
 
             await repository.DeleteAsync(id);
             await settingsRepository.IncrementVersionAsync();
+            await snapshotScheduler.RemoveSnapshotAsync(id);
 
             return Result<bool>.Success(true);
         }
@@ -212,6 +223,11 @@ public sealed class CurationCollectionService(
 
             await repository.UpdateAsync(entity);
             await settingsRepository.IncrementVersionAsync();
+
+            if (entity.IsActive && entity.Mode == ECurationCollectionMode.DYNAMIC)
+                await snapshotScheduler.ScheduleRebuildAsync(entity.Id, entity.Name);
+            else
+                await snapshotScheduler.RemoveSnapshotAsync(entity.Id);
 
             return Result<bool>.Success(true);
         }

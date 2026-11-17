@@ -85,6 +85,7 @@ public static class ConfigureServices
         services.AddScoped<ICurationCollectionRepository, CurationCollectionRepository>();
         services.AddScoped<ICurationSettingsRepository, CurationSettingsRepository>();
         services.AddScoped<ICurationContentRepository, CurationContentRepository>();
+        services.AddScoped<ICurationCollectionSnapshotRepository, CurationCollectionSnapshotRepository>();
 
         return services;
     }
@@ -104,6 +105,8 @@ public static class ConfigureServices
         services.AddScoped<IFeaturedService, FeaturedService>();
         services.AddScoped<ICurationCollectionService, CurationCollectionService>();
         services.AddScoped<ICurationCompositionService, CurationCompositionService>();
+        services.AddScoped<ICurationSnapshotService, CurationSnapshotService>();
+        services.AddScoped<ICurationSnapshotScheduler, CurationSnapshotScheduler>();
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<ITokenService, TokenService>();
         services.AddScoped<IAuthService, AuthService>();
@@ -139,12 +142,14 @@ public static class ConfigureServices
         services.AddScoped<IBackgroundJobProcessorStrategy, ImportEpisodesSeriesBackgroundJobProcessorStrategy>();
         services.AddScoped<IBackgroundJobProcessorStrategy, CalculateCategoryDistributionBackgroundJobProcessorStrategy>();
         services.AddScoped<IBackgroundJobProcessorStrategy, DispacthWebhooksBackgroundProcessorStrategy>();
+        services.AddScoped<IBackgroundJobProcessorStrategy, RebuildCurationSnapshotsBackgroundJobProcessorStrategy>();
 
         services.AddScoped<IAuditLogService, AuditLogService>();
 
         services.AddHostedService<BackgroundJobQueueWorker>();
         services.AddHostedService<PeopleIndexInitializer>();
         services.AddHostedService<CurationIndexInitializer>();
+        services.AddHostedService<CurationSnapshotInitializer>();
 
         return services;
     }

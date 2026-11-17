@@ -20,6 +20,7 @@ public class BackgroundJobEntity : BaseEntity
     public string? SpreadsheetFileUrl { get; private set; } = null;
     public string? SeriesIdImportEpisodes { get; private set; } = null;
     public string? DispatchWebhooksEntityId { get; private set; } = null;
+    public string? CurationCollectionId { get; private set; } = null;
     public bool UserWasNotified { get; private set; } = false;
 
     public static BackgroundJobEntity Create(
@@ -95,6 +96,21 @@ public class BackgroundJobEntity : BaseEntity
             },
 
             DispatchWebhooksEntityId = dispatchWebhooksEntityId,
+            Status = EBackgroundJobStatus.PENDING
+        };
+    }
+
+    public static BackgroundJobEntity Create(string? curationCollectionId, string? curationCollectionName)
+    {
+        return new BackgroundJobEntity
+        {
+            Type = EBackgroundJobType.REBUILD_CURATION_COLLECTION_SNAPSHOTS,
+
+            JobName = curationCollectionId is null
+                ? "Atualização das visões materializadas da curadoria"
+                : $"Atualização da visão materializada da curadoria ({curationCollectionName})",
+
+            CurationCollectionId = curationCollectionId,
             Status = EBackgroundJobStatus.PENDING
         };
     }

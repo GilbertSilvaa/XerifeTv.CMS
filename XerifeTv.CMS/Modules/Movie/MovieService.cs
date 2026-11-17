@@ -1,6 +1,7 @@
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.ContentCuration.Interfaces;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Movie.Dtos.Request;
@@ -17,6 +18,7 @@ public sealed class MovieService(
     IMovieRepository repository,
     IFranchiseService franchiseService,
     IBackgroundJobQueueService backgroundJobQueueService,
+    ICurationSnapshotScheduler curationSnapshotScheduler,
     IPersonRepository personRepository,
     CreditValidator creditValidator) : IMovieService
 {
@@ -98,6 +100,7 @@ public sealed class MovieService(
             var response = await repository.CreateAsync(entity);
 
             await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
+            await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
             await backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.MOVIES, response!);
 
             return Result<string>.Success(response);
@@ -132,6 +135,7 @@ public sealed class MovieService(
             entity.CreateAt = response.CreateAt;
             await repository.UpdateAsync(entity);
             await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
+            await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
 
             return Result<string>.Success(entity.Id);
         }
@@ -153,6 +157,7 @@ public sealed class MovieService(
 
             await repository.DeleteAsync(id);
             await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
+            await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
 
             return Result<bool>.Success(true);
         }
