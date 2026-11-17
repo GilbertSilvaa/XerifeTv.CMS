@@ -19,6 +19,7 @@ public class GetBackgroundJobResponseDto
 	public string? SpreadsheetFileUrl { get; private set; } = null;
 	public string? SeriesIdImportEpisodes { get; private set; } = null;
 	public string? DispatchWebhooksEntityId { get; private set; } = null;
+	public string? CurationCollectionId { get; private set; } = null;
 
 
     public static GetBackgroundJobResponseDto FromEntity(BackgroundJobEntity entity)
@@ -39,7 +40,8 @@ public class GetBackgroundJobResponseDto
 			LastUpdatDate = entity.FinishedAt ?? entity.UpdateAt,
 			SeriesIdImportEpisodes = entity.SeriesIdImportEpisodes,
 			SpreadsheetFileUrl = entity.SpreadsheetFileUrl,
-            DispatchWebhooksEntityId = entity.DispatchWebhooksEntityId
+            DispatchWebhooksEntityId = entity.DispatchWebhooksEntityId,
+            CurationCollectionId = entity.CurationCollectionId
         };
 	}
 }

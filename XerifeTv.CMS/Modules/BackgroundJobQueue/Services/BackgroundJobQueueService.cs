@@ -117,6 +117,24 @@ public class BackgroundJobQueueService(
         }
     }
 
+    public async Task<Result<AddJobQueueResponseDto>> AddCurationSnapshotRebuildJobAsync(
+        string? curationCollectionId, string? curationCollectionName)
+    {
+        try
+        {
+            var backgroundJob = BackgroundJobEntity.Create(curationCollectionId, curationCollectionName);
+
+            var resultId = await repository.CreateAsync(backgroundJob);
+
+            return Result<AddJobQueueResponseDto>.Success(new AddJobQueueResponseDto(resultId));
+        }
+        catch (Exception ex)
+        {
+            var error = new Error("500", ex.InnerException?.Message ?? ex.Message);
+            return Result<AddJobQueueResponseDto>.Failure(error);
+        }
+    }
+
     public async Task<Result<bool>> CancelJobAsync(string jobId)
     {
         try
