@@ -49,6 +49,25 @@ public sealed class CurationIndexInitializer(
 
         try
         {
+            await database.GetCollection<CurationCollectionSnapshotEntity>(
+                    ECollection.CURATION_COLLECTION_SNAPSHOTS.ToString())
+                .Indexes.CreateOneAsync(
+                    new CreateIndexModel<CurationCollectionSnapshotEntity>(
+                        Builders<CurationCollectionSnapshotEntity>.IndexKeys
+                            .Ascending(x => x.CollectionId),
+                        new CreateIndexOptions
+                        {
+                            Name = "ux_curation_snapshots_collection_id",
+                            Unique = true
+                        }));
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to create unique index for curation collection snapshots");
+        }
+
+        try
+        {
             await database.GetCollection<FeaturedEntity>(ECollection.CURATION_FEATUREDS.ToString())
                 .Indexes.CreateOneAsync(
                     new CreateIndexModel<FeaturedEntity>(

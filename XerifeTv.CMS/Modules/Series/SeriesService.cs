@@ -2,6 +2,7 @@ using MongoDB.Driver.Linq;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.ContentCuration.Interfaces;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
@@ -18,6 +19,7 @@ public class SeriesService(
     IFranchiseService franchiseService,
     IBackgroundJobQueueService backgroundJobQueueService,
     IConfiguration configuration,
+    ICurationSnapshotScheduler curationSnapshotScheduler,
     IPersonRepository personRepository,
     CreditValidator creditValidator) : ISeriesService
 {
@@ -98,6 +100,7 @@ public class SeriesService(
 
             var response = await repository.CreateAsync(entity);
             await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
+            await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
             await backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.SERIES, response!);
 
             return Result<string>.Success(entity.Id);
@@ -131,6 +134,7 @@ public class SeriesService(
 
             await repository.UpdateAsync(entity);
             await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
+            await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
 
             return Result<string>.Success(entity.Id);
         }
@@ -152,6 +156,7 @@ public class SeriesService(
 
             await repository.DeleteAsync(id);
             await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
+            await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
 
             return Result<bool>.Success(true);
         }

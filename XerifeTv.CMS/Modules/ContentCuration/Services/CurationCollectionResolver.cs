@@ -10,6 +10,8 @@ namespace XerifeTv.CMS.Modules.ContentCuration.Services;
 public interface ICurationCollectionResolver
 {
     Task<IReadOnlyList<ResolvedCurationContent>> ResolveItemsAsync(CurationCollectionEntity collection);
+    Task<IReadOnlyList<ResolvedCurationContent>> ResolveAllAsync(
+        CurationCollectionEntity collection, CancellationToken cancellationToken = default);
     Task<CurationPageResult> ResolvePageAsync(CurationCollectionEntity collection, int page, int pageSize);
 }
 
@@ -39,6 +41,40 @@ public sealed class CurationCollectionResolver(
             collection.SortDirection,
             limit);
 
+        var candidates = await FetchCandidatesAsync(types, query);
+
+        return OrderCandidates(candidates, collection.OrderBy, collection.SortDirection)
+            .Take(limit)
+            .ToList();
+    }
+
+    public async Task<IReadOnlyList<ResolvedCurationContent>> ResolveAllAsync(
+        CurationCollectionEntity collection, CancellationToken cancellationToken = default)
+    {
+        if (collection.Mode == ECurationCollectionMode.STATIC)
+            return await ResolveStaticAsync(collection.Items, int.MaxValue);
+
+        var types = collection.ContentTypes.Distinct().ToList();
+        if (types.Count == 0) return [];
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var countQuery = new DynamicCollectionQuery(
+            collection.Filters,
+            collection.LogicalOperator,
+            collection.OrderBy,
+            collection.SortDirection,
+            int.MaxValue);
+
+        var total = await CountTotalAsync(types, countQuery);
+
+        if (total <= 0) return [];
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var limit = (int)Math.Min(int.MaxValue, total);
+
+        var query = countQuery with { Limit = limit };
         var candidates = await FetchCandidatesAsync(types, query);
 
         return OrderCandidates(candidates, collection.OrderBy, collection.SortDirection)
