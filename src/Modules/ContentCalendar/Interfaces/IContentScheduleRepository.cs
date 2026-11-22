@@ -13,6 +13,7 @@ public interface IContentScheduleRepository : IBaseRepository<ContentScheduleEnt
         EContentScheduleType contentType, int tmdbId, int? seasonNumber, int? episodeNumber);
     Task<IReadOnlyCollection<ContentScheduleEntity>> GetByImdbIdAsync(string imdbId, EContentScheduleType contentType);
     Task<ContentScheduleEntity?> GetEpisodeByImdbIdAsync(string imdbId, int seasonNumber, int episodeNumber);
+    Task<IReadOnlyCollection<ContentScheduleEntity>> GetEpisodesByImdbIdAndSeasonAsync(string imdbId, int seasonNumber);
     Task<ContentScheduleEntity?> GetByRegisteredContentIdAsync(string registeredContentId);
     Task<bool> ExistsByExternalKeyAsync(
         EContentScheduleType contentType, int tmdbId, int? seasonNumber, int? episodeNumber);

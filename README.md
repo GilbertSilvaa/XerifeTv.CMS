@@ -160,6 +160,7 @@ The codebase is organized by business modules inside a single ASP.NET Core proje
 - v1 compatibility endpoints under `/Api/Content`.
 - v2 endpoints under `/Api/Content/v2`.
 - Movies, series, episodes, categories, grouped categories, search, recommendations, and home content.
+- `/Api/Content/v2/series/{seriesId}/seasons/{seasonNumber}/episodes?includeEpisodesScheduleds=true` also returns planned episodes with `status` (`published`, `scheduled`, or `pending`) and `scheduledDate` metadata.
 - In-memory response caching.
 - Encrypted content identifiers/fields where configured through `SecuritySettings:ContentEncryptionKey`.
 - Swagger/OpenAPI JSON under `/openapi/v1.json`.

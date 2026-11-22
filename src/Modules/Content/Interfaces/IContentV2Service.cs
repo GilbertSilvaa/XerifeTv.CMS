@@ -9,7 +9,8 @@ public interface IContentV2Service
     Task<Result<IEnumerable<SeriesSummaryContentV2ResponseDto>>> GetSeriesAsync(int limit);
     Task<Result<MovieContentV2ResponseDto?>> GetMovieByIdAsync(string id);
     Task<Result<SeriesSummaryContentV2ResponseDto?>> GetSeriesByIdAsync(string id);
-    Task<Result<IEnumerable<EpisodeContentV2ResponseDto>>> GetEpisodesBySeriesIdAndSeasonAsync(string seriesId, int seasonNumber);
+    Task<Result<IEnumerable<EpisodeContentV2ResponseDto>>> GetEpisodesBySeriesIdAndSeasonAsync(
+        string seriesId, int seasonNumber, bool includeEpisodesScheduleds = false);
     Task<Result<string[]>> GetMoviesCategoriesAsync(int limit = 10);
     Task<Result<string[]>> GetSeriesCategoriesAsync(int limit = 10);
     Task<Result<PagedList<ItemsByCategory<MovieContentV2ResponseDto>>>> GetMoviesByCategoryAsync(string category, int page = 1, int pageSize = 1);

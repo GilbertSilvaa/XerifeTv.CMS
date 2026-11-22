@@ -85,6 +85,20 @@ public sealed class ContentScheduleRepository(IOptions<DBSettings> options, IMon
         return await _collection.Find(filter).FirstOrDefaultAsync();
     }
 
+    public async Task<IReadOnlyCollection<ContentScheduleEntity>> GetEpisodesByImdbIdAndSeasonAsync(
+        string imdbId, int seasonNumber)
+    {
+        var filter = Builders<ContentScheduleEntity>.Filter.And(
+            Builders<ContentScheduleEntity>.Filter.Eq(r => r.ContentType, EContentScheduleType.EPISODE),
+            Builders<ContentScheduleEntity>.Filter.Eq(r => r.ImdbId, imdbId),
+            Builders<ContentScheduleEntity>.Filter.Eq(r => r.SeasonNumber, seasonNumber));
+
+        return await _collection.Find(filter)
+            .SortBy(r => r.EpisodeNumber)
+            .ThenBy(r => r.ScheduledDate)
+            .ToListAsync();
+    }
+
     public async Task<ContentScheduleEntity?> GetByRegisteredContentIdAsync(string registeredContentId)
         => await _collection.Find(r => r.RegisteredContentId == registeredContentId).FirstOrDefaultAsync();
 

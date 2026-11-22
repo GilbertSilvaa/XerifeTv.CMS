@@ -1,6 +1,9 @@
 using XerifeTv.CMS.Modules.Common;
 using XerifeTv.CMS.Modules.Content.Dtos.Response;
 using XerifeTv.CMS.Modules.Content.Interfaces;
+using XerifeTv.CMS.Modules.ContentCalendar.Entities;
+using XerifeTv.CMS.Modules.ContentCalendar.Enums;
+using XerifeTv.CMS.Modules.ContentCalendar.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Enums;
 using XerifeTv.CMS.Modules.Abstractions.ValueObjects;
 using XerifeTv.CMS.Modules.Movie;
@@ -16,6 +19,7 @@ namespace XerifeTv.CMS.Modules.Content.Services;
 public class ContentV2Service(
     IMovieRepository movieRepository,
     ISeriesRepository seriesRepository,
+    IContentScheduleRepository contentScheduleRepository,
     IContentSettingsRepository contentSettingsRepository,
     IPersonRepository personRepository,
     IConfiguration configuration) : IContentV2Service
@@ -137,15 +141,60 @@ public class ContentV2Service(
         }
     }
 
-    public async Task<Result<IEnumerable<EpisodeContentV2ResponseDto>>> GetEpisodesBySeriesIdAndSeasonAsync(string seriesId, int seasonNumber)
+    public async Task<Result<IEnumerable<EpisodeContentV2ResponseDto>>> GetEpisodesBySeriesIdAndSeasonAsync(
+        string seriesId, int seasonNumber, bool includeEpisodesScheduleds = false)
     {
         try
         {
             var seriesResult = await seriesRepository.GetEpisodesBySeasonAsync(seriesId, seasonNumber, false);
 
+            if (seriesResult is null)
+                return Result<IEnumerable<EpisodeContentV2ResponseDto>>.Success([]);
+
+            var encryptKey = configuration["SecuritySettings:ContentEncryptionKey"]!;
+            var episodes = seriesResult.Episodes.ToList();
+
+            IReadOnlyCollection<ContentScheduleEntity> schedules = [];
+            if (includeEpisodesScheduleds && !string.IsNullOrWhiteSpace(seriesResult.ImdbId))
+                schedules = await contentScheduleRepository.GetEpisodesByImdbIdAndSeasonAsync(seriesResult.ImdbId, seasonNumber);
+
+            var registeredByEpisodeId = schedules
+                .Where(s => s.Status == EScheduleStatus.REGISTERED && s.RegisteredContentId is not null)
+                .GroupBy(s => s.RegisteredContentId!)
+                .ToDictionary(g => g.Key, g => g.First());
+
+            var publishedNumbers = episodes.Select(e => e.Number).ToHashSet();
+            var items = new List<(int Number, EpisodeContentV2ResponseDto Dto)>();
+
+            foreach (var episode in episodes)
+            {
+                DateOnly? scheduledDate = registeredByEpisodeId.TryGetValue(episode.Id, out var registered)
+                    ? registered.ScheduledDate
+                    : null;
+
+                items.Add((
+                    episode.Number,
+                    EpisodeContentV2ResponseDto.FromEntity(episode, encryptKey, scheduledDate)));
+            }
+
+            if (includeEpisodesScheduleds)
+            {
+                var addedNumbers = new HashSet<int>(publishedNumbers);
+
+                foreach (var schedule in schedules.Where(s =>
+                    s.Status != EScheduleStatus.REGISTERED && s.EpisodeNumber.HasValue))
+                {
+                    var number = schedule.EpisodeNumber!.Value;
+
+                    if (!addedNumbers.Add(number))
+                        continue;
+
+                    items.Add((number, EpisodeContentV2ResponseDto.FromSchedule(schedule)));
+                }
+            }
+
             return Result<IEnumerable<EpisodeContentV2ResponseDto>>.Success(
-                seriesResult?.Episodes.Select(
-                    i => EpisodeContentV2ResponseDto.FromEntity(i, configuration["SecuritySettings:ContentEncryptionKey"]!)) ?? []);
+                items.OrderBy(i => i.Number).Select(i => i.Dto));
         }
         catch (Exception ex)
         {
