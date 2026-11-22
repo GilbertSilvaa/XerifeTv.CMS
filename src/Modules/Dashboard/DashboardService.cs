@@ -2,9 +2,12 @@ using Microsoft.Extensions.Options;
 using MongoDB.Bson;
 using MongoDB.Driver;
 using System.Globalization;
-using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.ContentCalendar;
+using XerifeTv.CMS.Modules.ContentCalendar.Dtos.Response;
+using XerifeTv.CMS.Modules.ContentCalendar.Interfaces;
+using XerifeTv.CMS.Modules.ContentCalendar.Services;
 using XerifeTv.CMS.Modules.Dashboard.Dtos.Response;
 using XerifeTv.CMS.Modules.Dashboard.Interfaces;
 using XerifeTv.CMS.Modules.Movie.Enums;
@@ -19,7 +22,8 @@ public sealed class DashboardService(
   IMovieRepository movieRepository,
   ISeriesRepository seriesRepository,
   IChannelRepository channelRepository,
-  IAuditLogService auditLogService,
+  IContentScheduleRepository contentScheduleRepository,
+  IBusinessClock businessClock,
   IMongoClient mongoClient,
   IOptions<DBSettings> dbSettings) : IDashboardService
 {
@@ -29,7 +33,7 @@ public sealed class DashboardService(
 
     public async Task<Result<GetDashboardDataRequestDto>> GetAsync(string? userName = null)
     {
-        var today = DateTime.UtcNow;
+        var today = businessClock.Now;
         var currentMonthStart = new DateTime(today.Year, today.Month, 1);
 
         var rangesLast6Months = BuildLast6MonthRanges(today, currentMonthStart);
@@ -62,9 +66,7 @@ public sealed class DashboardService(
 
         var lastChannelsTask = channelRepository.GetAsync(currentPage: 1, LatestContentLimit);
 
-        var auditLogsTask = userName is not null
-            ? auditLogService.GetAsync(userName, currentPage: 1, LatestContentLimit)
-            : auditLogService.GetAsync(currentPage: 1, LatestContentLimit);
+        var pendingSchedulesTask = contentScheduleRepository.GetPendingAsync(businessClock.Today, LatestContentLimit);
 
         var dbSizeTask = GetDatabaseSizeInMbAsync();
 
@@ -72,7 +74,7 @@ public sealed class DashboardService(
         [
             totalMoviesTask, totalSeriesTask, totalChannelsTask,
             lastMoviesTask, lastSeriesTask, lastChannelsTask,
-            auditLogsTask, dbSizeTask,
+            pendingSchedulesTask, dbSizeTask,
             .. monthlyCountTasks
         ];
 
@@ -108,14 +110,21 @@ public sealed class DashboardService(
             lastContentsAdded.AddRange(lastChannelsAdded.Items.Select(c => new LatestContentDto(c.Title, c.CreateAt, ELatestContentType.CHANNEL)));
         }
 
-        var auditLogsResponse = auditLogsTask.Result;
-
-        List<LatestSystemActionDto> lastSystemActions = auditLogsResponse.IsSuccess && auditLogsResponse.Data?.Items is not null
-            ? [.. auditLogsResponse.Data.Items.Select(x => new LatestSystemActionDto(x.UserName, x.Description, x.CreateAt))]
-            : [];
+        var pendingSchedules = pendingSchedulesTask.Result
+            .Select(schedule => GetContentScheduleResponseDto.FromEntity(schedule, businessClock.Today))
+            .OrderByDescending(schedule => schedule.DaysLate)
+            .Select(schedule => new PendingScheduleDto(
+                schedule.Id,
+                schedule.Title,
+                ContentScheduleDisplay.GetTypeLabel(schedule.ContentType),
+                schedule.ScheduledDate,
+                schedule.DaysLate,
+                schedule.SeasonNumber,
+                schedule.EpisodeNumber))
+            .ToList();
 
         var result = new GetDashboardDataRequestDto(
-            LatestSystemActions: lastSystemActions,
+            PendingSchedules: pendingSchedules,
             MonthlyContentCounts: [.. countsTotalContentByMonths.Select(x => new MonthlyContentCountDto(x.MonthName, x.Count))],
             LatestContents: [.. lastContentsAdded.OrderByDescending(c => c.PublishAt).Take(LatestContentLimit)],
             NumberOfMoviesTotal: totalMoviesTask.Result,

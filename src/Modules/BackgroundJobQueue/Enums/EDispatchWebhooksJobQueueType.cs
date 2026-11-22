@@ -4,5 +4,6 @@ public enum EDispatchWebhooksJobQueueType
 {
     MOVIES,
     SERIES,
-    CHANNELS
+    CHANNELS,
+    CONTENT_SCHEDULE
 }

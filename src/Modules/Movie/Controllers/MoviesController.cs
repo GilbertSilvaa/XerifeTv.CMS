@@ -73,7 +73,7 @@ public class MoviesController(
     }
 
     [Authorize(Roles = "admin, common")]
-    public async Task<IActionResult> Form(string? id)
+    public async Task<IActionResult> Form(string? id, string? imdbId = null)
     {
         IEnumerable<GetMediaDeliveryProfileResponseDto> mediaDeliveryProfiles = [];
         IEnumerable<GetFranchiseResponseDto> franchises = [];
@@ -101,6 +101,7 @@ public class MoviesController(
             }
         }
 
+        ViewBag.PrefillImdbId = imdbId;
         return View(new MovieFormModelView(null, mediaDeliveryProfiles, franchises, selectedFranchiseName));
     }
 

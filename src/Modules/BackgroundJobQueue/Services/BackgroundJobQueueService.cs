@@ -117,6 +117,19 @@ public class BackgroundJobQueueService(
         }
     }
 
+    public async Task<Result<AddJobQueueResponseDto>> AddProcessDueContentSchedulesJobAsync()
+    {
+        try
+        {
+            var resultId = await repository.CreateAsync(BackgroundJobEntity.CreateProcessDueContentSchedules());
+            return Result<AddJobQueueResponseDto>.Success(new AddJobQueueResponseDto(resultId));
+        }
+        catch (Exception ex)
+        {
+            return Result<AddJobQueueResponseDto>.Failure(new Error("500", ex.InnerException?.Message ?? ex.Message));
+        }
+    }
+
     public async Task<Result<AddJobQueueResponseDto>> AddCurationSnapshotRebuildJobAsync(
         string? curationCollectionId, string? curationCollectionName)
     {
