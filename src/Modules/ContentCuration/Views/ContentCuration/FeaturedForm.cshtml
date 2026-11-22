@@ -1,0 +1,141 @@
+@using XerifeTv.CMS.Modules.ContentCuration
+@using XerifeTv.CMS.Modules.ContentCuration.Enums
+@using XerifeTv.CMS.Modules.ContentCuration.Views.Models
+
+@model FeaturedFormModelView
+
+@{
+    ViewData["Title"] = "Curadoria de Conteúdo";
+
+    var featured = Model.Featured;
+    var isEditing = featured is not null;
+    var items = featured?.Items
+        .Select(i => new ContentPickerItem(i.ContentId, i.ContentType, i.Title, i.PosterUrl))
+        .ToList() ?? [];
+}
+
+<div class="container">
+    <header>
+        <div class="d-flex align-items-center gap-4">
+            <a asp-controller="ContentCuration" asp-action="Featured" class="fs-4">
+                <i class="fa fa-undo" aria-hidden="true"></i>
+            </a>
+            <span class="fs-3 fw-normal">@(isEditing ? "Editar" : "Cadastrar") Destaque</span>
+        </div>
+        <hr />
+    </header>
+
+    <main>
+        <form asp-controller="ContentCuration" asp-action="SaveFeatured" method="post">
+            <input type="hidden" name="Id" value="@featured?.Id" />
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-8">
+                    <label for="title" class="form-label">Título</label>
+                    <input type="text"
+                           class="form-control"
+                           id="title"
+                           name="Title"
+                           placeholder="Digite aqui..."
+                           value="@featured?.Title"
+                           required />
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <label for="order" class="form-label">Ordem</label>
+                    <input type="number"
+                           class="form-control"
+                           id="order"
+                           name="Order"
+                           min="1"
+                           value="@(featured?.Order > 0 ? featured.Order : null)" required />
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label for="description" class="form-label">Descrição</label>
+                <textarea class="form-control"
+                          id="description"
+                          name="Description"
+                          rows="3"
+                          placeholder="Descrição exibida no destaque..." required>@featured?.Description</textarea>
+            </div>
+
+            <div class="row mb-3">
+                <div class="col-12 col-md-4">
+                    <label for="maxItems" class="form-label">Quantidade máxima de conteúdos</label>
+                    <input type="number"
+                           class="form-control"
+                           id="maxItems"
+                           name="MaxItems"
+                           min="1"
+                           value="@(featured?.MaxItems ?? 20)" required />
+                </div>
+
+                <div class="col-12 col-md-4 d-flex align-items-center">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               id="isActive"
+                               name="IsActive"
+                               value="true"
+                               checked="@(featured?.IsActive ?? true)" />
+                        <input type="hidden" name="IsActive" value="false" />
+                        <label class="form-check-label" for="isActive">Ativo</label>
+                    </div>
+                </div>
+
+                <div class="col-12 col-md-4 d-flex align-items-center">
+                    <div class="form-check form-switch mt-4">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               id="isHomeHero"
+                               name="IsHomeHero"
+                               value="true"
+                               checked="@(featured?.IsHomeHero ?? false)" />
+                        <input type="hidden" name="IsHomeHero" value="false" />
+                        <label class="form-check-label" for="isHomeHero">Destaque principal da home</label>
+                    </div>
+                </div>
+            </div>
+
+            <hr />
+            <h2 class="fs-5">Conteúdos do destaque</h2>
+
+            @await Html.PartialAsync("_ContentPicker", new ContentPickerViewModel
+            {
+                IdPrefix = "featuredPicker",
+                InputName = "Items",
+                AllowedTypes = [EContentType.MOVIE, EContentType.SERIES],
+                Items = items
+            })
+
+            <hr />
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    @if (isEditing)
+                    {
+                        <button type="button" class="btn btn-outline-danger" onclick="deleteFeatured()">
+                            <i class="fa fa-trash" aria-hidden="true"></i> Remover
+                        </button>
+                    }
+                </div>
+
+                <button type="submit" class="btn btn-primary mt-2">
+                    @(isEditing ? "Editar" : "Cadastrar")
+                </button>
+            </div>
+        </form>
+    </main>
+</div>
+
+@section scripts {
+    <script>
+        function deleteFeatured() {
+            if (!confirm('Deseja realmente remover o destaque?')) return;
+            location.href = '/ContentCuration/DeleteFeatured/@Model.Featured?.Id';
+        }
+    </script>
+}

@@ -76,7 +76,7 @@ _[Ss]cripts
 *.ncrunchsolution
 *.dot[Cc]over
 env.js
-/XerifeTv.CMS/appsettings.Development.json
+/src/appsettings.Development.json
 /.idea
 
 /.agents
