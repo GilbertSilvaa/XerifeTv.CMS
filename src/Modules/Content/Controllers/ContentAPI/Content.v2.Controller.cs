@@ -127,15 +127,20 @@ public class ContentV2Controller(
 
     [HttpGet]
     [Route("series/{seriesId}/seasons/{seasonNumber}/episodes")]
-    public async Task<IActionResult> EpisodesBySeriesIdAndSeason(string seriesId, int seasonNumber)
+    public async Task<IActionResult> EpisodesBySeriesIdAndSeason(
+        string seriesId, int seasonNumber, bool includeEpisodesScheduleds = false)
     {
-        logger.LogInformation("Request Content API v2 /series/{seriesId}/season/{seasonNumber}/episodes", seriesId, seasonNumber);
+        logger.LogInformation(
+            "Request Content API v2 /series/{seriesId}/season/{seasonNumber}/episodes (includeEpisodesScheduleds={includeEpisodesScheduleds})",
+            seriesId, seasonNumber, includeEpisodesScheduleds);
 
-        var cacheKey = $"content_v2_episodes_{seriesId}_{seasonNumber}";
+        var cacheKey = $"content_v2_episodes_{seriesId}_{seasonNumber}"
+            + (includeEpisodesScheduleds ? "_with_schedules" : string.Empty);
 
         var data = await cacheService.GetOrCreateAsync<object>(cacheKey, CacheTtl, async () =>
         {
-            var response = await service.GetEpisodesBySeriesIdAndSeasonAsync(seriesId, seasonNumber);
+            var response = await service.GetEpisodesBySeriesIdAndSeasonAsync(
+                seriesId, seasonNumber, includeEpisodesScheduleds);
 
             if (!response.IsSuccess) return null;
 

@@ -1,7 +1,17 @@
-﻿using XerifeTv.CMS.Modules.Series;
+﻿using System.Text.Json.Serialization;
+using XerifeTv.CMS.Modules.ContentCalendar.Entities;
+using XerifeTv.CMS.Modules.ContentCalendar.Enums;
+using XerifeTv.CMS.Modules.Series;
 using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.Content.Dtos.Response;
+
+public static class EpisodeContentStatus
+{
+    public const string Published = "published";
+    public const string Scheduled = "scheduled";
+    public const string Pending = "pending";
+}
 
 public class EpisodeContentV2ResponseDto
 {
@@ -12,8 +22,12 @@ public class EpisodeContentV2ResponseDto
     public long DurationSeconds { get; private set; }
     public string SubtitleURL { get; private set; } = string.Empty;
     public string VideoResolverURL { get; private set; } = string.Empty;
+    public string Status { get; private set; } = EpisodeContentStatus.Published;
 
-    public static EpisodeContentV2ResponseDto FromEntity(Episode entity, string encryptKey)
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public DateOnly? ScheduledDate { get; private set; }
+
+    public static EpisodeContentV2ResponseDto FromEntity(Episode entity, string encryptKey, DateOnly? scheduledDate = null)
     {
         string videoResolverPath;
 
@@ -38,7 +52,26 @@ public class EpisodeContentV2ResponseDto
             Duration = DateTimeHelper.ConvertSecondsToHHmm(entity.Video?.Duration ?? 0),
             DurationSeconds = entity.Video?.Duration ?? 0,
             SubtitleURL = entity.Video?.Subtitle ?? string.Empty,
-            VideoResolverURL = $"/MediaDeliveryProfiles{videoResolverPath}"
+            VideoResolverURL = $"/MediaDeliveryProfiles{videoResolverPath}",
+            Status = EpisodeContentStatus.Published,
+            ScheduledDate = scheduledDate
+        };
+    }
+
+    public static EpisodeContentV2ResponseDto FromSchedule(ContentScheduleEntity schedule)
+    {
+        return new()
+        {
+            Id = schedule.Id,
+            Title = schedule.Title,
+            BannerURL = schedule.ImageUrl ?? string.Empty,
+            Status = schedule.Status switch
+            {
+                EScheduleStatus.PENDING => EpisodeContentStatus.Pending,
+                EScheduleStatus.REGISTERED => EpisodeContentStatus.Published,
+                _ => EpisodeContentStatus.Scheduled
+            },
+            ScheduledDate = schedule.ScheduledDate
         };
     }
 }
