@@ -84,6 +84,7 @@ public class BackgroundJobEntity : BaseEntity
                 EDispatchWebhooksJobQueueType.MOVIES => EBackgroundJobType.DISPATCH_WEBHOOKS_MOVIES,
                 EDispatchWebhooksJobQueueType.SERIES => EBackgroundJobType.DISPATCH_WEBHOOKS_SERIES,
                 EDispatchWebhooksJobQueueType.CHANNELS => EBackgroundJobType.DISPATCH_WEBHOOKS_CHANNELS,
+                EDispatchWebhooksJobQueueType.CONTENT_SCHEDULE => EBackgroundJobType.DISPATCH_WEBHOOKS_CONTENT_SCHEDULE,
                 _ => EBackgroundJobType.DISPATCH_WEBHOOKS_MOVIES
             },
 
@@ -92,6 +93,7 @@ public class BackgroundJobEntity : BaseEntity
                 EDispatchWebhooksJobQueueType.MOVIES => "Disparo de Webhooks - Filmes",
                 EDispatchWebhooksJobQueueType.SERIES => "Disparo de Webhooks - Séries",
                 EDispatchWebhooksJobQueueType.CHANNELS => "Disparo de Webhooks - Canais",
+                EDispatchWebhooksJobQueueType.CONTENT_SCHEDULE => "Disparo de Webhooks - Vencimento de Agendamento",
                 _ => string.Empty
             },
 
@@ -99,6 +101,14 @@ public class BackgroundJobEntity : BaseEntity
             Status = EBackgroundJobStatus.PENDING
         };
     }
+
+    public static BackgroundJobEntity CreateProcessDueContentSchedules()
+        => new()
+        {
+            Type = EBackgroundJobType.PROCESS_DUE_CONTENT_SCHEDULES,
+            JobName = "Processamento de agendamentos de conteúdo vencidos",
+            Status = EBackgroundJobStatus.PENDING
+        };
 
     public static BackgroundJobEntity Create(string? curationCollectionId, string? curationCollectionName)
     {

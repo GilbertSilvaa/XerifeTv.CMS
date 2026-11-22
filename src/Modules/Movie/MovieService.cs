@@ -1,6 +1,7 @@
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.ContentCalendar.Interfaces;
 using XerifeTv.CMS.Modules.ContentCuration.Interfaces;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
@@ -20,7 +21,8 @@ public sealed class MovieService(
     IBackgroundJobQueueService backgroundJobQueueService,
     ICurationSnapshotScheduler curationSnapshotScheduler,
     IPersonRepository personRepository,
-    CreditValidator creditValidator) : IMovieService
+    CreditValidator creditValidator,
+    IContentScheduleCompletionService contentScheduleCompletionService) : IMovieService
 {
     public async Task<Result<PagedList<GetMovieResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -103,6 +105,9 @@ public sealed class MovieService(
             await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
             await backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.MOVIES, response!);
 
+            await contentScheduleCompletionService
+                .CompleteByMovieAsync(entity.ImdbId, entity.Id, entity.Disabled);
+
             return Result<string>.Success(response);
         }
         catch (Exception ex)
@@ -136,6 +141,9 @@ public sealed class MovieService(
             await repository.UpdateAsync(entity);
             await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.MOVIES);
             await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
+
+            await contentScheduleCompletionService
+                .CompleteByMovieAsync(entity.ImdbId, entity.Id, entity.Disabled);
 
             return Result<string>.Success(entity.Id);
         }

@@ -18,6 +18,9 @@
     pagesViewSideMenu.Add(["Channels", "Index", "Canais", "fa-solid fa-satellite-dish"]);
     pagesViewSideMenu.Add(["ContentCuration", "Index", "Curadoria de Conteúdo", "fa-solid fa-layer-group"]);
 
+    if (!User.IsInRole("visitor"))
+        pagesViewSideMenu.Add(["ContentCalendar", "Index", "Calendário de Conteúdo", "fa-solid fa-calendar-days"]);
+
     if (User.IsInRole("admin"))
         pagesViewSideMenu.Add(["Users", "Index", "Usuários", "fa-solid fa-users"]);
 

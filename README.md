@@ -125,13 +125,23 @@ The codebase is organized by business modules inside a single ASP.NET Core proje
 ### Webhooks
 
 - Webhook CRUD from the settings area.
-- Trigger events for movie, series, and channel publication.
+- Trigger events for movie, series, channel publication, and content schedule due (`content.schedule.due`).
 - Configurable HTTP method, headers, URL, and payload template.
 - Template keyword replacement from published entities.
 - Background webhook dispatch jobs.
 - Retry support with up to five attempts.
 - Dispatch history with request/response metadata and per-attempt logs.
 - Manual redispatch support from webhook history.
+
+### Content Calendar
+
+- Monthly calendar and list views for planned movie, series, and episode registrations.
+- TMDB search-based manual scheduling with unique external keys.
+- Automatic completion when matching enabled content is created or updated.
+- Pending registrations section on the dashboard with lateness in business days.
+- Automatic future-episode scheduling during IMDb episode import.
+- `content.schedule.due` webhook event with at-most-once dispatch per schedule.
+- Business date based on `America/Sao_Paulo` (`IBusinessClock`).
 
 ### Background Jobs
 
@@ -400,6 +410,8 @@ Supported job types:
 - `DISPATCH_WEBHOOKS_MOVIES`
 - `DISPATCH_WEBHOOKS_SERIES`
 - `DISPATCH_WEBHOOKS_CHANNELS`
+- `DISPATCH_WEBHOOKS_CONTENT_SCHEDULE`
+- `PROCESS_DUE_CONTENT_SCHEDULES`
 
 The job UI supports filtering, live updates, cancellation, deletion, and completed/failed notifications.
 

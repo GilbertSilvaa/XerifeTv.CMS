@@ -265,6 +265,34 @@
 
 @section scripts {
     <script defer>
+        @if (ViewBag.PrefillSeason is int ps || ViewBag.PrefillEpisode is int pe)
+        {
+            <text>
+            $(function () {
+                const prefillSeason = '@ViewBag.PrefillSeason';
+                const prefillEpisode = '@ViewBag.PrefillEpisode';
+                const prefillEpisodeId = '@ViewBag.PrefillEpisodeId';
+                const modalId = '#episodeFormModal-';
+                if (prefillEpisodeId) {
+                    const editModal = document.querySelector(modalId + prefillEpisodeId);
+                    if (editModal) {
+                        new bootstrap.Modal(editModal).show();
+                        return;
+                    }
+                }
+                if (prefillSeason) {
+                    $(modalId + ' #season-').val(prefillSeason);
+                }
+                if (prefillEpisode) {
+                    $(modalId + ' #number-').val(prefillEpisode);
+                }
+                if (prefillSeason || prefillEpisode) {
+                    const modal = new bootstrap.Modal(document.querySelector(modalId));
+                    modal.show();
+                }
+            });
+            </text>
+        }
         $('#seasonFilter').change(e => {
             $('.loading-global .label').text('Carregando, por favor aguarde...');
             $('.loading-global').show();

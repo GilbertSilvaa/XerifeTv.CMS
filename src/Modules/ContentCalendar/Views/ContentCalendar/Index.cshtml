@@ -1,0 +1,240 @@
+@using XerifeTv.CMS.Modules.ContentCalendar.Dtos.Response
+@using XerifeTv.CMS.Modules.ContentCalendar.Enums
+@using XerifeTv.CMS.Modules.ContentCalendar
+
+@{
+    ViewData["Title"] = "Calendário de Conteúdo";
+    var schedules = (IReadOnlyCollection<GetContentScheduleResponseDto>?)ViewBag.Schedules
+        ?? Array.Empty<GetContentScheduleResponseDto>();
+    var year = (int)ViewBag.CurrentYear;
+    var month = (int)ViewBag.CurrentMonth;
+    var start = new DateOnly(year, month, 1);
+    var end = start.AddMonths(1).AddDays(-1);
+    var viewMode = (string)ViewBag.ViewMode;
+    var today = (DateOnly)ViewBag.Today;
+    var prevYear = (int)ViewBag.PreviousYear;
+    var prevMonth = (int)ViewBag.PreviousMonth;
+    var nextYear = (int)ViewBag.NextYear;
+    var nextMonth = (int)ViewBag.NextMonth;
+    var firstDayOffset = (int)start.DayOfWeek;
+    var gridStart = start.AddDays(-(firstDayOffset == 0 ? 6 : firstDayOffset - 1));
+    var gridEnd = end.AddDays(end.DayOfWeek == DayOfWeek.Sunday ? 0 : 7 - (int)end.DayOfWeek);
+}
+
+<style>
+    .cc-calendar { table-layout: fixed; width: 100%; }
+    .cc-calendar th { text-align: center; padding: 0.5rem; font-size: 0.85rem; text-transform: uppercase; color: #6c757d; border-bottom: 2px solid #dee2e6; }
+    .cc-calendar td { height: 110px; vertical-align: top; padding: 0.35rem; border: 1px solid #e9ecef; }
+    .cc-calendar td.cc-out { background-color: #f8f9fa; color: #707070; }
+    .cc-calendar td.cc-today { background-color: #e7f1ff; color: #0e3f7a; }
+    .cc-day-number { font-weight: 700; font-size: 0.9rem; margin-bottom: 0.25rem; }
+    .cc-schedule { display: block; font-size: 0.75rem; margin-bottom: 0.2rem; padding: 0.15rem 0.35rem; border-radius: 0.25rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+</style>
+
+<div class="container">
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4">
+            <span class="fs-3 fw-normal">Calendário de Conteúdo</span>
+
+            <div class="d-flex align-items-center gap-2">
+                <div class="btn-group btn-group-sm" role="group">
+                    <a class="btn btn-outline-secondary @(viewMode == "calendar" ? "active" : "")"
+                       asp-action="Index" asp-route-year="@year" asp-route-month="@month" asp-route-view="calendar">
+                        <i class="fa-solid fa-calendar"></i>
+                    </a>
+                    <a class="btn btn-outline-secondary @(viewMode == "list" ? "active" : "")"
+                       asp-action="Index" asp-route-year="@year" asp-route-month="@month" asp-route-view="list">
+                        <i class="fa-solid fa-list"></i>
+                    </a>
+                </div>
+
+                @if (!User.IsInRole("visitor"))
+                {
+                    <button class="btn btn-primary shadow-none" data-bs-toggle="modal" data-bs-target="#createScheduleModal">
+                        <i class="fa-solid fa-plus"></i> Novo agendamento
+                    </button>
+                }
+            </div>
+        </div>
+        <hr />
+    </header>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <a class="btn btn-outline-info btn-sm shadow-none"
+           asp-action="Index" asp-route-year="@prevYear" asp-route-month="@prevMonth" asp-route-view="@viewMode">
+            <i class="fa-solid fa-chevron-left"></i> Anterior
+        </a>
+        <strong class="fs-5 text-capitalize">@start.ToString("MMMM yyyy", new System.Globalization.CultureInfo("pt-BR"))</strong>
+        <a class="btn btn-outline-info btn-sm shadow-none"
+           asp-action="Index" asp-route-year="@nextYear" asp-route-month="@nextMonth" asp-route-view="@viewMode">
+            Próximo <i class="fa-solid fa-chevron-right"></i>
+        </a>
+    </div>
+
+    @if (viewMode == "list")
+    {
+        <div class="table-responsive">
+            <table class="table table-hover table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 110px;" class="p-2">Data prevista</th>
+                        <th class="p-2">Título</th>
+                        <th style="width: 100px;" class="p-2">Tipo</th>
+                        <th style="width: 110px;" class="p-2">Status</th>
+                        <th style="width: 90px;" class="text-end p-2">...</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in schedules.OrderBy(s => s.ScheduledDate))
+                    {
+                        <tr>
+                            <td class="p-3">@item.ScheduledDate.ToString("dd/MM/yyyy")</td>
+                            <td class="fw-semibold">@item.Title</td>
+                            <td>@ContentScheduleDisplay.GetTypeLabel(item.ContentType)</td>
+                            <td>
+                                <span class="badge @ContentScheduleDisplay.GetStatusCssClass(item.Status)">
+                                    @ContentScheduleDisplay.GetStatusLabel(item.Status)
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@item.Id">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+            @if (!schedules.Any())
+            {
+                <p class="text-muted">Nenhum agendamento neste mês.</p>
+            }
+        </div>
+    }
+    else
+    {
+        <table class="table cc-calendar">
+            <thead>
+                <tr>
+                    @foreach (var wd in new[] { "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom" })
+                    {
+                        <th>@wd</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @for (var cell = gridStart; cell <= gridEnd; cell = cell.AddDays(7))
+                {
+                    <tr>
+                        @for (var d = 0; d < 7; d++)
+                        {
+                            var day = cell.AddDays(d);
+                            var isCurrentMonth = day.Month == month;
+                            var isToday = day == today;
+                            var dayItems = schedules.Where(s => s.ScheduledDate == day).ToList();
+                            <td class="@(isCurrentMonth ? "" : "cc-out") @(isToday ? "cc-today" : "")">
+                                <div class="cc-day-number">@day.Day</div>
+                                @foreach (var item in dayItems)
+                                {
+                                    <a class="badge @ContentScheduleDisplay.GetStatusCssClass(item.Status) cc-schedule text-decoration-none"
+                                       asp-action="Details" asp-route-id="@item.Id" title="@item.Title">
+                                        @item.Title
+                                    </a>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="d-flex flex-wrap gap-3 mt-2 small text-muted">
+            <span><span class="badge text-bg-primary">&nbsp;</span> Agendado</span>
+            <span><span class="badge text-bg-warning">&nbsp;</span> Pendente</span>
+            <span><span class="badge text-bg-success">&nbsp;</span> Cadastrado</span>
+        </div>
+    }
+</div>
+
+<!-- Create modal -->
+<div class="modal fade" id="createScheduleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <form asp-action="Create" method="post" id="createScheduleForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title">Novo agendamento</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Tipo</label>
+                            <select class="form-select" name="ContentType" id="cs-type">
+                                <option value="1">Filme</option>
+                                <option value="2">Série</option>
+                                <option value="3">Episódio</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Pesquisar no TMDB</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="cs-search" placeholder="Digite o título..." />
+                                <button class="btn btn-success shadow-none" type="button" id="cs-search-btn">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="cs-results" class="mb-3" style="max-height: 260px; overflow: auto;"></div>
+
+                    <input type="hidden" name="TmdbId" id="cs-tmdb-id" />
+                    <input type="hidden" name="Title" id="cs-title" />
+                    <input type="hidden" name="ImageUrl" id="cs-image-url" />
+                    <input type="hidden" name="SeasonNumber" id="cs-season-hidden" />
+
+                    <div class="row mb-3" id="cs-selected" style="display: none;">
+                        <div class="col-12">
+                            <div class="alert alert-light py-2 mb-0 d-flex align-items-center gap-2">
+                                <span>Selecionado: <strong id="cs-selected-title"></strong></span>
+                                <img id="cs-selected-image" src="" alt="" style="height: 40px;" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3" id="cs-episode-fields" style="display: none;">
+                        <div class="col-md-4">
+                            <label class="form-label">Temporada</label>
+                            <select class="form-select" id="cs-season">
+                                <option value="">Selecione</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">Episódio</label>
+                            <select class="form-select" name="EpisodeNumber" id="cs-episode">
+                                <option value="">Selecione a temporada</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Data prevista</label>
+                            <input type="date" class="form-control" name="ScheduledDate" id="cs-date"
+                                   value="@today.ToString("yyyy-MM-dd")" required />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary shadow-none" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary shadow-none" id="cs-submit" disabled>Criar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section scripts {
+    <script src="~/js/content-calendar.js" asp-append-version="true"></script>
+}

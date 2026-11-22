@@ -2,6 +2,7 @@ using MongoDB.Driver.Linq;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums;
 using XerifeTv.CMS.Modules.BackgroundJobQueue.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.ContentCalendar.Interfaces;
 using XerifeTv.CMS.Modules.ContentCuration.Interfaces;
 using XerifeTv.CMS.Modules.Franchise.Interfaces;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
@@ -21,7 +22,8 @@ public class SeriesService(
     IConfiguration configuration,
     ICurationSnapshotScheduler curationSnapshotScheduler,
     IPersonRepository personRepository,
-    CreditValidator creditValidator) : ISeriesService
+    CreditValidator creditValidator,
+    IContentScheduleCompletionService contentScheduleCompletionService) : ISeriesService
 {
     public async Task<Result<PagedList<GetSeriesResponseDto>>> GetAsync(int currentPage, int limit)
     {
@@ -103,6 +105,9 @@ public class SeriesService(
             await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
             await backgroundJobQueueService.AddJobInQueueAsync(EDispatchWebhooksJobQueueType.SERIES, response!);
 
+            await contentScheduleCompletionService
+                .CompleteBySeriesAsync(entity.ImdbId, entity.Id, entity.Disabled);
+
             return Result<string>.Success(entity.Id);
         }
         catch (Exception ex)
@@ -135,6 +140,9 @@ public class SeriesService(
             await repository.UpdateAsync(entity);
             await backgroundJobQueueService.AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType.SERIES);
             await curationSnapshotScheduler.ScheduleCatalogRebuildAsync();
+
+            await contentScheduleCompletionService
+                .CompleteBySeriesAsync(entity.ImdbId, entity.Id, entity.Disabled);
 
             return Result<string>.Success(entity.Id);
         }
@@ -260,9 +268,18 @@ public class SeriesService(
                 return Result<string>.Failure(
                     new Error("409", $"Episódio não cadastrado. [{seriesResponse.ImdbId}|T{dto.Season}:EP{dto.Number}] duplicado"));
 
-            await repository.CreateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
+            var episode = dto.ToEntity();
+            await repository.CreateEpisodeAsync(seriesResponse.Id, episode);
 
-            return Result<string>.Success(dto.ToEntity().Id);
+            await contentScheduleCompletionService.CompleteByEpisodeAsync(
+                seriesResponse.ImdbId,
+                episode.Season,
+                episode.Number,
+                episode.Id,
+                seriesResponse.Id,
+                episode.Disabled);
+
+            return Result<string>.Success(episode.Id);
         }
         catch (Exception ex)
         {
@@ -291,7 +308,16 @@ public class SeriesService(
                 return Result<string>.Failure(
                     new Error("409", $"Episódio não atualizado. [{seriesResponse.ImdbId}|T{dto.Season}:EP{dto.Number}] duplicado"));
 
-            await repository.UpdateEpisodeAsync(seriesResponse.Id, dto.ToEntity());
+            var episode = dto.ToEntity();
+            await repository.UpdateEpisodeAsync(seriesResponse.Id, episode);
+
+            await contentScheduleCompletionService.CompleteByEpisodeAsync(
+                seriesResponse.ImdbId,
+                episode.Season,
+                episode.Number,
+                episode.Id,
+                seriesResponse.Id,
+                episode.Disabled);
 
             return Result<string>.Success(seriesResponse.Id);
         }

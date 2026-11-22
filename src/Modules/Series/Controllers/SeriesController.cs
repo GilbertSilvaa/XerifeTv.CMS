@@ -73,7 +73,7 @@ public class SeriesController(
     }
 
     [Authorize(Roles = "admin, common")]
-    public async Task<IActionResult> Form(string? id)
+    public async Task<IActionResult> Form(string? id, string? imdbId = null)
     {
         IEnumerable<GetFranchiseResponseDto> franchises = [];
         string? selectedFranchiseName = null;
@@ -97,6 +97,7 @@ public class SeriesController(
             }
         }
 
+        ViewBag.PrefillImdbId = imdbId;
         return View(new SeriesFormModelView(null, franchises, selectedFranchiseName));
     }
 
@@ -159,14 +160,18 @@ public class SeriesController(
         return RedirectToAction("Index");
     }
 
-    public async Task<IActionResult> Episodes(string? id, int? seasonFilter)
+    public async Task<IActionResult> Episodes(string? id, int? seasonFilter, int? season, int? episode, string? episodeId)
     {
         if (id is null) return RedirectToAction("Index");
 
+        var selectedSeason = season ?? seasonFilter ?? 1;
         ViewBag.SerieId = id;
-        ViewBag.SeasonFilter = seasonFilter;
+        ViewBag.SeasonFilter = selectedSeason;
+        ViewBag.PrefillSeason = season;
+        ViewBag.PrefillEpisode = episode;
+        ViewBag.PrefillEpisodeId = episodeId;
 
-        var response = await service.GetEpisodesBySeasonAsync(id, seasonFilter ?? 1, includeDisabled: true);
+        var response = await service.GetEpisodesBySeasonAsync(id, selectedSeason, includeDisabled: true);
 
         if (response.IsSuccess)
         {

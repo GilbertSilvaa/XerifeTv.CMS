@@ -1,5 +1,8 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Common;
+using XerifeTv.CMS.Modules.ContentCalendar.Dtos.Request;
+using XerifeTv.CMS.Modules.ContentCalendar.Interfaces;
+using XerifeTv.CMS.Modules.ContentCalendar.Services;
 using XerifeTv.CMS.Modules.Integrations.Tmdb.Services;
 using XerifeTv.CMS.Modules.Series.Dtos.Request;
 using XerifeTv.CMS.Modules.Series.Dtos.Response;
@@ -10,7 +13,9 @@ namespace XerifeTv.CMS.Modules.Series.Importers;
 public class EpisodesTmdbImporter(
     ISeriesService service,
     ITmdbService tmdbService,
-    ICacheService cacheService) : IEpisodesImporter
+    ICacheService cacheService,
+    IContentScheduleService contentScheduleService,
+    IBusinessClock businessClock) : IEpisodesImporter
 {
     public async Task<Result<string>> ImportAsync(string seriesId)
     {
@@ -96,6 +101,28 @@ public class EpisodesTmdbImporter(
                     });
 
                     if (newEpisodeResult.IsSuccess) createdEpisodesCount++;
+
+                    if (episode.AirDate is DateTime airDate)
+                    {
+                        var scheduledDate = DateOnly.FromDateTime(airDate);
+
+                        if (scheduledDate > businessClock.Today)
+                        {
+                            await contentScheduleService.UpsertAutomaticEpisodeAsync(
+                                new AutomaticEpisodeScheduleRequestDto
+                                {
+                                    SeriesTmdbId = seriesTmdbResult.Data!.Id,
+                                    SeriesImdbId = seriesResult.Data.ImdbId,
+                                    SeriesTitle = seriesResult.Data.Title,
+                                    SeasonNumber = episode.SeasonNumber,
+                                    EpisodeNumber = episode.EpisodeNumber,
+                                    EpisodeTitle = episode.Name,
+                                    ImageUrl = episode.BannerUrl,
+                                    AirDate = scheduledDate,
+                                    AllowCreate = newEpisodeResult.IsSuccess
+                                });
+                        }
+                    }
 
                     episodeCreationAttemptsCount++;
                     await UpdateProgress();
