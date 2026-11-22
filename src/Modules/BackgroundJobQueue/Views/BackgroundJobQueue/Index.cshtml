@@ -1,0 +1,277 @@
+@using XerifeTv.CMS.Modules.BackgroundJobQueue.Dtos.Response;
+@using XerifeTv.CMS.Modules.BackgroundJobQueue.Enums
+@using XerifeTv.CMS.Modules.BackgroundJobQueue
+@using XerifeTv.CMS.Modules.BackgroundJobQueue.Views.Models
+
+@model BackgroundJobQueueModelView;
+
+@{
+    ViewData["Title"] = "Fila de Processamentos";
+
+    var selectedUsername = ViewBag.Username as string;
+    var isSystemSelected = selectedUsername == BackgroundJobQueueConstants.SystemResponsibleUsername;
+
+    ICollection<string[]> statusList = [];
+    statusList.Add([$"{(int)EBackgroundJobStatus.PENDING}", "Pendente"]);
+    statusList.Add([$"{(int)EBackgroundJobStatus.PROCESSING}", "Processando"]);
+    statusList.Add([$"{(int)EBackgroundJobStatus.COMPLETED}", "Concluido"]);
+    statusList.Add([$"{(int)EBackgroundJobStatus.FAILED}", "Falhou"]);
+    statusList.Add([$"{(int)EBackgroundJobStatus.CANCELED}", "Cancelado"]);
+}
+
+<style>
+    .users-select-group {
+        width: 25%;
+    }
+
+    @@media (max-width: 800px) {
+        .users-select-group {
+            width: 100% !important;
+        }
+    }
+</style>
+
+<form id="page-form" asp-controller="BackgroundJobQueue" asp-action="Index" class="container">
+    <header>
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-4" style="max-width: 65%;">
+                <span class="d-none d-md-inline-block text-truncate fs-3 fw-normal mw-100">
+                    Fila de Processamentos
+                </span>
+            </div>
+
+            @if (User.IsInRole("admin"))
+            {
+                <div class="input-group d-flex justify-content-center align-items-center users-select-group">
+                    <span class="input-group-text">Usuário</span>
+                    <select class="form-select shadow-none" id="username" name="username">
+                        @if (isSystemSelected)
+                        {
+                            <option value="@BackgroundJobQueueConstants.SystemResponsibleUsername" selected>@BackgroundJobQueueConstants.SystemResponsibleLabel</option>
+                        }
+                        else
+                        {
+                            <option value="@BackgroundJobQueueConstants.SystemResponsibleUsername">@BackgroundJobQueueConstants.SystemResponsibleLabel</option>
+                        }
+
+                        @foreach (var user in Model.Users)
+                        {
+                            if (user.UserName.Equals(selectedUsername))
+                            {
+                                <option value="@user.UserName" selected>@user.UserName</option>
+                            }
+                            else
+                            {
+                                <option value="@user.UserName">@user.UserName</option>
+                            }
+                        }
+                    </select>
+                </div>
+            }
+        </div>
+    </header>
+    <hr />
+
+    <div class="row mt-2">
+        <div class="row mb-4">
+            <div class="col-12 col-md-2">
+                <div class="w-100 d-flex justify-content-start align-items-center">
+                    <select class="form-select shadow-none" id="status" name="status">
+                        <option value="">Todos</option>
+                        @foreach (var status in statusList)
+                        {
+                            if (status[0].Equals(ViewBag.Status))
+                            {
+                                <option value="@status[0]" selected>@status[1]</option>
+                            }
+                            else
+                            {
+                                <option value="@status[0]">@status[1]</option>
+                            }
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-md-10 d-none d-md-flex justify-content-end align-items-center">
+                <a class="fs-5" role="button" id="btn-manual-refresh" title="Atualizar fila">
+                    <i class="fa-solid fa-rotate" id="refresh-icon"></i>
+                </a>
+            </div>
+        </div>
+
+        <div id="jobs-list-container" class="row">
+            @await Html.PartialAsync("_JobListPartial", Model)
+        </div>
+    </div>
+</form>
+
+@section scripts {
+    <script>
+        let isRefreshing = false;
+        const cancellingJobIds = new Set();
+
+        function getQueryParam(param) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param) || '';
+        }
+
+        function getCurrentPage() {
+            return getQueryParam('currentPage') || 1;
+        }
+
+        function updateRunningDurations() {
+            const processingStatus = '@((int)EBackgroundJobStatus.PROCESSING)';
+            $('.job-duration').each(function () {
+                const status = $(this).attr('data-status');
+                if (status === processingStatus) {
+                    const processedAtIso = $(this).attr('data-processed-at');
+                    if (processedAtIso) {
+                        const startTime = new Date(processedAtIso).getTime();
+                        const now = new Date().getTime();
+                        const diffMs = Math.max(0, now - startTime);
+                        const totalSeconds = Math.floor(diffMs / 1000);
+
+                        const hours = Math.floor(totalSeconds / 3600);
+                        const minutes = Math.floor((totalSeconds % 3600) / 60);
+                        const seconds = totalSeconds % 60;
+
+                        const pad = (n) => String(n).padStart(2, '0');
+                        $(this).text(`${pad(hours)}:${pad(minutes)}:${pad(seconds)}`);
+                    }
+                }
+            });
+        }
+
+        function applyCancellingState(jobId) {
+            const $card = $(`#job-card-${jobId}`);
+            if ($card.length === 0) return;
+
+            $card.find('> .card > .row > div:first-child').html(
+                '<i class="fa-solid fa-spinner fa-spin fa-lg p-3 text-warning opacity-75"></i>'
+            );
+
+            $card.find('> .card > .row > div:nth-child(3) .card-body').html(
+                '<h5 class="m-0"><span class="badge text-bg-warning">cancelando...</span></h5>'
+            );
+
+            $card.find('> .card > .row > div:last-child').html(
+                '<button type="button" class="btn px-4 border-0 bg-transparent text-warning shadow-none" disabled title="cancelando...">' +
+                    '<i class="fa-solid fa-spinner fa-spin fa-lg"></i>' +
+                '</button>'
+            );
+        }
+
+        function checkCancellingStates() {
+            const canceledStatus = '@((int)EBackgroundJobStatus.CANCELED)';
+            const failedStatus = '@((int)EBackgroundJobStatus.FAILED)';
+            const completedStatus = '@((int)EBackgroundJobStatus.COMPLETED)';
+
+            cancellingJobIds.forEach((jobId) => {
+                const $durationEl = $(`#job-card-${jobId} .job-duration`);
+                if ($durationEl.length === 0) return;
+
+                const status = $durationEl.attr('data-status');
+                if (status === canceledStatus || status === failedStatus || status === completedStatus) {
+                    cancellingJobIds.delete(jobId);
+                } else {
+                    applyCancellingState(jobId);
+                }
+            });
+        }
+
+        async function refreshJobsList(pageOverride) {
+            if (isRefreshing) return;
+
+            if ($('.modal.show').length > 0) return;
+
+            isRefreshing = true;
+            const page = pageOverride || getCurrentPage();
+            const username = $('#username').val() || '';
+            const status = $('#status').val() || '';
+
+            try {
+                const queryParams = new URLSearchParams({
+                    currentPage: page,
+                    username: username,
+                    status: status
+                });
+
+                const response = await fetch(`/BackgroundJobQueue/GetJobsPartial?${queryParams.toString()}`);
+                if (response.ok) {
+                    const html = await response.text();
+                    $('#jobs-list-container').html(html);
+                    updateRunningDurations();
+                    checkCancellingStates();
+                }
+            } catch (err) {
+                console.error('Erro ao atualizar lista de jobs:', err);
+            } finally {
+                isRefreshing = false;
+            }
+        }
+
+        $(document).ready(function () {
+            setInterval(updateRunningDurations, 1000);
+            setInterval(refreshJobsList, 3000);
+
+            $('#username, #status').change(function () {
+                const username = $('#username').val() || '';
+                const status = $('#status').val() || '';
+
+                const url = new URL(window.location.href);
+                url.searchParams.set('currentPage', '1');
+                if (username) url.searchParams.set('username', username); else url.searchParams.delete('username');
+                if (status) url.searchParams.set('status', status); else url.searchParams.delete('status');
+
+                window.history.pushState({}, '', url);
+                refreshJobsList(1);
+            });
+
+            $('#btn-manual-refresh').click(function () {
+                $('#refresh-icon').addClass('fa-spin');
+                refreshJobsList().finally(() => {
+                    setTimeout(() => $('#refresh-icon').removeClass('fa-spin'), 500);
+                });
+            });
+
+            $(document).on('click', '#jobs-list-container .pagination .page-link', function (e) {
+                e.preventDefault();
+                const href = $(this).attr('href');
+                if (!href || $(this).parent().hasClass('disabled') || $(this).parent().hasClass('active')) return;
+
+                const urlParams = new URLSearchParams(href.split('?')[1]);
+                const page = urlParams.get('currentPage') || 1;
+
+                window.history.pushState({}, '', href);
+                refreshJobsList(page);
+            });
+
+            $(document).on('click', '.btn-cancel-job', async function () {
+                if (!confirm('Deseja realmente cancelar o processo?')) return;
+
+                const jobId = String($(this).data('jobId'));
+                const jobName = $(this).data('jobName');
+
+                cancellingJobIds.add(jobId);
+                applyCancellingState(jobId);
+
+                const cancelFormData = new FormData();
+                cancelFormData.append('jobId', jobId);
+                cancelFormData.append('jobName', jobName);
+
+                try {
+                    await fetch(`/BackgroundJobQueue/CancelJob`, {
+                        method: 'POST',
+                        body: cancelFormData
+                    });
+                    await refreshJobsList();
+                } catch (err) {
+                    console.error('Erro ao cancelar job:', err);
+                    cancellingJobIds.delete(jobId);
+                    await refreshJobsList();
+                }
+            });
+        });
+    </script>
+}

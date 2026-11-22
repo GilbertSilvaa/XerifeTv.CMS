@@ -3,6 +3,6 @@ version: '3.4'
 services:
   xerifetv-cms:
     image: xerifetvcms-docker
-    build: ./XerifeTv.CMS
+    build: ./src
     ports:
       - "8080:80"
