@@ -330,6 +330,12 @@
 
 @section scripts {
     <script defer>
+        const prefillImdbId = '@ViewBag.PrefillImdbId';
+        if (prefillImdbId && !$('#imdbId').val()) {
+            $('#imdbId').val(prefillImdbId);
+            setTimeout(() => $('#btn-get-imdb').trigger('click'), 100);
+        }
+
         async function getMovieByTmdb(imdbId) {
             const response = await fetch(`/Movies/GetByImdbId?imdbId=${imdbId}`);
             return await response.json();

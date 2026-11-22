@@ -11,6 +11,7 @@ public interface IBackgroundJobQueueService
     Task<Result<AddJobQueueResponseDto>> AddJobInQueueAsync(AddImportEpisodesJobQueueRequestDto dto);
     Task<Result<AddJobQueueResponseDto>> AddJobInQueueAsync(ECalculateCategoryDistributionJobQueueType type);
     Task<Result<AddJobQueueResponseDto>> AddJobInQueueAsync(EDispatchWebhooksJobQueueType type, string dispatchWebhooksEntityId);
+    Task<Result<AddJobQueueResponseDto>> AddProcessDueContentSchedulesJobAsync();
     Task<Result<AddJobQueueResponseDto>> AddCurationSnapshotRebuildJobAsync(
         string? curationCollectionId, string? curationCollectionName);
     Task<Result<GetBackgroundJobResponseDto?>> GetAsync(string id);

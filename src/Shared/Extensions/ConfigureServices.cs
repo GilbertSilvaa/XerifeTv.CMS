@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi;
+using MongoDB.Bson.Serialization;
 using MongoDB.Driver;
 using XerifeTv.CMS.Modules.Abstractions.Interfaces;
 using XerifeTv.CMS.Modules.Abstractions.Services;
@@ -18,6 +19,9 @@ using XerifeTv.CMS.Modules.Channel.Interfaces;
 using XerifeTv.CMS.Modules.Content;
 using XerifeTv.CMS.Modules.Content.Interfaces;
 using XerifeTv.CMS.Modules.Content.Services;
+using XerifeTv.CMS.Modules.ContentCalendar;
+using XerifeTv.CMS.Modules.ContentCalendar.Interfaces;
+using XerifeTv.CMS.Modules.ContentCalendar.Services;
 using XerifeTv.CMS.Modules.ContentCuration;
 using XerifeTv.CMS.Modules.ContentCuration.Interfaces;
 using XerifeTv.CMS.Modules.ContentCuration.Services;
@@ -70,6 +74,8 @@ public static class ConfigureServices
             return new MongoClient(dbSettings.ConnectionString);
         });
 
+        BsonSerializer.TryRegisterSerializer(new DateOnlyBsonSerializer());
+
         services.AddScoped<IMovieRepository, MovieRepository>();
         services.AddScoped<ISeriesRepository, SeriesRepository>();
         services.AddScoped<IChannelRepository, ChannelRepository>();
@@ -86,6 +92,7 @@ public static class ConfigureServices
         services.AddScoped<ICurationSettingsRepository, CurationSettingsRepository>();
         services.AddScoped<ICurationContentRepository, CurationContentRepository>();
         services.AddScoped<ICurationCollectionSnapshotRepository, CurationCollectionSnapshotRepository>();
+        services.AddScoped<IContentScheduleRepository, ContentScheduleRepository>();
 
         return services;
     }
@@ -131,6 +138,9 @@ public static class ConfigureServices
         services.AddScoped<ILoginStrategy, GoogleLoginStrategy>();
         services.AddScoped<IWebhookService, WebhookService>();
         services.AddScoped<IWebhookDispatchHistoryService, WebhookDispatchHistoryService>();
+        services.AddSingleton<IBusinessClock, BusinessClock>();
+        services.AddScoped<IContentScheduleService, ContentScheduleService>();
+        services.AddScoped<IContentScheduleCompletionService, ContentScheduleCompletionService>();
 
         services.AddScoped<IMediaDeliveryProfileService, MediaDeliveryProfileService>();
         services.AddScoped<IMediaDeliveryUrlResolver, MediaDeliveryUrlResolver>();
@@ -143,6 +153,9 @@ public static class ConfigureServices
         services.AddScoped<IBackgroundJobProcessorStrategy, CalculateCategoryDistributionBackgroundJobProcessorStrategy>();
         services.AddScoped<IBackgroundJobProcessorStrategy, DispacthWebhooksBackgroundProcessorStrategy>();
         services.AddScoped<IBackgroundJobProcessorStrategy, RebuildCurationSnapshotsBackgroundJobProcessorStrategy>();
+        services.AddScoped<IBackgroundJobProcessorStrategy, ProcessDueContentSchedulesBackgroundJobProcessorStrategy>();
+        services.AddScoped<IBackgroundJobProcessorStrategy, DispatchContentScheduleWebhookProcessorStrategy>();
+        services.AddScoped<IWebhookDispatcher, WebhookDispatcher>();
 
         services.AddScoped<IAuditLogService, AuditLogService>();
 
@@ -150,6 +163,8 @@ public static class ConfigureServices
         services.AddHostedService<PeopleIndexInitializer>();
         services.AddHostedService<CurationIndexInitializer>();
         services.AddHostedService<CurationSnapshotInitializer>();
+        services.AddHostedService<ContentScheduleIndexInitializer>();
+        services.AddHostedService<ContentScheduleDueScheduler>();
 
         return services;
     }

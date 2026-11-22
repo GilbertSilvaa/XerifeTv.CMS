@@ -1,5 +1,7 @@
 ﻿using XerifeTv.CMS.Modules.Abstractions.Entities;
 using XerifeTv.CMS.Modules.Channel;
+using XerifeTv.CMS.Modules.ContentCalendar;
+using XerifeTv.CMS.Modules.ContentCalendar.Entities;
 using XerifeTv.CMS.Modules.Movie;
 using XerifeTv.CMS.Modules.Series;
 using XerifeTv.CMS.Shared.Helpers;
@@ -10,7 +12,8 @@ public enum EWebhookTriggerEvent
 {
     MOVIE_PUBLISHED = 1,
     SERIES_PUBLISHED = 2,
-    CHANNEL_PUBLISHED = 4
+    CHANNEL_PUBLISHED = 4,
+    CONTENT_SCHEDULE_DUE = 8
 }
 
 public static class EWebhookTriggerEventExtensions
@@ -22,6 +25,7 @@ public static class EWebhookTriggerEventExtensions
             EWebhookTriggerEvent.MOVIE_PUBLISHED => "Filme Publicado",
             EWebhookTriggerEvent.SERIES_PUBLISHED => "Série Publicada",
             EWebhookTriggerEvent.CHANNEL_PUBLISHED => "Canal Publicado",
+            EWebhookTriggerEvent.CONTENT_SCHEDULE_DUE => "Vencimento de Agendamento de Conteúdo",
             _ => "Unknown Event"
         };
     }
@@ -59,6 +63,19 @@ public static class EWebhookTriggerEventExtensions
                     "{{Id}}",
                     "{{Título}}",
                     "{{LogoUrl}}"
+                ];
+
+            case EWebhookTriggerEvent.CONTENT_SCHEDULE_DUE:
+                return [
+                    "{{ScheduleId}}",
+                    "{{ContentType}}",
+                    "{{ImdbId}}",
+                    "{{TmdbId}}",
+                    "{{Título}}",
+                    "{{ScheduledDate}}",
+                    "{{Origem}}",
+                    "{{Temporada}}",
+                    "{{Episódio}}"
                 ];
 
             default:
@@ -105,6 +122,27 @@ public static class EWebhookTriggerEventExtensions
             payloadTemplate = payloadTemplate.Replace("{{Titulo}}", channelEntity!.Title);
             payloadTemplate = payloadTemplate.Replace("{{LogoUrl}}", channelEntity!.LogoUrl);
         }
+
+        return payloadTemplate;
+    }
+
+    public static string ReplaceKeywords(
+        this EWebhookTriggerEvent eventType, string payloadTemplate, ContentScheduleEntity entity)
+    {
+        if (eventType != EWebhookTriggerEvent.CONTENT_SCHEDULE_DUE || entity is null)
+            return payloadTemplate;
+
+        payloadTemplate = payloadTemplate.Replace("{{ScheduleId}}", entity.Id);
+        payloadTemplate = payloadTemplate.Replace("{{ContentType}}", ContentScheduleDisplay.GetTypeLabel(entity.ContentType));
+        payloadTemplate = payloadTemplate.Replace("{{ImdbId}}", entity.ImdbId ?? string.Empty);
+        payloadTemplate = payloadTemplate.Replace("{{TmdbId}}", entity.TmdbId.ToString());
+        payloadTemplate = payloadTemplate.Replace("{{Título}}", entity.Title);
+        payloadTemplate = payloadTemplate.Replace("{{Titulo}}", entity.Title);
+        payloadTemplate = payloadTemplate.Replace("{{ScheduledDate}}", entity.ScheduledDate.ToString("yyyy-MM-dd"));
+        payloadTemplate = payloadTemplate.Replace("{{Origem}}", ContentScheduleDisplay.GetOriginLabel(entity.Origin));
+        payloadTemplate = payloadTemplate.Replace("{{Temporada}}", entity.SeasonNumber?.ToString() ?? string.Empty);
+        payloadTemplate = payloadTemplate.Replace("{{Episódio}}", entity.EpisodeNumber?.ToString() ?? string.Empty);
+        payloadTemplate = payloadTemplate.Replace("{{Episodio}}", entity.EpisodeNumber?.ToString() ?? string.Empty);
 
         return payloadTemplate;
     }
