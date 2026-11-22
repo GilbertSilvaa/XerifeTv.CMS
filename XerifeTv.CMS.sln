@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.10.35004.147
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerifeTv.CMS", "XerifeTv.CMS\XerifeTv.CMS.csproj", "{7A162152-7B09-4CF3-8331-3E3951E288A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XerifeTv.CMS", "src\XerifeTv.CMS.csproj", "{7A162152-7B09-4CF3-8331-3E3951E288A8}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -1,0 +1,429 @@
+﻿@using XerifeTv.CMS.Modules;
+@using XerifeTv.CMS.Modules.Series;
+@using XerifeTv.CMS.Modules.Series.Dtos.Response;
+@using XerifeTv.CMS.Shared.Helpers
+@using XerifeTv.CMS.Modules.Series.Views.Models
+
+@model EpisodesModelView
+
+@{
+    ViewData["Title"] = "Séries";
+
+    var episodeEmpty = new Episode { Id = string.Empty };
+
+    var currentView = Context.Request.Cookies["episodes_view"] == "table" ? "table" : "grid";
+}
+
+<style>
+    @@media (min-width: 800px) {
+        #seasonFilter {
+            max-width: 20%;
+        }
+    }
+
+    #episodesViews #tableView {
+        display: none;
+    }
+
+    @@media (min-width: 768px) {
+        #episodesViews[data-view="table"] #gridView {
+            display: none;
+        }
+
+        #episodesViews[data-view="table"] #tableView {
+            display: block;
+        }
+    }
+</style>
+
+<div class="container">
+    @await Html.PartialAsync("_VideoModal")
+    @await Html.PartialAsync("_EpisodeFormModal", new EpisodeFormModelView(episodeEmpty, Model?.MediaDeliveryProfiles ?? []))
+
+    <header>
+        <div class="d-flex align-items-center justify-content-between gap-4">
+            <div class="d-flex align-items-center gap-4" style="max-width: 65%;">
+                <a asp-controller="Series" asp-action="Index" class="fs-4">
+                    <i class="fa fa-undo" aria-hidden="true"></i>
+                </a>
+                <span class="d-none d-md-inline-block text-truncate fs-3 fw-normal mw-100">
+                    Episódios (@Model?.EpisodesDto?.SerieTitle)
+                </span>
+            </div>
+
+            @if (!User.IsInRole("visitor"))
+            {
+                <div class="d-flex justify-content-center align-items-center gap-3">
+                    <button id="btn-import-episodes" class="btn btn-success d-none d-md-block shadow-none">
+                        <i class="fa-solid fa-cloud-arrow-down me-1"></i> <span>Importar episódios via IMDB</span>
+                    </button>
+
+                    <button id="btn-register" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episodeEmpty.Id">
+                        <i class="fa-solid fa-plus"></i> Cadastrar
+                    </button>
+                </div>
+            }
+        </div>
+        <hr />
+    </header>
+
+    <div class="d-flex align-items-center gap-2 mb-4">
+        <select class="form-select form-select-sm shadow-none"
+                name="seasonFilter"
+                id="seasonFilter">
+
+            @for (var i = 1; i <= (ViewBag.NumberSeasons ?? 1); i++)
+            {
+                if (i == ViewBag.SeasonFilter)
+                {
+                    <option value="@i" selected>@i ª Temporada</option>
+                }
+                else
+                {
+                    <option value="@i">@i ª Temporada</option>
+                }
+            }
+        </select>
+
+        <div class="btn-group btn-group-sm ms-auto d-none d-md-flex" role="group" aria-label="Modo de visualização">
+            <button type="button"
+                    class="btn btn-outline-secondary shadow-sm @(currentView == "grid" ? "active" : "")"
+                    data-view="grid" title="Grade">
+                <i class="fa-solid fa-table-cells-large"></i>
+            </button>
+            <button type="button"
+                    class="btn btn-outline-secondary shadow-sm @(currentView == "table" ? "active" : "")"
+                    data-view="table" title="Tabela">
+                <i class="fa-solid fa-table-list"></i>
+            </button>
+        </div>
+    </div>
+
+    <input id="subtitle-file"
+           type="file"
+           accept=".vtt"
+           style="display: none"
+           onchange="uploadSubtitleFile()" />
+
+    <div id="episodesViews" data-view="@currentView">
+
+        <div id="gridView" class="row gap-2">
+            @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
+            {
+                <div class="card mb-3 col-md-12 col-lg-8 col-xl-5">
+                    <div class="row g-0">
+                        <div class="col-md-4">
+                            <div class="w-auto h-100 position-relative">
+                                <img src="@episode.BannerUrl"
+                                     class="img-fluid h-100 w-100 object-fit-cover"
+                                     alt="@episode.Title"
+                                     style="max-height: 188px;">
+
+                                @if (@episode.Disabled)
+                                {
+                                    <span class="position-absolute text-danger"
+                                          style="top: 6px; left: 8px; font-size: 24px;">
+                                        <i class="fa-solid fa-circle-exclamation"></i>
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card-body">
+                                <h5 class="card-title">@episode.Title</h5>
+                                <p class="card-text">
+                                    @DateTimeHelper.ConvertSecondsToHHmm(episode.Video?.Duration ?? 0)
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-body-secondary">
+                                        Temporada @episode.Season | Episódio @episode.Number
+                                    </small>
+                                </p>
+
+                                <div class="d-flex gap-2">
+                                    <a class="btn btn-sm btn-info"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#videoModal"
+                                       data-bs-title="@episode.Title"
+                                       data-bs-banner="@episode.BannerUrl"
+                                       data-bs-video-subtitle="@episode.Video?.Subtitle"
+                                       data-bs-video-resolver="@episode.UrlResolverPath">
+                                        <i class="fa-solid fa-play"></i> Play
+                                    </a>
+
+                                    @if (!User.IsInRole("visitor"))
+                                    {
+                                        <a class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episode.Id">
+                                            <i class="fa-solid fa-pen-to-square"></i> Editar
+                                        </a>
+                                    }
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div id="tableView" class="table-responsive">
+            <table class="table table-hover table-sm align-middle">
+                <thead>
+                    <tr>
+                        <th style="width: 88px;"></th>
+                        <th class="p-2" style="width: 64px;">Nº</th>
+                        <th class="p-2">Título</th>
+                        <th class="d-none d-lg-table-cell p-2">Duração</th>
+                        <th class="p-2">Status</th>
+                        <th class="text-end p-2">...</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
+                    {
+                        <tr>
+                            <td>
+                                <img src="@episode.BannerUrl"
+                                     class="rounded object-fit-cover"
+                                     width="72" height="40"
+                                     alt="@episode.Title"
+                                     loading="lazy" />
+                            </td>
+                            <td>@episode.Number</td>
+                            <td class="fw-semibold">
+                                @episode.Title
+                                @if (!string.IsNullOrEmpty(episode.Video?.Subtitle))
+                                {
+                                    <span class="badge text-bg-warning text-white ms-1">CC</span>
+                                }
+                            </td>
+                            <td class="d-none d-lg-table-cell">@DateTimeHelper.ConvertSecondsToHHmm(episode.Video?.Duration ?? 0)</td>
+                            <td>
+                                @if (episode.Disabled)
+                                {
+                                    <span class="badge text-bg-danger">Desativado</span>
+                                }
+                                else
+                                {
+                                    <span class="badge text-bg-success">Ativo</span>
+                                }
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a class="btn btn-sm btn-outline-info shadow-sm"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#videoModal"
+                                   data-bs-title="@episode.Title"
+                                   data-bs-banner="@episode.BannerUrl"
+                                   data-bs-video-subtitle="@episode.Video?.Subtitle"
+                                   data-bs-video-resolver="@episode.UrlResolverPath"
+                                   title="Play">
+                                    <i class="fa-solid fa-play"></i>
+                                </a>
+
+                                @if (!User.IsInRole("visitor"))
+                                {
+                                    <a class="btn btn-sm btn-outline-primary shadow-sm"
+                                       data-bs-toggle="modal"
+                                       data-bs-target="#episodeFormModal-@episode.Id"
+                                       title="Editar">
+                                        <i class="fa-solid fa-pen-to-square"></i>
+                                    </a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    @if (Model?.EpisodesDto?.Episodes.Count() == 0)
+    {
+        <p>Nenhum registro encontrado.</p>
+    }
+
+    @foreach (var episode in Model?.EpisodesDto?.Episodes ?? [])
+    {
+        @await Html.PartialAsync("_EpisodeFormModal", new EpisodeFormModelView(episode, Model?.MediaDeliveryProfiles ?? []))
+    }
+
+    @await Html.PartialAsync("_ImportEpisodesProgressModal")
+</div>
+
+<script>
+    (function () {
+        const container = document.getElementById('episodesViews');
+        const buttons = document.querySelectorAll('button[data-view]');
+
+        buttons.forEach(b => b.addEventListener('click', function () {
+            container.dataset.view = b.dataset.view;
+            buttons.forEach(x => x.classList.toggle('active', x === b));
+            document.cookie = 'episodes_view=' + b.dataset.view + '; path=/; max-age=31536000; SameSite=Lax';
+        }));
+    })();
+</script>
+
+@section scripts {
+    <script defer>
+        $('#seasonFilter').change(e => {
+            $('.loading-global .label').text('Carregando, por favor aguarde...');
+            $('.loading-global').show();
+            location.href = `/Series/Episodes/@Model?.EpisodesDto?.SerieId?seasonFilter=${e.target.value}`;
+        });
+
+        $('.duration').keyup(e =>
+            $(e.target).val(convertHHmmToSeconds(e.target.value)))
+
+        $('.disabled').change(e => e.target.value = e.target.checked);
+
+        function remove(id) {
+            if (!confirm('Deseja realmente excluir o episódio?')) return;
+            location.href = `/Series/DeleteEpisode?serieId=@Model?.EpisodesDto?.SerieId&id=${id}`;
+        }
+
+        function uploadSubtitleFile() {
+            const fileInput = $('#subtitle-file')[0];
+            const file = fileInput.files[0];
+
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            $('.btn-subtitle-file').attr('disabled', 'true');
+            $('.loading-global .label').text('Processando upload, por favor aguarde...');
+            $('.loading-global').show();
+
+            fetch('/StorageFiles/UploadFile', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(({ isSuccess, data }) => {
+                    if (isSuccess) $('.videoSubtitle:visible').val(data);
+                })
+                .finally(() => {
+                    $('.btn-subtitle-file').removeAttr('disabled');
+                    $('.loading-global').hide();
+                })
+        }
+
+        $('#btn-import-episodes').click(async () => {
+            if (!confirm('Confirmar ação?')) return;
+
+            if (confirm('Deseja executar o processamento em segundo plano?')) {
+                const formDataBackgroundJob = new FormData();
+                formDataBackgroundJob.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                formDataBackgroundJob.append('seriesImdbId', '@Model?.EpisodesDto?.SerieImdbId');
+                formDataBackgroundJob.append('seriesTitle', "@Html.Raw(Model?.EpisodesDto?.SerieTitle)");
+
+                await fetch(`/BackgroundJobQueue/AddJobInQueueImportEpisodesSeries`, {
+                    method: 'POST',
+                    body: formDataBackgroundJob
+                });
+
+                location.reload();
+                return;
+            }
+
+            $('#importEpisodesProgressModal').modal('show');
+            $('.close-modal').hide();
+
+            var monitorProgressInterval = 0;
+
+            try {
+                const formData = new FormData();
+                formData.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                formData.append('seriesTitle', "@Html.Raw(Model?.EpisodesDto?.SerieTitle)");
+
+                var response = await fetch('/Series/ImportEpisodesByImdbId', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                var importId = await response.text();
+
+                $('#btn-cancel-import').click(async function () {
+                    if (!confirm('Deseja realmente cancelar a importação?')) return;
+
+                    $(this).text('Cancelando...')
+                    $(this).attr('disabled', true);
+
+                    const cancelFormData = new FormData();
+                    cancelFormData.append('importId', importId);
+                    cancelFormData.append('seriesId', '@Model?.EpisodesDto?.SerieId');
+                    cancelFormData.append('seriesTitle', "@Html.Raw(Model?.EpisodesDto?.SerieTitle)");
+
+                    await fetch(`/Series/CancelImportEpisodes`, {
+                        method: 'POST',
+                        body: cancelFormData
+                    });
+                });
+
+                // monitor progress records
+                monitorProgressInterval = setInterval(async () => {
+                    var monitorResponse = await fetch(`/Series/MonitorImdbEpisodesImport?importId=${importId}`);
+                    const { importedCount, progressCount, isCancelled } = await monitorResponse.json();
+
+                    if (progressCount == 0) return;
+
+                    $('.process .progress-bar').css('width', `${progressCount}%`);
+                    $('.process span.status-percent').text(`${progressCount}%`);
+
+                    if (progressCount == 100 || isCancelled) {
+                        clearInterval(monitorProgressInterval);
+
+                        $('.finish-process-container .success-count').text(importedCount);
+
+                        $('.process .progress-bar').css('width', '100%');
+                        $('.process span.status-percent').text('100%');
+                        $('.process span.status-text').text(
+                            isCancelled
+                                ? 'Processo de importação cancelado.'
+                                : 'Processo de importação finalizado.');
+
+                        setTimeout(() => {
+                            $('.process-container').hide();
+                            $('.finish-process-container').show();
+
+                            $('#btn-cancel-import').hide();
+                            $('.close-modal').show();
+                            $('.close-modal').text('Fechar');
+                            $('.close-modal').prop('disabled', false);
+                            $('.close-modal').off().click(() => location.reload());
+                        }, 1250);
+                    }
+
+                }, 2000);
+            }
+            catch (error) {
+                console.error(error);
+
+                clearInterval(monitorProgressInterval);
+                $('.process .progress-bar').css('width', '100%');
+                $('.process span.status-percent').text('100%');
+                $('.process span.status-text').text('Processo de importação finalizado.');
+
+                setTimeout(() => {
+                    $('.process-container').hide();
+                    $('.finish-process-container').show();
+
+                    $('#btn-cancel-import').hide();
+                    $('.close-modal').show();
+                    $('.close-modal').text('Fechar');
+                    $('.close-modal').prop('disabled', false);
+                    $('.close-modal').off().click(() => location.reload());
+                }, 1250);
+            }
+
+        });
+    </script>
+
+    @foreach (var episode in Model?.EpisodesDto?.Episodes.Concat([episodeEmpty]) ?? [episodeEmpty])
+    {
+        <script>
+            initVideoSetting('episode_@episode?.Id');
+        </script>
+
+    }
+}

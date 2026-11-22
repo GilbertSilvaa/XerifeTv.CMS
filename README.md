@@ -461,35 +461,54 @@ The public API is documented through OpenAPI and Scalar.
 ## Folder Structure
 
 ```text
-.
-|-- Controllers/
-|   |-- ContentAPI/
-|   |-- BackgroundJobQueueController.cs
-|   |-- ChannelsController.cs
-|   |-- MoviesController.cs
-|   |-- SeriesController.cs
-|   |-- SettingsController.cs
-|   `-- UsersController.cs
+src/
 |-- Modules/
 |   |-- Abstractions/
 |   |-- AuditLog/
 |   |-- Authentication/
 |   |-- BackgroundJobQueue/
+|   |   |-- Controllers/
+|   |   `-- Views/
 |   |-- Channel/
+|   |   |-- Controllers/
+|   |   `-- Views/
 |   |-- Common/
 |   |-- Content/
+|   |   `-- Controllers/
+|   |       `-- ContentAPI/
+|   |-- ContentCuration/
+|   |   |-- Controllers/
+|   |   `-- Views/
 |   |-- Dashboard/
+|   |   |-- Controllers/
+|   |   `-- Views/
 |   |-- Franchise/
+|   |   `-- Controllers/
 |   |-- Integrations/
 |   |-- Media/
+|   |   |-- Controllers/
+|   |   `-- Delivery/
+|   |       `-- Controllers/
 |   |-- Movie/
+|   |   |-- Controllers/
+|   |   `-- Views/
+|   |-- People/
+|   |   `-- Controllers/
 |   |-- Series/
+|   |   |-- Controllers/
+|   |   `-- Views/
+|   |-- Settings/
+|   |   |-- Controllers/
+|   |   `-- Views/
 |   `-- User/
+|       |-- Controllers/
+|       `-- Views/
 |-- Shared/
 |   |-- Database/
 |   |-- Extensions/
-|   `-- Helpers/
-|-- Views/
+|   |-- Helpers/
+|   `-- Views/
+|       `-- Models/
 |-- wwwroot/
 |   |-- assets/
 |   |-- css/
@@ -498,6 +517,8 @@ The public API is documented through OpenAPI and Scalar.
 |   `-- templates/
 |-- Dockerfile
 |-- Program.cs
+|-- _ViewImports.cshtml
+|-- _ViewStart.cshtml
 `-- XerifeTv.CMS.csproj
 ```
 
@@ -517,7 +538,7 @@ The public API is documented through OpenAPI and Scalar.
 
 ```bash
 git clone https://github.com/GilbertSilvaa/XerifeTv.CMS.git
-cd XerifeTv.CMS/XerifeTv.CMS
+cd XerifeTv.CMS/src
 dotnet restore
 ```
 
