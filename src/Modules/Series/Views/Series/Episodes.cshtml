@@ -265,7 +265,7 @@
 
 @section scripts {
     <script defer>
-        @if (ViewBag.PrefillSeason is int ps || ViewBag.PrefillEpisode is int pe)
+        @if (ViewBag.PrefillSeason is int ps || ViewBag.PrefillEpisode is int pe || ViewBag.PrefillEpisodeId is string pid && !string.IsNullOrWhiteSpace(pid))
         {
             <text>
             $(function () {

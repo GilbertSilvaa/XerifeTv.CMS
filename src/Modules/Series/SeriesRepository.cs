@@ -166,6 +166,15 @@ public sealed class SeriesRepository(IOptions<DBSettings> options, IMongoClient 
             .FirstOrDefaultAsync();
     }
 
+    public async Task<SeriesEntity?> GetByEpisodeIdAsync(string episodeId)
+    {
+        var filter = Builders<SeriesEntity>.Filter.ElemMatch(
+            s => s.Episodes,
+            e => e.Id == episodeId);
+
+        return await _collection.Find(filter).FirstOrDefaultAsync();
+    }
+
     public override async Task UpdateAsync(SeriesEntity entity)
     {
         var filter = Builders<SeriesEntity>.Filter.Eq(r => r.Id, entity.Id);
