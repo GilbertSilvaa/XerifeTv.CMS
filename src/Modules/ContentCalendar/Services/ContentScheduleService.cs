@@ -519,7 +519,7 @@ public sealed class ContentScheduleService(
         if (!string.IsNullOrWhiteSpace(entity.ImdbId))
         {
             var movie = await movieRepository.GetByImdbIdAsync(entity.ImdbId);
-            if (movie is not null && !movie.Disabled)
+            if (movie is not null)
                 return new ContentScheduleShortcutDto($"/Movies/Form?id={movie.Id}");
         }
 
@@ -539,7 +539,7 @@ public sealed class ContentScheduleService(
         if (!string.IsNullOrWhiteSpace(entity.ImdbId))
         {
             var series = await seriesRepository.GetByImdbIdAsync(entity.ImdbId);
-            if (series is not null && !series.Disabled)
+            if (series is not null)
                 return new ContentScheduleShortcutDto($"/Series/Form?id={series.Id}");
         }
 
@@ -553,31 +553,38 @@ public sealed class ContentScheduleService(
 
     private async Task<ContentScheduleShortcutDto> BuildEpisodeShortcutAsync(ContentScheduleEntity entity)
     {
-        if (string.IsNullOrWhiteSpace(entity.ImdbId))
-        {
-            return new ContentScheduleShortcutDto(
-                "/Series",
-                "A série precisa ser cadastrada antes do episódio.");
-        }
+        var series = !string.IsNullOrWhiteSpace(entity.ImdbId)
+            ? await seriesRepository.GetByImdbIdAsync(entity.ImdbId)
+            : null;
 
-        var series = await seriesRepository.GetByImdbIdAsync(entity.ImdbId);
+        if (series is null && !string.IsNullOrWhiteSpace(entity.RegisteredContentId))
+            series = await seriesRepository.GetByEpisodeIdAsync(entity.RegisteredContentId);
 
         if (series is null)
         {
             return new ContentScheduleShortcutDto(
-                $"/Series/Form?imdbId={entity.ImdbId}",
+                string.IsNullOrWhiteSpace(entity.ImdbId)
+                    ? "/Series"
+                    : $"/Series/Form?imdbId={entity.ImdbId}",
                 "A série precisa ser cadastrada antes do episódio.");
+        }
+
+        var episode = !string.IsNullOrWhiteSpace(entity.RegisteredContentId)
+            ? series.Episodes.FirstOrDefault(e => e.Id == entity.RegisteredContentId)
+            : null;
+
+        episode ??= series.Episodes.FirstOrDefault(e =>
+            e.Season == (entity.SeasonNumber ?? 0) &&
+            e.Number == (entity.EpisodeNumber ?? 0));
+
+        if (episode is not null)
+        {
+            return new ContentScheduleShortcutDto(
+                $"/Series/Episodes?id={series.Id}&season={episode.Season}&episode={episode.Number}&episodeId={episode.Id}");
         }
 
         var season = entity.SeasonNumber ?? 0;
         var number = entity.EpisodeNumber ?? 0;
-        var episode = series.Episodes.FirstOrDefault(e => e.Season == season && e.Number == number);
-
-        if (episode is not null && !episode.Disabled)
-        {
-            return new ContentScheduleShortcutDto(
-                $"/Series/Episodes?id={series.Id}&season={season}&episode={number}&episodeId={episode.Id}");
-        }
 
         return new ContentScheduleShortcutDto(
             $"/Series/Episodes?id={series.Id}&season={season}&episode={number}");

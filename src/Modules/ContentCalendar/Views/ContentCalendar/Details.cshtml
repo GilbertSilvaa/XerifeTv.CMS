@@ -50,12 +50,10 @@
                 <span class="fs-3 fw-normal">Detalhes do agendamento</span>
             </div>
             <div class="d-flex align-items-center gap-2">
-                @if (!schedule.IsRegistered)
-                {
-                    <button type="button" class="btn btn-success shadow-none" id="btn-shortcut" data-id="@schedule.Id">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Cadastrar conteúdo
-                    </button>
-                }
+                <button type="button" class="btn btn-success shadow-none" id="btn-shortcut" data-id="@schedule.Id">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    @(schedule.IsRegistered ? "Abrir conteúdo" : "Cadastrar conteúdo")
+                </button>
             </div>
         </div>
         <hr />
