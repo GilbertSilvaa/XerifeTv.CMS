@@ -1,0 +1,33 @@
+@using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Response
+
+@model GetDemoStreamingSettingsResponseDto
+
+<div class="row">
+    <div class="col-12">
+
+        <form asp-controller="Settings"
+              asp-action="UpdateDemoStreamingSettings"
+              method="post"
+              class="row g-3">
+
+            <div class="col-12">
+                <label for="demoVideoUrl" class="form-label">
+                    URL do vídeo de demonstração (Usuário Demo)
+                </label>
+                <input type="url"
+                       class="form-control shadow-sm"
+                       id="demoVideoUrl"
+                       name="videoUrl"
+                       placeholder="https://cdn.exemplo.com/video-demo.m3u8"
+                       value="@Model.VideoUrl"
+                       required />
+            </div>
+
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary float-end">
+                    Salvar
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

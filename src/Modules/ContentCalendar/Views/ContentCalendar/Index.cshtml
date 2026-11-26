@@ -48,7 +48,7 @@
                     </a>
                 </div>
 
-                @if (!User.IsInRole("visitor"))
+                @if (!User.IsVisitorLike())
                 {
                     <button class="btn btn-primary shadow-none" data-bs-toggle="modal" data-bs-target="#createScheduleModal">
                         <i class="fa-solid fa-plus"></i> Novo agendamento

@@ -5,6 +5,7 @@ using XerifeTv.CMS.Modules.Authentication.Interfaces;
 using XerifeTv.CMS.Modules.AuditLog.Interfaces;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Dtos.Response;
+using XerifeTv.CMS.Modules.User.Enums;
 using XerifeTv.CMS.Modules.User.Interfaces;
 using XerifeTv.CMS.Shared.Extensions;
 using XerifeTv.CMS.Shared.Helpers;
@@ -70,6 +71,45 @@ public class UsersController(
 		logger.LogInformation($"{User.Identity?.Name} logged into the system");
 
 		return RedirectToAction("Index", "Home");
+	}
+
+	[HttpPost("user/signin")]
+	[AllowAnonymous]
+	public async Task<IActionResult> SignInApi([FromBody] SignInApiRequestDto? dto)
+	{
+		if (dto is null)
+			return BadRequest(new { message = "Dados de login inválidos." });
+
+		if (string.IsNullOrWhiteSpace(dto.UserNameOrEmail) || string.IsNullOrWhiteSpace(dto.Password))
+			return BadRequest(new { message = "Usuário/e-mail e senha são obrigatórios." });
+
+		var response = await authService.LoginAsync(dto.ToLoginRequestDto());
+
+		if (response.IsFailure)
+		{
+			var statusCode = int.TryParse(response.Error.Code, out var code) ? code : 500;
+
+			return StatusCode(
+				statusCode,
+				new { message = response.Error.Description ?? "Não foi possível realizar o login." });
+		}
+
+		var login = response.Data!;
+
+		if (!login.Role.IsVisitorLike())
+		{
+			return StatusCode(
+				StatusCodes.Status403Forbidden,
+				new { message = "Login permitido apenas para usuários visitantes." });
+		}
+
+		logger.LogInformation($"{login.UserName} logged in through the user/signin API");
+
+		return Ok(new
+		{
+			username = login.UserName,
+			token = login.Token
+		});
 	}
 
 	[AllowAnonymous]

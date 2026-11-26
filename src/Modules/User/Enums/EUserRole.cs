@@ -4,5 +4,6 @@ public enum EUserRole
 {
     ADMIN,
     COMMON,
-    VISITOR
+    VISITOR,
+    DEMO
 }

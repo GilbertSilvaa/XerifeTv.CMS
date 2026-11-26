@@ -14,7 +14,7 @@ using XerifeTv.CMS.Modules.ContentCuration.Views.Models;
 
 namespace XerifeTv.CMS.Modules.ContentCuration.Controllers;
 
-[Authorize]
+[Authorize(Roles = "admin, common")]
 public class ContentCurationController(
     IFeaturedService featuredService,
     ICurationCollectionService collectionService,

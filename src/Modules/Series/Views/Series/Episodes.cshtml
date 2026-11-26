@@ -51,7 +51,7 @@
                 </span>
             </div>
 
-            @if (!User.IsInRole("visitor"))
+            @if (!User.IsVisitorLike())
             {
                 <div class="d-flex justify-content-center align-items-center gap-3">
                     <button id="btn-import-episodes" class="btn btn-success d-none d-md-block shadow-none">
@@ -151,7 +151,7 @@
                                         <i class="fa-solid fa-play"></i> Play
                                     </a>
 
-                                    @if (!User.IsInRole("visitor"))
+                                    @if (!User.IsVisitorLike())
                                     {
                                         <a class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#episodeFormModal-@episode.Id">
                                             <i class="fa-solid fa-pen-to-square"></i> Editar
@@ -220,7 +220,7 @@
                                     <i class="fa-solid fa-play"></i>
                                 </a>
 
-                                @if (!User.IsInRole("visitor"))
+                                @if (!User.IsVisitorLike())
                                 {
                                     <a class="btn btn-sm btn-outline-primary shadow-sm"
                                        data-bs-toggle="modal"

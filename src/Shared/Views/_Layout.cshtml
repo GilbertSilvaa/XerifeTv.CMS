@@ -16,18 +16,21 @@
     pagesViewSideMenu.Add(["Movies", "Index", "Filmes", "fa-solid fa-film"]);
     pagesViewSideMenu.Add(["Series", "Index", "Séries", "fa-solid fa-clapperboard"]);
     pagesViewSideMenu.Add(["Channels", "Index", "Canais", "fa-solid fa-satellite-dish"]);
-    pagesViewSideMenu.Add(["ContentCuration", "Index", "Curadoria de Conteúdo", "fa-solid fa-layer-group"]);
 
-    if (!User.IsInRole("visitor"))
+    if (User.IsAdminOrCommon())
+        pagesViewSideMenu.Add(["ContentCuration", "Index", "Curadoria de Conteúdo", "fa-solid fa-layer-group"]);
+
+    if (!User.IsVisitorLike())
         pagesViewSideMenu.Add(["ContentCalendar", "Index", "Calendário de Conteúdo", "fa-solid fa-calendar-days"]);
 
     if (User.IsInRole("admin"))
         pagesViewSideMenu.Add(["Users", "Index", "Usuários", "fa-solid fa-users"]);
 
-    if (!User.IsInRole("visitor"))
+    if (!User.IsVisitorLike())
         pagesViewSideMenu.Add(["BackgroundJobQueue", "Index", "Fila de Processamentos", "fa-solid fa-list-check"]);
 
-    pagesViewSideMenu.Add(["Settings", "Index", "Configurações", "fa-solid fa-gear"]);
+    if (!User.IsDemo())
+        pagesViewSideMenu.Add(["Settings", "Index", "Configurações", "fa-solid fa-gear"]);
 
     /* pagesView[x][0] => Controller view
      * pagesView[x][1] => Controller action view
@@ -137,7 +140,7 @@
                                 </li>
                             }
 
-                            @if (!User.IsInRole("visitor"))
+                            @if (!User.IsVisitorLike())
                             {
                                 <li class="w-100 nav-item py-2">
                                     <a href="#submenu"
@@ -265,7 +268,7 @@
 
     </script>
 
-    @if (!User.IsInRole("visitor") && !pagesViewWithoutTemplate.Contains(ViewData["title"]?.ToString()))
+    @if (!User.IsVisitorLike() && !pagesViewWithoutTemplate.Contains(ViewData["title"]?.ToString()))
     {
         <script>
                 const jobsEventSource = new EventSource('/BackgroundJobQueue/GetJobsNotification');

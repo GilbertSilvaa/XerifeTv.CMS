@@ -1,3 +1,9 @@
-﻿namespace XerifeTv.CMS.Modules.Authentication.Dtos.Response;
+﻿using XerifeTv.CMS.Modules.User.Enums;
 
-public record LoginResponseDto(string Token, string RefreshToken);
+namespace XerifeTv.CMS.Modules.Authentication.Dtos.Response;
+
+public record LoginResponseDto(
+    string Token,
+    string RefreshToken,
+    string UserName,
+    EUserRole Role);
