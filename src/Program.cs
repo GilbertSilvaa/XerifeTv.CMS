@@ -6,6 +6,7 @@ using System.Text.Encodings.Web;
 using System.Text.Unicode;
 using XerifeTv.CMS.Shared.Database.MongoDB;
 using XerifeTv.CMS.Shared.Extensions;
+using XerifeTv.CMS.Shared.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -50,11 +51,26 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStatusCodePages(context =>
 {
+	var request = context.HttpContext.Request;
 	var response = context.HttpContext.Response;
+	var path = request.Path;
+
+	var isResolveUrlRequest =
+		path.StartsWithSegments("/MediaDeliveryProfiles", StringComparison.OrdinalIgnoreCase) &&
+		(path.Value?.Contains("ResolveUrl", StringComparison.OrdinalIgnoreCase) ?? false);
+
+	var isApiRequest =
+		path.StartsWithSegments("/Api", StringComparison.OrdinalIgnoreCase) ||
+		path.StartsWithSegments("/user/signin", StringComparison.OrdinalIgnoreCase) ||
+		isResolveUrlRequest ||
+		request.Headers.Accept.ToString().Contains("application/json", StringComparison.OrdinalIgnoreCase);
+
+	if (isApiRequest)
+		return Task.CompletedTask;
 
 	if (response.StatusCode == 401)
 	{
-		var originalUrl = context.HttpContext.Request.Path + context.HttpContext.Request.QueryString;
+		var originalUrl = request.Path + request.QueryString;
 		response.Redirect($"/Users/RefreshSession?successRedirectUrl={originalUrl}");
 	}
 
@@ -74,6 +90,7 @@ app.UseRouting();
 app.UseCors("AllowAnyOrigin");
 
 app.UseAuthentication();
+app.UseMiddleware<VisitorExpiredTokenMiddleware>();
 app.UseAuthorization();
 
 app.UseSwagger(options =>

@@ -31,7 +31,7 @@ public class BackgroundJobQueueController(
         {
             usernameSearch = username ?? User.Identity?.Name;
             var usersResult = await userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
-            if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => u.Role != EUserRole.VISITOR) ?? [];
+            if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => !u.Role.IsVisitorLike()) ?? [];
         }
 
         var jobsResult = await service.GetByFilterAsync(new GetBackgroundJobsByFilterRequestDto(
@@ -156,7 +156,7 @@ public class BackgroundJobQueueController(
         if (User.IsInRole("admin"))
         {
             var usersResult = await userService.GetAsync(currentPage: 1, limit: 1000, includeAdmin: true);
-            if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => u.Role != EUserRole.VISITOR) ?? [];
+            if (usersResult.IsSuccess) modelView.Users = usersResult.Data?.Items.Where(u => !u.Role.IsVisitorLike()) ?? [];
         }
 
         ViewBag.CurrentPage = jobsResult.Data?.CurrentPage;

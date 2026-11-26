@@ -10,10 +10,10 @@ using XerifeTv.CMS.Shared.Helpers;
 
 namespace XerifeTv.CMS.Modules.Media.Delivery.Controllers;
 
-[Authorize(Roles = "admin")]
 public class MediaDeliveryProfilesController(
     IMediaDeliveryProfileService service,
     IMediaDeliveryUrlResolver urlResolver,
+    IDemoStreamingSettingsService demoStreamingSettingsService,
     ILogger<MediaDeliveryProfilesController> logger,
     ICacheService cacheService,
     IAuditLogService auditLogService,
@@ -21,6 +21,7 @@ public class MediaDeliveryProfilesController(
 {
     private static readonly TimeSpan CacheTtl = TimeSpan.FromMinutes(10);
 
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Create(CreateMediaDeliveryProfileRequestDto dto)
     {
         var response = await service.CreateAsync(dto);
@@ -43,6 +44,7 @@ public class MediaDeliveryProfilesController(
         return Redirect(Url.Action("Index", "Settings") + "#media-delivery");
     }
 
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Update(UpdateMediaDeliveryProfileRequestDto dto)
     {
         var response = await service.UpdateAsync(dto);
@@ -67,6 +69,7 @@ public class MediaDeliveryProfilesController(
         return Redirect(Url.Action("Index", "Settings") + "#media-delivery");
     }
 
+    [Authorize(Roles = "admin")]
     public async Task<IActionResult> Delete(string? id)
     {
         if (id is not null)
@@ -99,10 +102,15 @@ public class MediaDeliveryProfilesController(
         return Redirect(Url.Action("Index", "Settings") + "#media-delivery");
     }
 
-    [Authorize(Roles = "admin, common")]
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> ResolveUrl(string mediaPath, string mediaDeliveryProfileId, bool isCached = false)
     {
+        var demoResult = await TryResolveDemoAsync();
+
+        if (demoResult is not null)
+            return demoResult;
+
         var normalizedPath = mediaPath.Trim().ToLowerInvariant();
         var cacheKey = $"resolve-url:{normalizedPath}:{mediaDeliveryProfileId}";
 
@@ -157,10 +165,15 @@ public class MediaDeliveryProfilesController(
         return Ok(new { Url = urlMidiaProxy, data?.StreamFormat });
     }
 
-    [Authorize(Roles = "admin, common")]
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> ResolveUrlFixed(string urlFixed, string streamFormat)
     {
+        var demoResult = await TryResolveDemoAsync();
+
+        if (demoResult is not null)
+            return demoResult;
+
         var response = await urlResolver.ResolveUrlFixedAsync(urlFixed, streamFormat);
 
         if (response.IsFailure)
@@ -185,10 +198,15 @@ public class MediaDeliveryProfilesController(
         return Ok(new { Url = urlMidiaProxy, response.Data?.StreamFormat });
     }
 
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> ResolveUrlMdp(string mp, string mdp)
     {
+        var demoResult = await TryResolveDemoAsync();
+
+        if (demoResult is not null)
+            return demoResult;
+
         string mediaDeliveryProfileId = CryptographyHelper.Decrypt(mdp, configuration["SecuritySettings:ContentEncryptionKey"]!);
         string mediaPath = CryptographyHelper.Decrypt(mp, configuration["SecuritySettings:ContentEncryptionKey"]!);
 
@@ -229,10 +247,15 @@ public class MediaDeliveryProfilesController(
         return Ok(new { Url = urlMidiaProxy, data?.StreamFormat });
     }
 
-    [AllowAnonymous]
+    [Authorize]
     [HttpGet]
     public async Task<IActionResult> ResolveUrlFx(string uf, string sf)
     {
+        var demoResult = await TryResolveDemoAsync();
+
+        if (demoResult is not null)
+            return demoResult;
+
         string urlFixed = CryptographyHelper.Decrypt(uf, configuration["SecuritySettings:ContentEncryptionKey"]!);
         string streamFormat = CryptographyHelper.Decrypt(sf, configuration["SecuritySettings:ContentEncryptionKey"]!);
 
@@ -258,6 +281,44 @@ public class MediaDeliveryProfilesController(
         string urlMidiaProxy = $"/MediaProxy/{routeMidiaProxy}?url={Uri.EscapeDataString(urlEncrypted)}";
 
         return Ok(new { Url = urlMidiaProxy, response.Data?.StreamFormat });
+    }
+
+    private async Task<IActionResult?> TryResolveDemoAsync()
+    {
+        if (!User.IsInRole("demo"))
+            return null;
+
+        var response = await demoStreamingSettingsService.GetAsync();
+
+        if (response.IsFailure)
+            return StatusCode(int.Parse(response.Error.Code), response.Error.Description);
+
+        var videoUrl = response.Data?.VideoUrl ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(videoUrl))
+            return NotFound(new { message = "Vídeo de demonstração não configurado." });
+
+        return Ok(new
+        {
+            Url = videoUrl,
+            StreamFormat = InferStreamFormat(videoUrl)
+        });
+    }
+
+    private static string InferStreamFormat(string url)
+    {
+        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+            return "hls";
+
+        var path = uri.AbsolutePath;
+
+        if (path.EndsWith(".mp4", StringComparison.OrdinalIgnoreCase)) return "mp4";
+        if (path.EndsWith(".webm", StringComparison.OrdinalIgnoreCase)) return "webm";
+        if (path.EndsWith(".mkv", StringComparison.OrdinalIgnoreCase)) return "mkv";
+        if (path.EndsWith(".mov", StringComparison.OrdinalIgnoreCase)) return "mov";
+        if (path.EndsWith(".mpd", StringComparison.OrdinalIgnoreCase)) return "mpeg-dash";
+
+        return "hls";
     }
 
     private static string MediaDeliveryProfileIndexKey(string mediaDeliveryProfileId)

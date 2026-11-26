@@ -37,7 +37,9 @@ public class BasicLoginStrategy(IUserService userService, ITokenService tokenSer
 			return Result<LoginResponseDto>.Success(
 				new LoginResponseDto(
 					tokenService.GenerateToken(userResult.UserName, userResult.Role),
-					tokenService.GenerateRefreshToken(userResult.UserName)));
+					tokenService.GenerateRefreshToken(userResult.UserName),
+					userResult.UserName,
+					userResult.Role));
 		}
 		catch (Exception ex)
 		{
