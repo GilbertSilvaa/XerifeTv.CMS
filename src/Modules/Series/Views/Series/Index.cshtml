@@ -38,7 +38,7 @@
         <div class="d-flex align-items-center justify-content-between gap-4">
             <span class="fs-3 fw-normal">Séries</span>
 
-            @if (!User.IsInRole("visitor"))
+            @if (!User.IsVisitorLike())
             {
                 <a class="btn btn-primary" asp-controller="Series" asp-action="Form">
                     <i class="fa-solid fa-plus"></i> Cadastrar
@@ -136,7 +136,7 @@
                                 <i class="fa-solid fa-list"></i> Episódios
                             </a>
 
-                            @if (!User.IsInRole("visitor"))
+                            @if (!User.IsVisitorLike())
                             {
                                 <a class="btn btn-sm btn-primary"
                                    asp-controller="Series"
@@ -207,7 +207,7 @@
                                     <i class="fa-solid fa-list"></i>
                                 </a>
 
-                                @if (!User.IsInRole("visitor"))
+                                @if (!User.IsVisitorLike())
                                 {
                                     <a class="btn btn-sm btn-outline-primary shadow-sm"
                                        asp-controller="Series"

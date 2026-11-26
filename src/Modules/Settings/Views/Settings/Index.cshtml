@@ -213,6 +213,18 @@
                                 Perfis de Entrega de Mídia
                             </button>
                         </li>
+
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link"
+                                    id="demo-streaming-tab"
+                                    data-bs-toggle="tab"
+                                    data-bs-target="#demo-streaming"
+                                    type="button"
+                                    role="tab"
+                                    aria-selected="false">
+                                Vídeo de Demonstração
+                            </button>
+                        </li>
                     </ul>
 
                     <div class="tab-content">
@@ -223,6 +235,15 @@
                              aria-labelledby="media-delivery-tab">
 
                             @await Html.PartialAsync("_MediaDeliveryProfiles", Model.MediaDeliveryProfiles)
+
+                        </div>
+
+                        <div class="tab-pane fade"
+                             id="demo-streaming"
+                             role="tabpanel"
+                             aria-labelledby="demo-streaming-tab">
+
+                            @await Html.PartialAsync("_DemoStreamingSettings", Model.DemoStreamingSettings)
 
                         </div>
 

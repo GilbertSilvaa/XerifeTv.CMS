@@ -30,6 +30,7 @@ public class GetUserResponseDto
       {
           EUserRole.ADMIN => "Administrador",
           EUserRole.COMMON => "Usuário Comum",
+          EUserRole.DEMO => "Demo",
           _ => "Visitante"
       };
 }

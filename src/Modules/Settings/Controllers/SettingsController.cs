@@ -7,6 +7,7 @@ using XerifeTv.CMS.Modules.Integrations.Webhook.Dtos.Response;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Entities;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Enums;
 using XerifeTv.CMS.Modules.Integrations.Webhook.Interfaces;
+using XerifeTv.CMS.Modules.Media.Delivery.Dtos.Request;
 using XerifeTv.CMS.Modules.Media.Delivery.Intefaces;
 using XerifeTv.CMS.Modules.User.Dtos.Request;
 using XerifeTv.CMS.Modules.User.Interfaces;
@@ -21,10 +22,11 @@ public class SettingsController(
     IWebhookService webhookService,
     IWebhookDispatchHistoryService webhookDispatchHistoryService,
     IMediaDeliveryProfileService mediaDeliveryProfileService,
+    IDemoStreamingSettingsService demoStreamingSettingsService,
     IAuditLogService auditLogService,
     ILogger<SettingsController> logger) : Controller
 {
-    [Authorize]
+    [Authorize(Roles = "admin, common, visitor")]
     public async Task<IActionResult> Index()
     {
         var userResponse = await userService.GetByUsernameAsync(User.Identity?.Name ?? string.Empty);
@@ -36,13 +38,20 @@ public class SettingsController(
         var mediaDeliveryProfilesResponse = await mediaDeliveryProfileService.GetAllAsync(isIncludeDisabled: true);
         if (mediaDeliveryProfilesResponse.IsFailure) return RedirectToAction("Index", "Home");
 
-        SettingsModelView model = new(userResponse.Data!, webhooksResponse.Data?.Items ?? [], mediaDeliveryProfilesResponse.Data ?? []);
+        var demoStreamingSettingsResponse = await demoStreamingSettingsService.GetAsync();
+        if (demoStreamingSettingsResponse.IsFailure) return RedirectToAction("Index", "Home");
+
+        SettingsModelView model = new(
+            userResponse.Data!,
+            webhooksResponse.Data?.Items ?? [],
+            mediaDeliveryProfilesResponse.Data ?? [],
+            demoStreamingSettingsResponse.Data!);
 
         return View(model);
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "admin, common, visitor")]
     public async Task<IActionResult> UserUpdateProfile(UpdateUserProfileRequestDto dto)
     {
         var updateUserRequestDto = new UpdateUserRequestDto
@@ -75,7 +84,7 @@ public class SettingsController(
     }
 
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "admin, common, visitor")]
     public async Task<IActionResult> UserUpdatePassword(UpdatePasswordUserRequestDto dto)
     {
         if (dto.NewPassword != dto.NewPasswordConfirm)
@@ -102,6 +111,30 @@ public class SettingsController(
         logger.LogInformation($"{User.Identity?.Name} updated your password");
 
         return Redirect(Url.Action("Index") + "#password");
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "admin")]
+    public async Task<IActionResult> UpdateDemoStreamingSettings(UpdateDemoStreamingSettingsRequestDto dto)
+    {
+        var response = await demoStreamingSettingsService.UpdateAsync(dto);
+
+        TempData["Notification"] = response.IsFailure
+          ? MessageViewHelper.ErrorJson(response.Error.Description ?? string.Empty)
+          : MessageViewHelper.SuccessJson("Vídeo de demonstração atualizado com sucesso");
+
+        if (response.IsSuccess)
+        {
+            await this.AddAuditLogAsync(
+                auditLogService,
+                "DemoStreamingSettings",
+                response.Data ?? "demo",
+                "atualizou o vídeo de demonstração");
+        }
+
+        logger.LogInformation($"{User.Identity?.Name} updated the demo streaming video");
+
+        return Redirect(Url.Action("Index") + "#demo-streaming");
     }
 
     [HttpPost]

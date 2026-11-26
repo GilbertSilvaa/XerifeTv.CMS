@@ -84,6 +84,7 @@ public static class ConfigureServices
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IWebhookRepository, WebhookRepository>();
         services.AddScoped<IMediaDeliveryProfileRepository, MediaDeliveryProfileRepository>();
+        services.AddScoped<IDemoStreamingSettingsRepository, DemoStreamingSettingsRepository>();
         services.AddScoped<IContentSettingsRepository, ContentSettingsRepository>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();
         services.AddScoped<IWebhookDispatchHistoryRepository, WebhookDispatchHistoryRepository>();
@@ -143,6 +144,7 @@ public static class ConfigureServices
         services.AddScoped<IContentScheduleCompletionService, ContentScheduleCompletionService>();
 
         services.AddScoped<IMediaDeliveryProfileService, MediaDeliveryProfileService>();
+        services.AddScoped<IDemoStreamingSettingsService, DemoStreamingSettingsService>();
         services.AddScoped<IMediaDeliveryUrlResolver, MediaDeliveryUrlResolver>();
         services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenNoneStrategy>();
         services.AddScoped<IMediaDeliveryTokenStrategy, MediaDeliveryTokenStaticQueryStrategy>();
